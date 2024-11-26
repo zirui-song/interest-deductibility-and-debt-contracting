@@ -1,2 +1,2 @@
-# m&a-debt
-project folder for tax and M&amp;A debt
+# tax-debt
+project folder for interest deductibility and debt contracting
