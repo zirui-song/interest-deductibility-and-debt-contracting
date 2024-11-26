@@ -1,2 +1,2 @@
 # tax-debt
-project folder for interest deductability and debt contracting
+project folder for interest deductibility and debt contracting
