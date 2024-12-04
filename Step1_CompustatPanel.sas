@@ -7,13 +7,15 @@
 /* FILES CREATED:	"matdata"; a series of "matdatatwoYYYY" files                           */                                   */
 /********************************************************************************************/
 
+* Dec 1, 2024 Revised by Zirui Song
+
 * 	define libraries;
-libname perm 'insert path where you store your permanent datasets';
-libname comp 'insert path where you store your Compustat data';
+libname perm '/Users/zrsong/Dropbox (MIT)/Research Projects/MPS_Interest Deductibility and Debt Contracting/3. Data/Processed';
+libname comp '/Users/zrsong/Dropbox (MIT)/Research Projects/MPS_Interest Deductibility and Debt Contracting/3. Data/Raw';
 
 *	load file that contains a Winsorization/Truncation macro (used below) - if you don't have such a macro, ignore this and replace the macro call
 	below with your preferred truncation approach ;
-%include 'C:\MyResearch\GlobalSAS\Macros.sas';
+%include '/Users/zrsong/Dropbox (MIT)/Research Projects/MPS_Interest Deductibility and Debt Contracting/4. Code/Macros.sas';
 
 *	Pull Compustat quarterly data used in standard covenant definitions;
 * 	note: fundq_i is the standard Compustat fundq dataset, with some cleaning of historical industry identifiers (not a critical step);
