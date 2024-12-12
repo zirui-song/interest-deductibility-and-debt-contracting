@@ -13,10 +13,10 @@ gen log_margin_bps = log(margin_bps)
 gen log_at = log(at)
 gen log_deal_amount_converted = log(deal_amount_converted)
 
-local controls "log_at cash_flows_by_at market_to_book ppent_by_at debt_by_at cash_by_at sales_growth dividend_payer z_score nol ret_vol"
+local controls "log_at cash_flows_by_at market_to_book ppent_by_at debt_by_at cash_by_at sales_growth dividend_payer z_score nol ret_vol"å
 local deal_controls "leveraged maturity log_deal_amount_converted secured_dummy tranche_type_dummy tranche_o_a_dummy sponsor_dummy"
 
-* generate interaction between controls and post
+# generate interaction between controls and post
 foreach var in `controls' {
     gen `var'_post = `var' * post
 }
