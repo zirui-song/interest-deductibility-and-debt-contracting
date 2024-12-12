@@ -13,14 +13,14 @@ gen log_margin_bps = log(margin_bps)
 gen log_at = log(at)
 gen log_deal_amount_converted = log(deal_amount_converted)
 
-local controls "log_at cash_flows_by_at market_to_book ppent_by_at debt_by_at cash_by_at sales_growth dividend_payer z_score nol ret_vol"å
+local controls "log_at cash_flows_by_at market_to_book ppent_by_at debt_by_at cash_by_at sales_growth dividend_payer nol ret_vol"
 local deal_controls "leveraged maturity log_deal_amount_converted secured_dummy tranche_type_dummy tranche_o_a_dummy sponsor_dummy"
 
-# generate interaction between controls and post
+* generate interaction between controls and post
 foreach var in `controls' {
     gen `var'_post = `var' * post
 }
-local controls_post "log_at_post cash_flows_by_at_post market_to_book_post ppent_by_at_post debt_by_at_post cash_by_at_post sales_growth_post dividend_payer_post z_score_post nol_post ret_vol_post"
+local controls_post "log_at_post cash_flows_by_at_post market_to_book_post ppent_by_at_post debt_by_at_post cash_by_at_post sales_growth_post dividend_payer_post nol_post ret_vol_post"
 
 * winsorize at 1% and 99%
 foreach var in margin_bps log_margin_bps `controls' `deal_controls' `controls_post' {
@@ -77,7 +77,7 @@ nodepvars nomti nonum collabels(none) label b(3) se(3) parentheses ///
 star(* 0.10 ** 0.05 *** 0.01) ar2 plain lines fragment noconstant drop(_cons `controls_post')
 est clear
 
-* Appendix Table: Logged Margin
+* Appendix Table D1: Logged Margin
 reghdfe log_margin_bps treated treated_post treated_loss treated_loss_post `controls' `deal_controls', absorb(year ff_48) vce(cluster gvkey)
 estimates store m1
 reghdfe log_margin_bps treated treated_post treated_loss treated_loss_post `controls' `controls_post' `deal_controls', absorb(year ff_48) vce(cluster gvkey)
@@ -89,36 +89,38 @@ nodepvars nomti nonum collabels(none) label b(3) se(3) parentheses ///
 star(* 0.10 ** 0.05 *** 0.01) ar2 plain lines fragment noconstant keep(treated treated_post treated_loss treated_loss_post)
 est clear
 
+*** DID regressions (30% and Loss Rule: ROBUSTNESS RESULT TABLE 2) ***
+
 * Firm FE 
 reghdfe margin_bps treated treated_post treated_loss treated_loss_post `controls' `deal_controls', absorb(year gvkey) vce(cluster gvkey)
 estimates store m1
 reghdfe margin_bps treated treated_post treated_loss treated_loss_post `controls' `controls_post' `deal_controls', absorb(year gvkey) vce(cluster gvkey)
 estimates store m2
+* 3-year and 5-year look backs
+preserve  
+	drop treated treated_post treated_loss treated_loss_post
+	rename (treated_prev_3yr treated_prev_3yr_post treated_loss_prev_3yr treated_loss_prev_3yr_post) (treated treated_post treated_loss treated_loss_post)
+	reghdfe margin_bps treated treated_post treated_loss treated_loss_post `controls' `deal_controls', absorb(year ff_48) vce(cluster gvkey)
+	estimates store m3
+	reghdfe margin_bps treated treated_post treated_loss treated_loss_post `controls' `controls_post' `deal_controls', absorb(year ff_48) vce(cluster gvkey)
+	estimates store m4
+	
+	drop treated treated_post treated_loss treated_loss_post
+	rename (treated_prev_5yr treated_prev_5yr_post treated_loss_prev_5yr treated_loss_prev_5yr_post) (treated treated_post treated_loss treated_loss_post)
+	reghdfe margin_bps treated treated_post treated_loss treated_loss_post `controls' `deal_controls', absorb(year ff_48) vce(cluster gvkey)
+	estimates store m5
+	reghdfe margin_bps treated treated_post treated_loss treated_loss_post `controls' `controls_post' `deal_controls', absorb(year ff_48) vce(cluster gvkey)
+	estimates store m6
+restore 
 
 * save the results (esttab) using overleaf_dir
-esttab m1 m2 using "$overleaf_dir/margin_did_both_rule_gvkey.tex", replace ///
+esttab m1 m2 m3 m4 m5 m6 using "$overleaf_dir/margin_did_both_rule_robustness.tex", replace ///
 nodepvars nomti nonum collabels(none) label b(3) se(3) parentheses ///
-star(* 0.10 ** 0.05 *** 0.01) ar2 plain lines fragment noconstant drop(_cons `controls_post')
+star(* 0.10 ** 0.05 *** 0.01) ar2 plain lines fragment noconstant keep(treated treated_post treated_loss treated_loss_post)
 est clear
 
-* Appendix Table: Margin results with prev_3yr and prev_5yr definitions
-reghdfe margin_bps treated_prev_3yr treated_prev_3yr_post treated_loss_prev_3yr treated_loss_prev_3yr_post `controls' `deal_controls', absorb(year ff_48) vce(cluster gvkey)
-estimates store m1
-reghdfe margin_bps treated_prev_3yr treated_prev_3yr_post treated_loss_prev_3yr treated_loss_prev_3yr_post `controls' `controls_post' `deal_controls', absorb(year ff_48) vce(cluster gvkey)
-estimates store m2
-reghdfe margin_bps treated_prev_5yr treated_prev_5yr_post treated_loss_prev_5yr treated_loss_prev_5yr_post `controls' `deal_controls', absorb(year ff_48) vce(cluster gvkey)
-estimates store m3
-reghdfe margin_bps treated_prev_5yr treated_prev_5yr_post treated_loss_prev_5yr treated_loss_prev_5yr_post `controls' `controls_post' `deal_controls', absorb(year ff_48) vce(cluster gvkey)
-estimates store m4
 
-* save the results (esttab) using overleaf_dir
-esttab m1 m2 m3 m4 using "$overleaf_dir/margin_did_both_rule_prev.tex", replace ///
-nodepvars nomti nonum collabels(none) label b(3) se(3) parentheses ///
-star(* 0.10 ** 0.05 *** 0.01) ar2 plain lines fragment noconstant keep(treated_prev_3yr treated_prev_3yr_post treated_loss_prev_3yr treated_loss_prev_3yr_post ///
-treated_prev_5yr treated_prev_5yr_post treated_loss_prev_5yr treated_loss_prev_5yr_post)
-est clear
-
-* Appendix Table: Log Margin results with prev_3yr and prev_5yr definitions
+*** Appendix Table: Log Margin results with prev_3yr and prev_5yr definitions
 reghdfe log_margin_bps treated_prev_3yr treated_prev_3yr_post treated_loss_prev_3yr treated_loss_prev_3yr_post `controls' `deal_controls', absorb(year ff_48) vce(cluster gvkey)
 estimates store m1
 reghdfe log_margin_bps treated_prev_3yr treated_prev_3yr_post treated_loss_prev_3yr treated_loss_prev_3yr_post `controls' `controls_post' `deal_controls', absorb(year ff_48) vce(cluster gvkey)
@@ -134,6 +136,35 @@ nodepvars nomti nonum collabels(none) label b(3) se(3) parentheses ///
 star(* 0.10 ** 0.05 *** 0.01) ar2 plain lines fragment noconstant keep(treated_prev_3yr treated_prev_3yr_post treated_loss_prev_3yr treated_loss_prev_3yr_post ///
 treated_prev_5yr treated_prev_5yr_post treated_loss_prev_5yr treated_loss_prev_5yr_post)
 est clear
+
+*********** Regressions with Other Loan Terms ***********
+
+*** DID regressions (30% and Loss Rule: Perf Pricing and Num Fin Cov) ***
+
+reghdfe perf_pricing_dummy treated treated_post treated_loss treated_loss_post `controls' `deal_controls', absorb(year ff_48) vce(cluster gvkey)
+estimates store m1
+reghdfe num_fin_cov treated treated_post treated_loss treated_loss_post `controls' `deal_controls', absorb(year ff_48) vce(cluster gvkey)
+estimates store m2
+
+*** DID regressions (30% and Loss Rule: Loan Size and Maturity) ***
+
+local deal_controls_2 "leveraged secured_dummy tranche_type_dummy tranche_o_a_dummy sponsor_dummy"
+
+reghdfe deal_amount_converted treated treated_post treated_loss treated_loss_post `controls' `deal_controls_2', absorb(year ff_48) vce(cluster gvkey)
+estimates store m3
+
+reghdfe log_deal_amount_converted treated treated_post treated_loss treated_loss_post `controls' `deal_controls_2', absorb(year ff_48) vce(cluster gvkey)
+estimates store m4
+
+reghdfe maturity treated treated_post treated_loss treated_loss_post `controls' `deal_controls_2', absorb(year ff_48) vce(cluster gvkey)
+estimates store m5
+
+* save the results (esttab) using overleaf_dir
+esttab m1 m2 m3 m4 m5 using "$overleaf_dir/other_terms_did_both_rule.tex", replace ///
+nodepvars nomti nonum collabels(none) label b(3) se(3) parentheses ///
+star(* 0.10 ** 0.05 *** 0.01) ar2 plain lines fragment noconstant keep()
+est clear
+
 
 *********** Dynamic Regressions ***********
 local dynamic_treated "treated_year_2014 treated_year_2015 treated_year_2016 treated_year_2018 treated_year_2019 treated_year_2020 treated_year_2021 treated_year_2022 treated_year_2023"
