@@ -1,3 +1,5 @@
+log using Dealscan_Analysis.log, replace
+
 use "../3. Data/Processed/tranche_level_ds_compa.dta", clear
 global overleaf_dir "/Users/zrsong/Dropbox (MIT)/Apps/Overleaf/M&A Debt/Tables"
 global fig_dir "/Users/zrsong/Dropbox (MIT)/Apps/Overleaf/M&A Debt/Figures"
@@ -261,3 +263,6 @@ xtitle("Year") ytitle("Interest Spread (Basis Points)") xline(2017) savegraph("$
 
 binscatter log_margin_bps year, by(treated) controls(`controls' `deal_controls') legend(label(1 "Control (30% rule)") label(2 "Treated (30% rule)") position(1) ring(0)) ///
 xtitle("Year") ytitle("Log Interest Spread") xline(2017) savegraph("$fig_dir/binscatter_log_margin_bps_treated.png") replace
+
+*** close log
+log close
