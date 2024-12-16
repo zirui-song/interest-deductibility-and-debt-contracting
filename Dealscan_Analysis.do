@@ -1,5 +1,6 @@
 use "../3. Data/Processed/tranche_level_ds_compa.dta", clear
 global overleaf_dir "/Users/zrsong/Dropbox (MIT)/Apps/Overleaf/M&A Debt/Tables"
+global fig_dir "/Users/zrsong/Dropbox (MIT)/Apps/Overleaf/M&A Debt/Figures"
 
 keep if year >= 2014
 
@@ -165,27 +166,37 @@ nodepvars nomti nonum collabels(none) label b(3) se(3) parentheses ///
 star(* 0.10 ** 0.05 *** 0.01) ar2 plain lines fragment noconstant keep(treated treated_post treated_loss treated_loss_post)
 est clear
 
-
 *********** Dynamic Regressions ***********
 local dynamic_treated "treated_year_2014 treated_year_2015 treated_year_2016 treated_year_2018 treated_year_2019 treated_year_2020 treated_year_2021 treated_year_2022 treated_year_2023"
-local dynamic_treated_loss "treated_loss_year_2014 treated_loss_year_2015 treated_loss_year_2016 treated_loss_year_2017 treated_loss_year_2019 treated_loss_year_2020 treated_loss_year_2021 treated_loss_year_2022 treated_loss_year_2023"
+local dynamic_treated_loss "treated_loss_year_2014 treated_loss_year_2015 treated_loss_year_2016 treated_loss_year_2018 treated_loss_year_2019 treated_loss_year_2020 treated_loss_year_2021 treated_loss_year_2022 treated_loss_year_2023"
 
 *** Loss Rule ***
-reghdfe margin_bps `dynamic_treated_loss' `controls' `deal_controls', absorb(year ff_48) vce(cluster ff_48)
+reghdfe margin_bps treated_loss `dynamic_treated_loss' `controls' `deal_controls', absorb(year ff_48) vce(cluster ff_48)
 mat c = e(b)'
 mata st_matrix("srdvcovbt",sqrt(diagonal(st_matrix("e(V)"))))
 mat res = c , srdvcovbt
 
 esttab mat(res) using "$overleaf_dir/margin_did_dynamic_loss_ff48.csv", replace mlab(none)
 
-reghdfe margin_bps `dynamic_treated' `controls' `deal_controls', absorb(year ff_48) vce(cluster ff_48)
+* drop 2020 and re run the regression
+drop if year == 2020
+reghdfe margin_bps treated_loss `dynamic_treated_loss' `controls' `deal_controls', absorb(year ff_48) vce(cluster ff_48)
+mat c = e(b)'
+mata st_matrix("srdvcovbt",sqrt(diagonal(st_matrix("e(V)"))))
+mat res = c , srdvcovbt
+
+esttab mat(res) using "$overleaf_dir/margin_did_dynamic_loss_ff48_no2020.csv", replace mlab(none)
+
+*** 30% Rule ***
+
+reghdfe margin_bps treated `dynamic_treated' `controls' `deal_controls', absorb(year ff_48) vce(cluster ff_48)
 mat c = e(b)'
 mata st_matrix("srdvcovbt",sqrt(diagonal(st_matrix("e(V)"))))
 mat res = c , srdvcovbt
 
 esttab mat(res) using "$overleaf_dir/margin_did_dynamic_ff48.csv", replace mlab(none)
 
-reghdfe margin_bps `dynamic_treated' `controls' `deal_controls', absorb(year gvkey) vce(cluster gvkey)
+reghdfe margin_bps treated `dynamic_treated' `controls' `deal_controls', absorb(year gvkey) vce(cluster gvkey)
 mat c = e(b)'
 mata st_matrix("srdvcovbt",sqrt(diagonal(st_matrix("e(V)"))))
 mat res = c , srdvcovbt
@@ -193,14 +204,14 @@ mat res = c , srdvcovbt
 esttab mat(res) using "$overleaf_dir/margin_did_dynamic_gvkey.csv", replace mlab(none)
 
 *********** Dynamic Regressions (num of financial covenants) ***********
-reghdfe num_fin_cov `dynamic_treated' `controls' `deal_controls', absorb(year ff_48) vce(cluster ff_48)
+reghdfe num_fin_cov treated `dynamic_treated' `controls' `deal_controls', absorb(year ff_48) vce(cluster ff_48)
 mat c = e(b)'
 mata st_matrix("srdvcovbt",sqrt(diagonal(st_matrix("e(V)"))))
 mat res = c , srdvcovbt
 
 esttab mat(res) using "$overleaf_dir/num_fin_cov_did_dynamic_ff48.csv", replace mlab(none)
 
-reghdfe num_fin_cov `dynamic_treated' `controls' `deal_controls', absorb(year gvkey) vce(cluster gvkey)
+reghdfe num_fin_cov treated `dynamic_treated' `controls' `deal_controls', absorb(year gvkey) vce(cluster gvkey)
 mat c = e(b)'
 mata st_matrix("srdvcovbt",sqrt(diagonal(st_matrix("e(V)"))))
 mat res = c , srdvcovbt
@@ -208,14 +219,14 @@ mat res = c , srdvcovbt
 esttab mat(res) using "$overleaf_dir/num_fin_cov_did_dynamic_gvkey.csv", replace mlab(none)
 
 *********** Dynamic Regressions (perf_pricing_dummy) ***********
-reghdfe perf_pricing_dummy `dynamic_treated' `controls' `deal_controls', absorb(year ff_48) vce(cluster ff_48)
+reghdfe perf_pricing_dummy treated `dynamic_treated' `controls' `deal_controls', absorb(year ff_48) vce(cluster ff_48)
 mat c = e(b)'
 mata st_matrix("srdvcovbt",sqrt(diagonal(st_matrix("e(V)"))))
 mat res = c , srdvcovbt
 
 esttab mat(res) using "$overleaf_dir/perf_pricing_dummy_did_dynamic_ff48.csv", replace mlab(none)
 
-reghdfe perf_pricing_dummy `dynamic_treated' `controls' `deal_controls', absorb(year gvkey) vce(cluster gvkey)
+reghdfe perf_pricing_dummy treated `dynamic_treated' `controls' `deal_controls', absorb(year gvkey) vce(cluster gvkey)
 mat c = e(b)'
 mata st_matrix("srdvcovbt",sqrt(diagonal(st_matrix("e(V)"))))
 mat res = c , srdvcovbt
@@ -223,16 +234,30 @@ mat res = c , srdvcovbt
 esttab mat(res) using "$overleaf_dir/perf_pricing_dummy_did_dynamic_gvkey.csv", replace mlab(none)
 
 *********** Dynamic Regressions (sweep_dummy) ***********
-reghdfe sweep_dummy `dynamic_treated' `controls' `deal_controls', absorb(year ff_48) vce(cluster ff_48)
+reghdfe sweep_dummy treated `dynamic_treated' `controls' `deal_controls', absorb(year ff_48) vce(cluster ff_48)
 mat c = e(b)'
 mata st_matrix("srdvcovbt",sqrt(diagonal(st_matrix("e(V)"))))
 mat res = c , srdvcovbt
 
 esttab mat(res) using "$overleaf_dir/sweep_dummy_did_dynamic_ff48.csv", replace mlab(none)
 
-reghdfe sweep_dummy `dynamic_treated' `controls' `deal_controls', absorb(year gvkey) vce(cluster gvkey)
+reghdfe sweep_dummy treated `dynamic_treated' `controls' `deal_controls', absorb(year gvkey) vce(cluster gvkey)
 mat c = e(b)'
 mata st_matrix("srdvcovbt",sqrt(diagonal(st_matrix("e(V)"))))
 mat res = c , srdvcovbt
 
 esttab mat(res) using "$overleaf_dir/sweep_dummy_did_dynamic_gvkey.csv", replace mlab(none)
+
+*********** Binscatters ***********
+* binscatters
+binscatter margin_bps year, by(treated_loss) controls(`controls' `deal_controls') legend(label(1 "Control (Loss rule)") label(2 "Treated (Loss rule)") position(1) ring(0)) ///
+xtitle("Year") ytitle("Interest Spread (Basis Points)") xline(2017) savegraph("$fig_dir/binscatter_margin_bps_treated_loss.png") replace
+
+binscatter log_margin_bps year, by(treated_loss) controls(`controls' `deal_controls') legend(label(1 "Control (Loss rule)") label(2 "Treated (Loss rule)") position(1) ring(0)) ///
+xtitle("Year") ytitle("Log Interest Spread") xline(2017) savegraph("$fig_dir/binscatter_log_margin_bps_treated_loss.png") replace
+
+binscatter margin_bps year, by(treated) controls(`controls' `deal_controls') legend(label(1 "Control (30% rule)") label(2 "Treated (30% rule)") position(1) ring(0)) ///
+xtitle("Year") ytitle("Interest Spread (Basis Points)") xline(2017) savegraph("$fig_dir/binscatter_margin_bps_treated.png") replace
+
+binscatter log_margin_bps year, by(treated) controls(`controls' `deal_controls') legend(label(1 "Control (30% rule)") label(2 "Treated (30% rule)") position(1) ring(0)) ///
+xtitle("Year") ytitle("Log Interest Spread") xline(2017) savegraph("$fig_dir/binscatter_log_margin_bps_treated.png") replace
