@@ -251,6 +251,29 @@ estimates store m1
 
 use "../3. Data/Processed/tranche_level_ds_compa_wlabel.dta", clear
 
+gen control = 0 
+replace control = 1 if treated == 0 & treated_loss == 0
+
+gen treated_one = 1 if treated == 1 & treated_loss == 0
+replace treated_one = 0 if treated_one == .
+gen treated_one_post = treated_one * post
+
+gen treated_two = 1 if treated == 0 & treated_loss == 1
+replace treated_two = 0 if treated_two == .
+gen treated_two_post = treated_two * post
+ 
+gen treated_three = 1 if treated == 1 & treated_loss == 1
+replace treated_three = 0 if treated_three == .
+gen treated_three_post = treated_three * post
+
+local controls "log_at cash_flows_by_at market_to_book ppent_by_at debt_by_at cash_by_at sales_growth dividend_payer nol ret_vol"
+local deal_controls "leveraged maturity log_deal_amount_converted secured_dummy tranche_type_dummy tranche_o_a_dummy sponsor_dummy"
+local treated_bi "treated_one treated_one_post treated_two treated_two_post treated_three treated_three_post"
+
+reghdfe margin_bps `treated_bi' `controls' `deal_controls', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
+
+******
+
 gen treated_all = 1 if treated == 1 | treated_loss == 1
 replace treated_all = 0 if treated_all == .
 
