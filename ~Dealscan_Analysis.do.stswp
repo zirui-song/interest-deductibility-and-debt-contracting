@@ -42,6 +42,26 @@ foreach var in margin_bps log_margin_bps `controls' `deal_controls' `controls_po
     winsor2 `var', cuts(1 99) replace
 }
 
+*** (NEW Jan 14, 2025) Generate 2x2 Treatment Groups
+gen control = 0 
+replace control = 1 if treated == 0 & treated_loss == 0
+
+gen treated_one = 1 if treated == 1 & treated_loss == 0
+replace treated_one = 0 if treated_one == .
+gen treated_one_post = treated_one * post
+
+gen treated_two = 1 if treated == 0 & treated_loss == 1
+replace treated_two = 0 if treated_two == .
+gen treated_two_post = treated_two * post
+ 
+gen treated_three = 1 if treated == 1 & treated_loss == 1
+replace treated_three = 0 if treated_three == .
+gen treated_three_post = treated_three * post
+
+local controls "log_at cash_flows_by_at market_to_book ppent_by_at debt_by_at cash_by_at sales_growth dividend_payer nol ret_vol"
+local deal_controls "leveraged maturity log_deal_amount_converted secured_dummy tranche_type_dummy tranche_o_a_dummy sponsor_dummy"
+local treated_bi "treated_one treated_one_post treated_two treated_two_post treated_three treated_three_post"
+
 * label controls and treated, post, and treated_post
 label variable log_at "Log Total Assets"
 label variable cash_flows_by_at "Cash Flows / Assets"
@@ -148,6 +168,9 @@ use "../3. Data/Processed/tranche_level_ds_compa_wlabel.dta", clear
 gen treated_both = treated * treated_loss
 gen treated_both_post = treated_both * post
 
+egen treated_either = rowmax(treated treated_loss)
+gen treated_either_post = treated_either * post
+
 gen treated_eo = 1 if treated == 1 | treated_next_1yr == 1
 replace treated_eo = 0 if treated_eo == .
 gen treated_loss_eo = 1 if treated_loss == 1 | treated_loss_next_1yr == 1
@@ -159,6 +182,9 @@ gen treated_loss_eo_post = treated_loss_eo * post
 local controls "log_at cash_flows_by_at market_to_book ppent_by_at debt_by_at cash_by_at sales_growth dividend_payer nol ret_vol"
 local deal_controls "leveraged maturity log_deal_amount_converted secured_dummy tranche_type_dummy tranche_o_a_dummy sponsor_dummy"
 local controls_post "log_at_post cash_flows_by_at_post market_to_book_post ppent_by_at_post debt_by_at_post cash_by_at_post sales_growth_post dividend_payer_post nol_post ret_vol_post"
+
+reghdfe margin_bps treated_both treated_both_post `controls' `deal_controls', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
+reghdfe margin_bps treated_either treated_either_post `controls' `deal_controls', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
 
 reghdfe margin_bps treated treated_post treated_loss treated_loss_post `controls' `deal_controls', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
 estimates store m1
@@ -250,25 +276,6 @@ estimates store m1
 *** DID regressions (30% and Loss Rule: ROBUSTNESS E-balancing) ***
 
 use "../3. Data/Processed/tranche_level_ds_compa_wlabel.dta", clear
-
-gen control = 0 
-replace control = 1 if treated == 0 & treated_loss == 0
-
-gen treated_one = 1 if treated == 1 & treated_loss == 0
-replace treated_one = 0 if treated_one == .
-gen treated_one_post = treated_one * post
-
-gen treated_two = 1 if treated == 0 & treated_loss == 1
-replace treated_two = 0 if treated_two == .
-gen treated_two_post = treated_two * post
- 
-gen treated_three = 1 if treated == 1 & treated_loss == 1
-replace treated_three = 0 if treated_three == .
-gen treated_three_post = treated_three * post
-
-local controls "log_at cash_flows_by_at market_to_book ppent_by_at debt_by_at cash_by_at sales_growth dividend_payer nol ret_vol"
-local deal_controls "leveraged maturity log_deal_amount_converted secured_dummy tranche_type_dummy tranche_o_a_dummy sponsor_dummy"
-local treated_bi "treated_one treated_one_post treated_two treated_two_post treated_three treated_three_post"
 
 reghdfe margin_bps `treated_bi' `controls' `deal_controls', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
 
