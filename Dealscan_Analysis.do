@@ -1,4 +1,4 @@
-*log using Dealscan_Analysis.log, replace
+log using Dealscan_Analysis.log, replace
 
 use "../3. Data/Processed/tranche_level_ds_compa.dta", clear
 
@@ -42,26 +42,6 @@ foreach var in margin_bps log_margin_bps `controls' `deal_controls' `controls_po
     winsor2 `var', cuts(1 99) replace
 }
 
-*** (NEW Jan 14, 2025) Generate 2x2 Treatment Groups
-gen control = 0 
-replace control = 1 if treated == 0 & treated_loss == 0
-
-gen treated_one = 1 if treated == 1 & treated_loss == 0
-replace treated_one = 0 if treated_one == .
-gen treated_one_post = treated_one * post
-
-gen treated_two = 1 if treated == 0 & treated_loss == 1
-replace treated_two = 0 if treated_two == .
-gen treated_two_post = treated_two * post
- 
-gen treated_three = 1 if treated == 1 & treated_loss == 1
-replace treated_three = 0 if treated_three == .
-gen treated_three_post = treated_three * post
-
-local controls "log_at cash_flows_by_at market_to_book ppent_by_at debt_by_at cash_by_at sales_growth dividend_payer nol ret_vol"
-local deal_controls "leveraged maturity log_deal_amount_converted secured_dummy tranche_type_dummy tranche_o_a_dummy sponsor_dummy"
-local treated_bi "treated_one treated_one_post treated_two treated_two_post treated_three treated_three_post"
-
 * label controls and treated, post, and treated_post
 label variable log_at "Log Total Assets"
 label variable cash_flows_by_at "Cash Flows / Assets"
@@ -89,6 +69,7 @@ label variable post "Post"
 label variable treated_post "Treated (30\% rule) x Post"
 label variable treated_loss "Treated (Loss rule)"
 label variable treated_loss_post "Treated (Loss rule) x Post"
+
 label variable treated_prev_3yr "Treated (30\% rule, Previous 3 Years)"
 label variable treated_prev_3yr_post "Treated (30\% rule, Previous 3 Years) x Post"
 label variable treated_loss_prev_3yr "Treated (Loss rule, Previous 3 Years)"
@@ -97,13 +78,6 @@ label variable treated_prev_5yr "Treated (30\% rule, Previous 5 Years)"
 label variable treated_prev_5yr_post "Treated (30\% rule, Previous 5 Years) x Post"
 label variable treated_loss_prev_5yr "Treated (Loss rule, Previous 5 Years)"
 label variable treated_loss_prev_5yr_post "Treated (Loss rule, Previous 5 Years) x Post"
-
-label variable treated_one "Excess Interest (30\% rule only)"
-label variable treated_two "Excess Interest (Loss rule only)"
-label variable treated_three "Excess Interest (30\% and Loss rule)"
-label variable treated_one_post "Excess Interest (30\% rule only) x Post"
-label variable treated_two_post "Excess Interest (Loss rule only) x Post"
-label variable treated_three_post "Excess Interest (30\% and Loss rule) x Post"
 
 save "../3. Data/Processed/tranche_level_ds_compa_wlabel.dta", replace
 
@@ -152,17 +126,17 @@ label var sp_rating_num "S\&P Rating"
 label var not_rated "Not Rated"
 
 * LHS Sample Composition Tests
-reghdfe not_rated `treated_bi' `controls' `deal_controls', absorb(year ff_48) vce(cluster gvkey)
+reghdfe not_rated `treat_vars' `controls' `deal_controls', absorb(year ff_48) vce(cluster gvkey)
 estimates store m2
 preserve 
 	drop if sp_rating_num == 0
-	reghdfe sp_rating_num `treated_bi' `controls' `deal_controls', absorb(year ff_48) vce(cluster gvkey)
+	reghdfe sp_rating_num `treat_vars' `controls' `deal_controls', absorb(year ff_48) vce(cluster gvkey)
 	estimates store m1
 restore
 * save the results (esttab) using overleaf_dir
 esttab m1 m2 using "$overleaf_dir/sp_rating_robustness.tex", replace ///
 nodepvars nomti nonum collabels(none) label b(3) se(3) parentheses ///
-star(* 0.10 ** 0.05 *** 0.01) ar2 plain lines fragment noconstant keep(`treated_bi')
+star(* 0.10 ** 0.05 *** 0.01) ar2 plain lines fragment noconstant keep(`treat_vars')
 est clear
 
 save "../3. Data/Processed/tranche_level_ds_compa_wlabel.dta", replace
@@ -171,11 +145,8 @@ save "../3. Data/Processed/tranche_level_ds_compa_wlabel.dta", replace
 
 use "../3. Data/Processed/tranche_level_ds_compa_wlabel.dta", clear
 
-/*gen treated_both = treated * treated_loss
+gen treated_both = treated * treated_loss
 gen treated_both_post = treated_both * post
-
-egen treated_either = rowmax(treated treated_loss)
-gen treated_either_post = treated_either * post
 
 gen treated_eo = 1 if treated == 1 | treated_next_1yr == 1
 replace treated_eo = 0 if treated_eo == .
@@ -189,12 +160,9 @@ local controls "log_at cash_flows_by_at market_to_book ppent_by_at debt_by_at ca
 local deal_controls "leveraged maturity log_deal_amount_converted secured_dummy tranche_type_dummy tranche_o_a_dummy sponsor_dummy"
 local controls_post "log_at_post cash_flows_by_at_post market_to_book_post ppent_by_at_post debt_by_at_post cash_by_at_post sales_growth_post dividend_payer_post nol_post ret_vol_post"
 
-reghdfe margin_bps treated_both treated_both_post `controls' `deal_controls', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
-reghdfe margin_bps treated_either treated_either_post `controls' `deal_controls', absorb(year ff_48 sp_rating_num) vce(cluster gvkey) */
-
-reghdfe margin_bps `treated_bi' `controls' `deal_controls', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
+reghdfe margin_bps treated treated_post treated_loss treated_loss_post `controls' `deal_controls', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
 estimates store m1
-reghdfe margin_bps `treated_bi' `controls' `controls_post' `deal_controls', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
+reghdfe margin_bps treated treated_post treated_loss treated_loss_post `controls' `controls_post' `deal_controls', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
 estimates store m2
 
 * save the results (esttab) using overleaf_dir
@@ -207,9 +175,9 @@ est clear
 	DID regressions (30% and Loss Rule: ROBUSTNESS RESULT TABLE 2 and Appendix)
 	*********/
 * Firm FE 
-reghdfe margin_bps `treated_bi' `controls' `deal_controls', absorb(year gvkey) vce(cluster gvkey)
+reghdfe margin_bps treated treated_post treated_loss treated_loss_post `controls' `deal_controls', absorb(year gvkey) vce(cluster gvkey)
 estimates store m1
-reghdfe margin_bps `treated_bi' `controls' `controls_post' `deal_controls', absorb(year gvkey) vce(cluster gvkey)
+reghdfe margin_bps treated treated_post treated_loss treated_loss_post `controls' `controls_post' `deal_controls', absorb(year gvkey) vce(cluster gvkey)
 estimates store m2
 * 3-year and 5-year look backs
 preserve  
@@ -283,6 +251,25 @@ estimates store m1
 
 use "../3. Data/Processed/tranche_level_ds_compa_wlabel.dta", clear
 
+gen control = 0 
+replace control = 1 if treated == 0 & treated_loss == 0
+
+gen treated_one = 1 if treated == 1 & treated_loss == 0
+replace treated_one = 0 if treated_one == .
+gen treated_one_post = treated_one * post
+
+gen treated_two = 1 if treated == 0 & treated_loss == 1
+replace treated_two = 0 if treated_two == .
+gen treated_two_post = treated_two * post
+ 
+gen treated_three = 1 if treated == 1 & treated_loss == 1
+replace treated_three = 0 if treated_three == .
+gen treated_three_post = treated_three * post
+
+local controls "log_at cash_flows_by_at market_to_book ppent_by_at debt_by_at cash_by_at sales_growth dividend_payer nol ret_vol"
+local deal_controls "leveraged maturity log_deal_amount_converted secured_dummy tranche_type_dummy tranche_o_a_dummy sponsor_dummy"
+local treated_bi "treated_one treated_one_post treated_two treated_two_post treated_three treated_three_post"
+
 reghdfe margin_bps `treated_bi' `controls' `deal_controls', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
 
 ******
@@ -336,34 +323,28 @@ est clear
 /*********** 
 	Regressions with Other Loan Terms 
 	***********/
-	
-use "../3. Data/Processed/tranche_level_ds_compa_wlabel.dta", clear
-
-local controls "log_at cash_flows_by_at market_to_book ppent_by_at debt_by_at cash_by_at sales_growth dividend_payer nol ret_vol"
-local deal_controls "leveraged maturity log_deal_amount_converted secured_dummy tranche_type_dummy tranche_o_a_dummy sponsor_dummy"
-local treated_bi "treated_one treated_one_post treated_two treated_two_post treated_three treated_three_post"
 
 *** DID regressions (30% and Loss Rule: Perf Pricing and Num Fin Cov) ***
 
-reghdfe perf_pricing_dummy `treated_bi' `controls' `deal_controls', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
+reghdfe perf_pricing_dummy treated treated_post treated_loss treated_loss_post `controls' `deal_controls', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
 estimates store m1
-reghdfe num_fin_cov `treated_bi' `controls' `deal_controls', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
+reghdfe num_fin_cov treated treated_post treated_loss treated_loss_post `controls' `deal_controls', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
 estimates store m2
 *** DID regressions (covenant tightness)
-reghdfe pviol treated `treated_bi' `controls' `deal_controls', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
+reghdfe pviol treated treated_post treated_loss treated_loss_post `controls' `deal_controls', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
 estimates store m3
 
 *** DID regressions (30% and Loss Rule: Loan Size and Maturity) ***
 
 local deal_controls_2 "leveraged secured_dummy tranche_type_dummy tranche_o_a_dummy sponsor_dummy"
 
-reghdfe deal_amount_converted `treated_bi' `controls' `deal_controls_2', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
+reghdfe deal_amount_converted treated treated_post treated_loss treated_loss_post `controls' `deal_controls_2', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
 estimates store m4
 
-reghdfe log_deal_amount_converted `treated_bi' `controls' `deal_controls_2', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
+reghdfe log_deal_amount_converted treated treated_post treated_loss treated_loss_post `controls' `deal_controls_2', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
 estimates store m5
 
-reghdfe maturity `treated_bi' `controls' `deal_controls_2', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
+reghdfe maturity treated treated_post treated_loss treated_loss_post `controls' `deal_controls_2', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
 estimates store m6
 
 * save the results (esttab) using overleaf_dir
