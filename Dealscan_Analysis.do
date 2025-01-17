@@ -18,10 +18,16 @@ cap mkdir "$overleaf_dir"
 
 * gen logged bps
 gen log_margin_bps = log(margin_bps)
-
-* list of controls in regression 
 gen log_at = log(at)
 gen log_deal_amount_converted = log(deal_amount_converted)
+
+*** treatment
+/*replace treated = 0 if treated_loss == 1
+replace treated_prev_3yr = 0 if treated_loss_prev_3yr == 1
+replace treated_prev_5yr = 0 if treated_loss_prev_5yr == 1
+replace treated_next_1yr = 0 if treated_loss_next_1yr == 1
+replace treated_next_3yr = 0 if treated_loss_next_3yr == 1
+replace treated_next_5yr = 0 if treated_loss_next_5yr == 1 */
 
 local controls "log_at cash_flows_by_at market_to_book ppent_by_at debt_by_at cash_by_at sales_growth dividend_payer nol ret_vol"
 local deal_controls "leveraged maturity log_deal_amount_converted secured_dummy tranche_type_dummy tranche_o_a_dummy sponsor_dummy"

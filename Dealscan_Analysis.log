@@ -4,7 +4,7 @@
 > rojects/MPS_Interest Deductibility and Debt Contracting/4.
 >  Code/Dealscan_Analysis.log
   log type:  text
- opened on:  17 Jan 2025, 09:58:34
+ opened on:  17 Jan 2025, 14:51:09
 
 . 
 . use "../3. Data/Processed/tranche_level_ds_compa.dta", cle
@@ -38,12 +38,19 @@
 . * gen logged bps
 . gen log_margin_bps = log(margin_bps)
 
-. 
-. * list of controls in regression 
 . gen log_at = log(at)
 
 . gen log_deal_amount_converted = log(deal_amount_converted)
 
+. 
+. *** treatment
+. /*replace treated = 0 if treated_loss == 1
+> replace treated_prev_3yr = 0 if treated_loss_prev_3yr == 1
+> replace treated_prev_5yr = 0 if treated_loss_prev_5yr == 1
+> replace treated_next_1yr = 0 if treated_loss_next_1yr == 1
+> replace treated_next_3yr = 0 if treated_loss_next_3yr == 1
+> replace treated_next_5yr = 0 if treated_loss_next_5yr == 1
+>  */
 . 
 . local controls "log_at cash_flows_by_at market_to_book ppe
 > nt_by_at debt_by_at cash_by_at sales_growth dividend_payer
@@ -12019,5 +12026,5 @@ m4_lnvar     |
 > rojects/MPS_Interest Deductibility and Debt Contracting/4.
 >  Code/Dealscan_Analysis.log
   log type:  text
- closed on:  17 Jan 2025, 09:58:45
+ closed on:  17 Jan 2025, 14:51:20
 ------------------------------------------------------------

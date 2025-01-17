@@ -31,6 +31,8 @@ gen treated_loss = excess_interest_loss
 gen treated_post = treated * post 
 gen treated_loss_post = treated_loss * post
 
+*** treatment
+*replace treated = 0 if treated_loss == 1
 
 label variable treated "Excess Interest (30\% Rule)"
 label variable post "Post"
