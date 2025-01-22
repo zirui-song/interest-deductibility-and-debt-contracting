@@ -160,7 +160,7 @@ estimates store m4
 * save the results (esttab) using overleaf_dir
 esttab m1 m2 m3 m4 using "$overleaf_dir/next_year_excess_interest_total_validation.tex", replace ///
 nodepvars nomti nonum collabels(none) label b(3) se(3) parentheses ///
-star(* 0.10 ** 0.05 *** 0.01) ar2 plain lines fragment noconstant keep(`treated_vars' `controls' `deal_controls')
+star(* 0.10 ** 0.05 *** 0.01) ar2 plain lines fragment noconstant keep(`treated_vars' `controls')
 est clear
 
 *** DID regressions (30% and Loss Rule: MAIN RESULT TABLE 1) ***

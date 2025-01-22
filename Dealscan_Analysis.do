@@ -142,7 +142,7 @@ restore
 * save the results (esttab) using overleaf_dir
 esttab m1 m2 using "$overleaf_dir/sp_rating_robustness.tex", replace ///
 nodepvars nomti nonum collabels(none) label b(3) se(3) parentheses ///
-star(* 0.10 ** 0.05 *** 0.01) ar2 plain lines fragment noconstant keep(`treat_vars')
+star(* 0.10 ** 0.05 *** 0.01) ar2 plain lines fragment noconstant keep(`treat_vars' `controls' `deal_controls')
 est clear
 
 save "../3. Data/Processed/tranche_level_ds_compa_wlabel.dta", replace
