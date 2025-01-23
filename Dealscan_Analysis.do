@@ -93,33 +93,38 @@ save "../3. Data/Processed/tranche_level_ds_compa_wlabel.dta", replace
 	
 	use "../3. Data/Processed/tranche_level_ds_compa_wlabel.dta", clear
 
-rename currentratingsymbol sp_rating
-replace sp_rating = subinstr(sp_rating, " prelim", "", .) 
+capture program drop clean_rating
+program define clean_rating
+	rename currentratingsymbol sp_rating
+	replace sp_rating = subinstr(sp_rating, " prelim", "", .) 
 
-gen sp_rating_num = .
-replace sp_rating_num = 21 if sp_rating == "AAA"
-* replace sp_rating_num = 21 if sp_rating == "AA+" (only 1 obs)
-replace sp_rating_num = 20 if sp_rating == "AA" | sp_rating == "ilAA" | sp_rating == "AA+"
-replace sp_rating_num = 19 if sp_rating == "AA-"
-replace sp_rating_num = 18 if sp_rating == "A+"
-replace sp_rating_num = 17 if sp_rating == "A"
-replace sp_rating_num = 16 if sp_rating == "A-" | sp_rating == "A-1+" | sp_rating == "A-2" | sp_rating == "A-3"
-replace sp_rating_num = 15 if sp_rating == "BBB+"
-replace sp_rating_num = 14 if sp_rating == "BBB"
-replace sp_rating_num = 13 if sp_rating == "BBB-"
-replace sp_rating_num = 12 if sp_rating == "BB+"
-replace sp_rating_num = 11 if sp_rating == "BB"
-replace sp_rating_num = 10 if sp_rating == "BB-"
-replace sp_rating_num = 9  if sp_rating == "B+"
-replace sp_rating_num = 8  if sp_rating == "B"
-replace sp_rating_num = 7  if sp_rating == "B-"
-replace sp_rating_num = 6  if sp_rating == "CCC+"
-replace sp_rating_num = 5  if sp_rating == "CCC"
-replace sp_rating_num = 4  if sp_rating == "CCC-"
-replace sp_rating_num = 3  if sp_rating == "CC"
-replace sp_rating_num = 2  if sp_rating == "C"
-replace sp_rating_num = 1  if sp_rating == "D"
-replace sp_rating_num = 0 if sp_rating_num == .
+	gen sp_rating_num = .
+	replace sp_rating_num = 21 if sp_rating == "AAA"
+	* replace sp_rating_num = 21 if sp_rating == "AA+" (only 1 obs)
+	replace sp_rating_num = 20 if sp_rating == "AA" | sp_rating == "ilAA" | sp_rating == "AA+"
+	replace sp_rating_num = 19 if sp_rating == "AA-"
+	replace sp_rating_num = 18 if sp_rating == "A+"
+	replace sp_rating_num = 17 if sp_rating == "A"
+	replace sp_rating_num = 16 if sp_rating == "A-" | sp_rating == "A-1+" | sp_rating == "A-2" | sp_rating == "A-3"
+	replace sp_rating_num = 15 if sp_rating == "BBB+"
+	replace sp_rating_num = 14 if sp_rating == "BBB"
+	replace sp_rating_num = 13 if sp_rating == "BBB-"
+	replace sp_rating_num = 12 if sp_rating == "BB+"
+	replace sp_rating_num = 11 if sp_rating == "BB"
+	replace sp_rating_num = 10 if sp_rating == "BB-"
+	replace sp_rating_num = 9  if sp_rating == "B+"
+	replace sp_rating_num = 8  if sp_rating == "B"
+	replace sp_rating_num = 7  if sp_rating == "B-"
+	replace sp_rating_num = 6  if sp_rating == "CCC+"
+	replace sp_rating_num = 5  if sp_rating == "CCC"
+	replace sp_rating_num = 4  if sp_rating == "CCC-"
+	replace sp_rating_num = 3  if sp_rating == "CC"
+	replace sp_rating_num = 2  if sp_rating == "C"
+	replace sp_rating_num = 1  if sp_rating == "D"
+	replace sp_rating_num = 0 if sp_rating_num == .
+end
+
+clean_rating
 
 local controls "log_at cash_flows_by_at market_to_book ppent_by_at debt_by_at cash_by_at sales_growth dividend_payer nol ret_vol"
 local deal_controls "leveraged maturity log_deal_amount_converted secured_dummy tranche_type_dummy tranche_o_a_dummy sponsor_dummy"
@@ -224,12 +229,14 @@ preserve
 	reghdfe margin_bps `treated_base' `controls' `controls_post' `deal_controls', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)  
 	estimates store m2
 
+	/*
 	drop `treated_base'
 	rename (`treated_next_3yr') (`treated_base')
 	reghdfe margin_bps `treated_base' `controls' `deal_controls', absorb(year ff_48 sp_rating_num) vce(cluster gvkey) 
 	estimates store m3
 	reghdfe margin_bps `treated_base' `controls' `controls_post' `deal_controls', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)  
 	estimates store m4
+	*/
 	
 	drop `treated_base'
 	rename (`treated_next_5yr') (`treated_base')
@@ -240,7 +247,7 @@ preserve
 restore
 
 * save the results (esttab) using overleaf_dir
-esttab m1 m2 m3 m4 m5 m6 using "$overleaf_dir/margin_did_both_rule_robustness_forward.tex", replace ///
+esttab m1 m2 m5 m6 using "$overleaf_dir/margin_did_both_rule_robustness_forward.tex", replace ///
 nodepvars nomti nonum collabels(none) label b(3) se(3) parentheses ///
 star(* 0.10 ** 0.05 *** 0.01) ar2 plain lines fragment noconstant keep(treated treated_post treated_loss treated_loss_post)
 est clear
@@ -459,6 +466,109 @@ xtitle("Year") ytitle("Log Interest Spread") xline(2018) xlabel(2014(1)2023) sav
 	Mechanism Tests
 	***********/
 	
+	*** Competition
+
+*** construct firm-level and industry-level competition measures
+* firm
+use "../3. Data/Processed/tranche_level_ds_compa_wlabel.dta", clear
+keep if year <= 2017
+bysort gvkey: egen avg_number_of_lead_byfirm = mean(number_of_lead_arrangers)
+egen median_number_of_lead = median(avg_number_of_lead_byfirm)
+
+gen high_competition = 1 if avg_number_of_lead_byfirm >= median_number_of_lead
+replace high_competition = 0 if high_competition == .
+
+keep gvkey high_competition
+duplicates drop 
+tempfile firm_competition_measure
+save `firm_competition_measure'
+
+* firm post and change
+use "../3. Data/Processed/tranche_level_ds_compa_wlabel.dta", clear
+
+replace lender_parent_id = lender_id if lender_parent_id == .
+* KKR and Everbank have missing lender_parent_id
+bysort gvkey: egen pre_avg_number_of_lead_byfirm = mean(number_of_lead_arrangers) if post == 0
+bysort gvkey: egen post_avg_number_of_lead_byfirm = mean(number_of_lead_arrangers) if post == 1
+bysort gvkey: egen pre_number_of_lead_byfirm = max(pre_avg_number_of_lead_byfirm)
+bysort gvkey: egen post_number_of_lead_byfirm = max(post_avg_number_of_lead_byfirm)
+gen diff_num_lead_byfirm = post_number_of_lead_byfirm - pre_number_of_lead_byfirm
+keep if diff_num_lead_byfirm != .
+
+egen median_diff_num_lead_byfirm = median(diff_num_lead_byfirm)
+
+gen increase_competition = 1 if diff_num_lead_byfirm > median_diff_num_lead_byfirm
+replace increase_competition = 0 if diff_num_lead_byfirm < median_diff_num_lead_byfirm
+
+* firm-level 
+local controls "log_at cash_flows_by_at market_to_book ppent_by_at debt_by_at cash_by_at sales_growth dividend_payer nol ret_vol"
+local deal_controls "leveraged maturity log_deal_amount_converted secured_dummy tranche_type_dummy tranche_o_a_dummy sponsor_dummy"
+local treat_vars "treated treated_post treated_loss treated_loss_post"
+
+fvset base 1 ff_48
+fvset base 1 gvkey
+
+reg margin_bps `treat_vars' `controls' `deal_controls' i.year i.gvkey ib2.sp_rating_num if increase_competition == 1
+estimates store m1 
+
+reg margin_bps `treat_vars' `controls' `deal_controls' i.year i.gvkey ib2.sp_rating_num if increase_competition == 0
+estimates store m2
+
+suest m1 m2, vce(cluster gvkey)
+test [m1_mean]treated_loss_post = [m2_mean]treated_loss_post
+
+
+* industry
+use "../3. Data/Processed/tranche_level_ds_compa_wlabel.dta", clear
+keep if year <= 2017
+
+replace lender_parent_id = lender_id if lender_parent_id == .
+* KKR and Everbank have missing lender_parent_id
+bysort ff_48: egen number_of_lead_byindustry = nvals(lender_parent_id)
+egen median_number_of_lead = median(number_of_lead_byindustry)
+gen high_competition_industry = 1 if number_of_lead_byindustry >= median_number_of_lead
+replace high_competition_industry = 0 if high_competition_industry == .
+
+keep ff_48 high_competition_industry
+duplicates drop 
+tempfile industry_competition_mesaure
+save `industry_competition_mesaure'
+
+*** merge back to data for regressions
+use "../3. Data/Processed/tranche_level_ds_compa_wlabel.dta", clear
+merge m:1 gvkey using `firm_competition_measure', nogen
+merge m:1 ff_48 using `industry_competition_mesaure', nogen
+
+save "../3. Data/Processed/tranche_level_ds_compa_wlabel_withcomp.dta", replace
+use "../3. Data/Processed/tranche_level_ds_compa_wlabel_withcomp.dta", clear
+
+* firm-level 
+local controls "log_at cash_flows_by_at market_to_book ppent_by_at debt_by_at cash_by_at sales_growth dividend_payer nol ret_vol"
+local deal_controls "leveraged maturity log_deal_amount_converted secured_dummy tranche_type_dummy tranche_o_a_dummy sponsor_dummy"
+local treat_vars "treated treated_post treated_loss treated_loss_post"
+
+fvset base 1 ff_48
+fvset base 1 gvkey
+
+reg margin_bps `treat_vars' `controls' `deal_controls' i.year i.ff_48 ib2.sp_rating_num if high_competition_industry == 1
+estimates store m1
+
+reg margin_bps `treat_vars' `controls' `deal_controls' i.year i.ff_48 ib2.sp_rating_num if high_competition_industry == 0
+estimates store m2
+
+suest m1 m2, vce(cluster ff_48)
+test [m1_mean]treated_loss_post = [m2_mean]treated_loss_post
+
+
+reg margin_bps `treat_vars' `controls' `deal_controls' i.year i.gvkey ib2.sp_rating_num if high_competition == 1
+estimates store m1
+
+reg margin_bps `treat_vars' `controls' `deal_controls' i.year i.gvkey ib2.sp_rating_num if high_competition == 0
+estimates store m2
+
+suest m1 m2, vce(cluster gvkey)
+test [m1_mean]treated_loss_post = [m2_mean]treated_loss_post
+
 	*** Relationship Lending
 	use "../3. Data/Processed/tranche_level_ds_compa_wlabel.dta", clear
 
@@ -585,8 +695,84 @@ estimates store m4
 suest m3 m4, vce(cluster gvkey)
 test [m3_mean]treated_loss_post = [m4_mean]treated_loss_post
 
-*** back of the envelope
+/***********
+	Falsification Tests
+	***********/
 
+import delimited "../3. Data/Processed/tranche_level_ds_compa_all.csv", clear
+
+keep if year <= 2017
+
+drop post
+gen post = 1 if year >= 2014
+replace post = 0 if post == .
+rename excess_interest_30 treated
+rename excess_interest_loss treated_loss
+gen treated_post = treated * post
+gen treated_loss_post = treated_loss * post
+
+* gen logged bps
+gen log_margin_bps = log(margin_bps)
+gen log_at = log(at)
+gen log_deal_amount_converted = log(deal_amount_converted)
+
+local controls "log_at cash_flows_by_at market_to_book ppent_by_at debt_by_at cash_by_at sales_growth dividend_payer nol ret_vol"
+local deal_controls "leveraged maturity log_deal_amount_converted secured_dummy tranche_type_dummy tranche_o_a_dummy sponsor_dummy"
+
+* generate interaction between controls and post
+foreach var in `controls' {
+    gen `var'_post = `var' * post
+	gen `var'_treated = `var' * treated
+	gen `var'_treated_loss = `var' * treated_loss
+}
+
+local controls_post "log_at_post cash_flows_by_at_post market_to_book_post ppent_by_at_post debt_by_at_post cash_by_at_post sales_growth_post dividend_payer_post nol_post ret_vol_post"
+
+* winsorize at 1% and 99%
+foreach var in margin_bps log_margin_bps `controls' `deal_controls' `controls_post' `controls_treated' `controls_treated_loss' {
+    winsor2 `var', cuts(1 99) replace
+}
+
+* label controls and treated, post, and treated_post
+label variable log_at "Log Total Assets"
+label variable cash_flows_by_at "Cash Flows / Assets"
+label variable market_to_book "Market to Book Ratio"
+label variable ppent_by_at "PP\&E / Assets"
+label variable debt_by_at "Debt / Assets"
+label variable cash_by_at "Cash / Assets"
+label variable sales_growth "Sales Growth"
+label variable dividend_payer "Dividend Payer"
+label variable z_score "Z-Score"
+label variable nol "Net Operating Loss"
+label variable ret_buy_and_hold "Buy and Hold Return"
+label variable ret_vol "Return Volatility"
+
+label variable leveraged "Leveraged"
+label variable maturity "Maturity"
+label variable log_deal_amount_converted "Log Loan Amount"
+label variable secured_dummy "Secured"
+label variable tranche_type_dummy "Tranche Type"
+label variable tranche_o_a_dummy "Origination"
+label variable sponsor_dummy "Sponsored"
+
+label variable treated "Excess Interest (30\% Rule)"
+label variable post "Post"
+label variable treated_post "Excess Interest (30\% Rule) x Post"
+label variable treated_loss "Excess Interest (Loss Rule)"
+label variable treated_loss_post "Excess Interest (Loss Rule) x Post"
+	
+clean_rating
+	
+reghdfe margin_bps treated treated_post treated_loss treated_loss_post `controls' `deal_controls', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
+estimates store m1
+reghdfe margin_bps treated treated_post treated_loss treated_loss_post `controls' `controls_post' `deal_controls', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
+estimates store m2
+
+* save the results (esttab) using overleaf_dir
+esttab m1 m2 using "$overleaf_dir/margin_did_both_rule_falsification.tex", replace ///
+nodepvars nomti nonum collabels(none) label b(3) se(3) parentheses ///
+star(* 0.10 ** 0.05 *** 0.01) ar2 plain lines fragment noconstant drop(_cons `controls_post')
+est clear
 
 *** close log
 log close
