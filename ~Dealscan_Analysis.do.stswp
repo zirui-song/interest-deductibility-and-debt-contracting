@@ -594,7 +594,7 @@ suest m1 m2, vce(cluster ff_48)
 test [m1_mean]treated_loss_post = [m2_mean]treated_loss_post
 
 * save the results (esttab) using overleaf_dir
-esttab m1 m2 using "$overleaf_dir/margin_did_both_rule_competition.tex", replace ///
+esttab m1 m2 using "$overleaf_dir/margin_did_both_rule_.tex", replace ///
 nodepvars nomti nonum collabels(none) label b(3) se(3) parentheses ///
 star(* 0.10 ** 0.05 *** 0.01) ar2 plain lines fragment noconstant keep(`treat_vars')
 est clear
