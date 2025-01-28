@@ -389,7 +389,7 @@ esttab mat(res) using "$overleaf_dir/margin_did_dynamic_both_ff48.csv", replace 
 
 * drop 2020 and re run the regression
 drop if year == 2020
-reghdfe margin_bps treated treated_loss `dynamic_treated' `dynamic_treated_loss' `controls' `deal_controls', absorb(year ff_48 sp_rating_num) vce(cluster ff_48)
+reghdfe margin_bps treated treated_loss `dynamic_treated_loss' `controls' `deal_controls', absorb(year ff_48 sp_rating_num) vce(cluster ff_48)
 mat c = e(b)'
 mata st_matrix("srdvcovbt",sqrt(diagonal(st_matrix("e(V)"))))
 mat res = c , srdvcovbt
