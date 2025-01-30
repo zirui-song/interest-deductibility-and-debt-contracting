@@ -12,13 +12,13 @@ gen treated1_post = treated1 * post
 gen treated2_post = treated2 * post
 
 if "`c(hostname)'" == "mphill-surface4" {
-global overleaf_dir "C:\Users\mphill\Dropbox\Apps\Overleaf\M&A Debt\Tables"
-global fig_dir "C:\Users\mphill\Dropbox\Apps\Overleaf\M&A Debt\Figures"
+global overleaf_dir "C:\Users\mphill\Dropbox\Apps\Overleaf\Tax Incidence and Loan Contract Negotiation\Tables"
+global fig_dir "C:\Users\mphill\Dropbox\Apps\Overleaf\Tax Incidence and Loan Contract Negotiation\Figures"
 	
 }
 
-global overleaf_dir "/Users/zrsong/MIT Dropbox/Zirui Song/Apps/Overleaf/M&A Debt/Tables"
-global fig_dir "/Users/zrsong/MIT Dropbox/Zirui Song/Apps/Overleaf/M&A Debt/Figures"
+global overleaf_dir "/Users/zrsong/MIT Dropbox/Zirui Song/Apps/Overleaf/Tax Incidence and Loan Contract Negotiation/Tables"
+global fig_dir "/Users/zrsong/MIT Dropbox/Zirui Song/Apps/Overleaf/Tax Incidence and Loan Contract Negotiation/Figures"
 
 keep if year >= 2014
 
@@ -141,9 +141,9 @@ save "../3. Data/Processed/tranche_level_ds_compa_wlabel1.dta", replace
 gen excess_interest_30_post = excess_interest_30 * post
 gen excess_interest_loss_post = excess_interest_loss * post
 label variable excess_interest_30 "Excess Interest (30\% Rule)"
-label variable excess_interest_loss "Excess Interest (Loss Rule)"
+label variable excess_interest_loss "Excess Interest (Loss)"
 label variable excess_interest_30_post "Excess Interest (30\% Rule) X Post"
-label variable excess_interest_loss_post "Excess Interest (Loss Rule) X Post"
+label variable excess_interest_loss_post "Excess Interest (Loss) X Post"
 
 local treated_vars "excess_interest_30 excess_interest_loss"
 	
@@ -163,7 +163,7 @@ nodepvars nomti nonum collabels(none) label b(3) se(3) parentheses ///
 star(* 0.10 ** 0.05 *** 0.01) ar2 plain lines fragment noconstant keep(`treated_vars' `controls' `deal_controls')
 est clear
 
-*** DID regressions (30% and Loss Rule: MAIN RESULT TABLE 1) ***
+*** DID regressions (30% and Loss: MAIN RESULT TABLE 1) ***
 /*
 use "../3. Data/Processed/tranche_level_ds_compa_wlabel1.dta", clear
 

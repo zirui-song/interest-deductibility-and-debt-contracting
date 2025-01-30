@@ -42,8 +42,8 @@ gen treated_loss_post = treated_loss * post
 label variable treated "Treated (30\% rule)"
 label variable post "Post"
 label variable treated_post "Treated (30\% rule) x Post"
-label variable treated_loss "Treated (loss rule)"
-label variable treated_loss_post "Treated (loss rule) x Post"
+label variable treated_loss "Treated (Loss)"
+label variable treated_loss_post "Treated (Loss) x Post"
 
 
 *** regressions of dta/asset on treated

@@ -1,13 +1,12 @@
 use "../3. Data/Processed/dta_analysis.dta", clear
 
 if "`c(hostname)'" == "mphill-surface4" {
-global overleaf_dir "C:\Users\mphill\Dropbox\Apps\Overleaf\M&A Debt\Tables"
-global fig_dir "C:\Users\mphill\Dropbox\Apps\Overleaf\M&A Debt\Figures"
-	
+global overleaf_dir "C:\Users\mphill\Dropbox\Apps\Overleaf\Tax Incidence and Loan Contract Negotiation\Tables"
+global fig_dir "C:\Users\mphill\Dropbox\Apps\Overleaf\Tax Incidence and Loan Contract Negotiation\Figures"
 }
 
-global overleaf_dir "/Users/zrsong/Dropbox (MIT)/Apps/Overleaf/M&A Debt/Tables"
-global fig_dir "/Users/zrsong/Dropbox (MIT)/Apps/Overleaf/M&A Debt/Figures"
+global overleaf_dir "/Users/zrsong/Dropbox (MIT)/Apps/Overleaf/Tax Incidence and Loan Contract Negotiation/Tables"
+global fig_dir "/Users/zrsong/Dropbox (MIT)/Apps/Overleaf/Tax Incidence and Loan Contract Negotiation/Figures"
 
 * Check if the directory exists, if not create it
 cap mkdir "$overleaf_dir"
@@ -32,13 +31,13 @@ gen treated_post = treated * post
 gen treated_loss_post = treated_loss * post
 
 *** treatment
-*replace treated = 0 if treated_loss == 1
+
 
 label variable treated "Excess Interest (30\% Rule)"
 label variable post "Post"
 label variable treated_post "Excess Interest (30\% Rule) x Post"
-label variable treated_loss "Excess Interest (Loss Rule)"
-label variable treated_loss_post "Excess Interest (Loss Rule) x Post"
+label variable treated_loss "Excess Interest (Loss)"
+label variable treated_loss_post "Excess Interest (Loss) x Post"
 
 
 *** regressions of dta/asset on treated
@@ -57,15 +56,15 @@ est clear
 *********** Binscatters ***********
 local controls "log_at cash_flows_by_at market_to_book ppent_by_at debt_by_at cash_by_at sales_growth dividend_payer nol ret_vol"
 * binscatters
-binscatter DTA fyear, by(treated_loss) controls(`controls' i.ff_48) legend(label(1 "Control (Loss rule)") label(2 "Treated (Loss rule)") position(1) ring(0)) msymbol(o X) mcolor(blue red) lcolor(blue red) ///
+binscatter DTA fyear, by(treated_loss) controls(`controls' i.ff_48) legend(label(1 "Control (Loss)") label(2 "Treated (Loss)") position(1) ring(0)) msymbol(o X) mcolor(blue red) lcolor(blue red) ///
 xtitle("Year") ytitle("DTA") xline(2018) xlabel(2014(1)2023) savegraph("$fig_dir/binscatter_dta_treated_loss.png") replace
 * binscatters
-binscatter DTA_byat fyear, by(treated_loss) controls(`controls' i.ff_48) legend(label(1 "Control (Loss rule)") label(2 "Treated (Loss rule)") position(1) ring(0)) msymbol(o X) mcolor(blue red) lcolor(blue red) ///
+binscatter DTA_byat fyear, by(treated_loss) controls(`controls' i.ff_48) legend(label(1 "Control (Loss)") label(2 "Treated (Loss)") position(1) ring(0)) msymbol(o X) mcolor(blue red) lcolor(blue red) ///
 xtitle("Year") ytitle("DTA by Total Assets") xline(2018) xlabel(2014(1)2023) savegraph("$fig_dir/binscatter_dta_byat_treated_loss.png") replace
 
 * binscatters
-binscatter delta_DTA fyear, by(treated_loss) controls(`controls' i.ff_48) legend(label(1 "Control (Loss rule)") label(2 "Treated (Loss rule)") position(1) ring(0)) msymbol(o X) mcolor(blue red) lcolor(blue red) ///
+binscatter delta_DTA fyear, by(treated_loss) controls(`controls' i.ff_48) legend(label(1 "Control (Loss)") label(2 "Treated (Loss)") position(1) ring(0)) msymbol(o X) mcolor(blue red) lcolor(blue red) ///
 xtitle("Year") ytitle("Delta DTA") xline(2018) xlabel(2014(1)2023) savegraph("$fig_dir/binscatter_delta_dta_treated_loss.png") replace
 * binscatters
-binscatter delta_DTA_byat fyear, by(treated_loss) controls(`controls' i.ff_48) legend(label(1 "Control (Loss rule)") label(2 "Treated (Loss rule)") position(1) ring(0)) msymbol(o X) mcolor(blue red) lcolor(blue red) ///
+binscatter delta_DTA_byat fyear, by(treated_loss) controls(`controls' i.ff_48) legend(label(1 "Control (Loss)") label(2 "Treated (Loss)") position(1) ring(0)) msymbol(o X) mcolor(blue red) lcolor(blue red) ///
 xtitle("Year") ytitle("Delta DTA by Total Assets") xline(2018) xlabel(2014(1)2023) savegraph("$fig_dir/binscatter_delta_dta_byat_treated_loss.png") replace
