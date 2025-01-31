@@ -1,13 +1,13 @@
 use "../3. Data/Processed/ds_gvkey_treatment_assignment.dta", clear
 
 if "`c(hostname)'" == "mphill-surface4" {
-global overleaf_dir "C:\Users\mphill\Dropbox\Apps\Overleaf\M&A Debt\Tables"
-global fig_dir "C:\Users\mphill\Dropbox\Apps\Overleaf\M&A Debt\Figures"
+global overleaf_dir "C:\Users\mphill\Dropbox\Apps\Overleaf\Tax Incidence and Loan Contract Negotiations\Tables"
+global fig_dir "C:\Users\mphill\Dropbox\Apps\Overleaf\Tax Incidence and Loan Contract Negotiations\Figures"
 	
 }
 
-global overleaf_dir "/Users/zrsong/Dropbox (MIT)/Apps/Overleaf/M&A Debt/Tables"
-global fig_dir "/Users/zrsong/Dropbox (MIT)/Apps/Overleaf/M&A Debt/Figures"
+global overleaf_dir "/Users/zrsong/Dropbox (MIT)/Apps/Overleaf/Tax Incidence and Loan Contract Negotiations/Tables"
+global fig_dir "/Users/zrsong/Dropbox (MIT)/Apps/Overleaf/Tax Incidence and Loan Contract Negotiations/Figures"
 
 * Check if the directory exists, if not create it
 cap mkdir "$overleaf_dir"
@@ -45,8 +45,6 @@ label variable treated_post "Treated (30\% rule) x Post"
 label variable treated_loss "Treated (Loss)"
 label variable treated_loss_post "Treated (Loss) x Post"
 
-
-*** regressions of dta/asset on treated
 reghdfe next_year_excess_interest_total treated treated_post treated_loss treated_loss_post `controls', absorb(fyear ff_48) vce(cluster gvkey)
 estimates store m1
 
@@ -54,7 +52,7 @@ reghdfe next_year_excess_interest_total treated treated_post treated_loss treate
 estimates store m2
 
 * save the results (esttab) using overleaf_dir
-esttab m1 m2 using "$overleaf_dir/dta_did_both_rule.tex", replace ///
+esttab m1 m2 using "$overleaf_dir/next_year_exposure_both_rule.tex", replace ///
 nodepvars nomti nonum collabels(none) label b(5) se(5) parentheses ///
 star(* 0.10 ** 0.05 *** 0.01) ar2 plain lines fragment noconstant keep(treated treated_post treated_loss treated_loss_post)
 est clear

@@ -12,13 +12,13 @@ gen treated1_post = treated1 * post
 gen treated2_post = treated2 * post
 
 if "`c(hostname)'" == "mphill-surface4" {
-global overleaf_dir "C:\Users\mphill\Dropbox\Apps\Overleaf\Tax Incidence and Loan Contract Negotiation\Tables"
-global fig_dir "C:\Users\mphill\Dropbox\Apps\Overleaf\Tax Incidence and Loan Contract Negotiation\Figures"
+global overleaf_dir "C:\Users\mphill\Dropbox\Apps\Overleaf\Tax Incidence and Loan Contract Negotiations\Tables"
+global fig_dir "C:\Users\mphill\Dropbox\Apps\Overleaf\Tax Incidence and Loan Contract Negotiations\Figures"
 	
 }
 
-global overleaf_dir "/Users/zrsong/MIT Dropbox/Zirui Song/Apps/Overleaf/Tax Incidence and Loan Contract Negotiation/Tables"
-global fig_dir "/Users/zrsong/MIT Dropbox/Zirui Song/Apps/Overleaf/Tax Incidence and Loan Contract Negotiation/Figures"
+global overleaf_dir "/Users/zrsong/MIT Dropbox/Zirui Song/Apps/Overleaf/Tax Incidence and Loan Contract Negotiations/Tables"
+global fig_dir "/Users/zrsong/MIT Dropbox/Zirui Song/Apps/Overleaf/Tax Incidence and Loan Contract Negotiations/Figures"
 
 keep if year >= 2014
 
@@ -162,6 +162,52 @@ esttab m1 m2 m3 m4 using "$overleaf_dir/next_year_excess_interest_total_validati
 nodepvars nomti nonum collabels(none) label b(3) se(3) parentheses ///
 star(* 0.10 ** 0.05 *** 0.01) ar2 plain lines fragment noconstant keep(`treated_vars' `controls' `deal_controls')
 est clear
+
+*** Margin on net_year_excess_interest_total 
+
+use "../3. Data/Processed/tranche_level_ds_compa_wlabel1.dta", clear
+
+replace interest_expense_total_excess = interest_expense_total_excess/xint
+
+corr interest_expense_total_excess next_year_excess_interest_total
+
+*drop if year == 2020 | year == 2021
+
+local controls "log_at cash_flows_by_at market_to_book ppent_by_at debt_by_at cash_by_at sales_growth dividend_payer nol ret_vol"
+local deal_controls "leveraged maturity log_deal_amount_converted secured_dummy tranche_type_dummy tranche_o_a_dummy sponsor_dummy"
+
+gen next_year_excess_post = next_year_excess_interest_total * post
+gen interest_expense_excess_post = interest_expense_total_excess * post
+
+reghdfe margin_bps next_year_excess_interest_total next_year_excess_post `controls' `deal_controls', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
+
+reghdfe margin_bps interest_expense_total_excess interest_expense_excess_post `controls' `deal_controls', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
+
+
+preserve 
+	keep if post == 0 
+	reg margin_bps next_year_excess_interest_total
+	reghdfe margin_bps next_year_excess_interest_total `controls' `deal_controls', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
+restore
+
+preserve 
+	keep if post == 1
+	reg margin_bps next_year_excess_interest_total
+	reghdfe margin_bps next_year_excess_interest_total `controls' `deal_controls', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
+restore
+
+* median/tercile split
+*keep if next_year_excess_interest_total > 0
+bysort year ff_48: egen median_excess = median(next_year_excess_interest_total)
+bysort year ff_48: egen p33_excess = pctile(next_year_excess_interest_total), p(33)
+bysort year ff_48: egen p66_excess = pctile(next_year_excess_interest_total), p(66)
+*gen next_year_excess_treat = 1 if next_year_excess_interest_total > median_excess
+gen next_year_excess_treat = 1 if next_year_excess_interest_total == 1
+replace next_year_excess_treat = 0 if next_year_excess_treat == .
+
+gen next_year_excess_treat_post = next_year_excess_treat * post
+
+reghdfe margin_bps next_year_excess_treat next_year_excess_treat_post `controls' `deal_controls', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
 
 *** DID regressions (30% and Loss: MAIN RESULT TABLE 1) ***
 /*

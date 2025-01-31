@@ -3,13 +3,13 @@ log using Dealscan_Analysis.log, replace
 use "../3. Data/Processed/tranche_level_ds_compa.dta", clear
 
 if "`c(hostname)'" == "mphill-surface4" {
-global overleaf_dir "C:\Users\mphill\Dropbox\Apps\Overleaf\Tax Incidence and Loan Contract Negotiation\Tables"
-global fig_dir "C:\Users\mphill\Dropbox\Apps\Overleaf\Tax Incidence and Loan Contract Negotiation\Figures"
+global overleaf_dir "C:\Users\mphill\Dropbox\Apps\Overleaf\Tax Incidence and Loan Contract Negotiations\Tables"
+global fig_dir "C:\Users\mphill\Dropbox\Apps\Overleaf\Tax Incidence and Loan Contract Negotiations\Figures"
 	
 }
 
-global overleaf_dir "/Users/zrsong/Dropbox (MIT)/Apps/Overleaf/Tax Incidence and Loan Contract Negotiation/Tables"
-global fig_dir "/Users/zrsong/Dropbox (MIT)/Apps/Overleaf/Tax Incidence and Loan Contract Negotiation/Figures"
+global overleaf_dir "/Users/zrsong/MIT Dropbox/Zirui Song/Apps/Overleaf/Tax Incidence and Loan Contract Negotiations/Tables"
+global fig_dir "/Users/zrsong/MIT Dropbox/Zirui Song/Apps/Overleaf/Tax Incidence and Loan Contract Negotiations/Figures"
 
 keep if year >= 2014
 
@@ -182,13 +182,19 @@ nodepvars nomti nonum collabels(none) label b(3) se(3) parentheses ///
 star(* 0.10 ** 0.05 *** 0.01) ar2 plain lines fragment noconstant drop(_cons `controls_post')
 est clear
 
-*** robustness dropping 2021 (COVID)
+*** robustness dropping 2020 and 2021 (COVID)
 preserve
-	drop if year == 2021
+	drop if year == 2021 | year == 2020
 	reghdfe margin_bps treated treated_post treated_loss treated_loss_post `controls' `deal_controls', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
 	estimates store m1
 	reghdfe margin_bps treated treated_post treated_loss treated_loss_post `controls' `controls_post' `deal_controls', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
 	estimates store m2
+	
+	* save the results (esttab) using overleaf_dir
+	esttab m1 m2 using "$overleaf_dir/margin_did_both_rule_dropcovid.tex", replace ///
+	nodepvars nomti nonum collabels(none) label b(3) se(3) parentheses ///
+	star(* 0.10 ** 0.05 *** 0.01) ar2 plain lines fragment noconstant drop(_cons `controls_post')
+	est clear
 restore
 
 /********* 
@@ -857,6 +863,52 @@ esttab m1 m2 using "$overleaf_dir/margin_did_both_rule_falsification.tex", repla
 nodepvars nomti nonum collabels(none) label b(3) se(3) parentheses ///
 star(* 0.10 ** 0.05 *** 0.01) ar2 plain lines fragment noconstant drop(_cons `controls_post')
 est clear
+
+/***********
+	Robustness Tests 
+	***********/
+
+use "../3. Data/Processed/tranche_level_ds_compa_wlabel.dta", clear
+
+replace interest_expense_total_excess = interest_expense_total_excess/xint
+gen interest_expense_excess_post = interest_expense_total_excess * post
+
+label var interest_expense_total_excess "Excess Interest Expense"
+label var interest_expense_excess_post "Excess Interest Expense x Post"
+
+local controls "log_at cash_flows_by_at market_to_book ppent_by_at debt_by_at cash_by_at sales_growth dividend_payer nol ret_vol"
+local deal_controls "leveraged maturity log_deal_amount_converted secured_dummy tranche_type_dummy tranche_o_a_dummy sponsor_dummy"
+local controls_post "log_at_post cash_flows_by_at_post market_to_book_post ppent_by_at_post debt_by_at_post cash_by_at_post sales_growth_post dividend_payer_post nol_post ret_vol_post"
+
+* keep only 
+binscatter margin_bps interest_expense_total_excess, controls(`controls' `deal_controls') by(post)
+
+reghdfe margin_bps interest_expense_total_excess interest_expense_excess_post `controls' `deal_controls', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
+estimates store m1
+
+*drop if year == 2020 | year == 2021 
+
+reghdfe margin_bps interest_expense_total_excess interest_expense_excess_post `controls' `deal_controls' `controls_post', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
+estimates store m2
+
+* save the results (esttab) using overleaf_dir
+esttab m1 m2 using "$overleaf_dir/margin_ie_excess.tex", replace ///
+nodepvars nomti nonum collabels(none) label b(3) se(3) parentheses ///
+star(* 0.10 ** 0.05 *** 0.01) ar2 plain lines fragment noconstant drop(_cons `controls_post')
+est clear
+
+*** split by median
+
+bysort year: egen median_excess = median(interest_expense_total_excess)
+bysort year: egen p80_excess = pctile(interest_expense_total_excess), p(80)
+*gen next_year_excess_treat = 1 if next_year_excess_interest_total > median_excess
+gen ie_excess_treat = 1 if interest_expense_total_excess > 0
+replace ie_excess_treat = 0 if ie_excess_treat == .
+
+gen ie_excess_treat_post = ie_excess_treat * post
+
+reghdfe margin_bps ie_excess_treat ie_excess_treat_post `controls' `deal_controls', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
+
 
 *** close log
 log close

@@ -1,28 +1,23 @@
---------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------------------------------------------------------------------------------
       name:  <unnamed>
-       log:  /Users/zrsong/MIT Dropbox/Zirui Song/Research Projects/MPS_Interest Deductibility and
->  Debt Contracting/4. Code/Dealscan_Analysis.log
+       log:  /Users/zrsong/MIT Dropbox/Zirui Song/Research Projects/MPS_Interest Deductibility and Debt Contracting/4. Code/Dealscan_Analysis.log
   log type:  text
- opened on:  29 Jan 2025, 13:59:40
+ opened on:  31 Jan 2025, 13:24:12
 
 . 
 . use "../3. Data/Processed/tranche_level_ds_compa.dta", clear
 
 . 
 . if "`c(hostname)'" == "mphill-surface4" {
-. global overleaf_dir "C:\Users\mphill\Dropbox\Apps\Overleaf\Tax Incidence and Loan Contract Negot
-> iation\Tables"
-. global fig_dir "C:\Users\mphill\Dropbox\Apps\Overleaf\Tax Incidence and Loan Contract Negotiatio
-> n\Figures"
+. global overleaf_dir "C:\Users\mphill\Dropbox\Apps\Overleaf\Tax Incidence and Loan Contract Negotiations\Tables"
+. global fig_dir "C:\Users\mphill\Dropbox\Apps\Overleaf\Tax Incidence and Loan Contract Negotiations\Figures"
 .         
 . }
 
 . 
-. global overleaf_dir "/Users/zrsong/Dropbox (MIT)/Apps/Overleaf/Tax Incidence and Loan Contract N
-> egotiation/Tables"
+. global overleaf_dir "/Users/zrsong/MIT Dropbox/Zirui Song/Apps/Overleaf/Tax Incidence and Loan Contract Negotiations/Tables"
 
-. global fig_dir "/Users/zrsong/Dropbox (MIT)/Apps/Overleaf/Tax Incidence and Loan Contract Negoti
-> ation/Figures"
+. global fig_dir "/Users/zrsong/MIT Dropbox/Zirui Song/Apps/Overleaf/Tax Incidence and Loan Contract Negotiations/Figures"
 
 . 
 . keep if year >= 2014
@@ -49,11 +44,9 @@
 > replace treated_next_3yr = 0 if treated_loss_next_3yr == 1
 > replace treated_next_5yr = 0 if treated_loss_next_5yr == 1 */
 . 
-. local controls "log_at cash_flows_by_at market_to_book ppent_by_at debt_by_at cash_by_at sales_g
-> rowth dividend_payer nol ret_vol"
+. local controls "log_at cash_flows_by_at market_to_book ppent_by_at debt_by_at cash_by_at sales_growth dividend_payer nol ret_vol"
 
-. local deal_controls "leveraged maturity log_deal_amount_converted secured_dummy tranche_type_dum
-> my tranche_o_a_dummy sponsor_dummy"
+. local deal_controls "leveraged maturity log_deal_amount_converted secured_dummy tranche_type_dummy tranche_o_a_dummy sponsor_dummy"
 
 . 
 . * generate interaction between controls and post
@@ -64,21 +57,18 @@
   5. }
 
 . 
-. local controls_post "log_at_post cash_flows_by_at_post market_to_book_post ppent_by_at_post debt
-> _by_at_post cash_by_at_post sales_growth_post dividend_payer_post nol_post ret_vol_post"
+. local controls_post "log_at_post cash_flows_by_at_post market_to_book_post ppent_by_at_post debt_by_at_post cash_by_at_post sales_growth_post dividen
+> d_payer_post nol_post ret_vol_post"
 
-. local controls_treated "log_at_treated cash_flows_by_at_treated market_to_book_treated ppent_by_
-> at_treated debt_by_at_treated cash_by_at_treated sales_growth_treated dividend_payer_treated nol
-> _treated ret_vol_treated"
+. local controls_treated "log_at_treated cash_flows_by_at_treated market_to_book_treated ppent_by_at_treated debt_by_at_treated cash_by_at_treated sale
+> s_growth_treated dividend_payer_treated nol_treated ret_vol_treated"
 
-. local controls_treated_loss "log_at_treated_loss cash_flows_by_at_treated_loss market_to_book_tr
-> eated_loss ppent_by_at_treated_loss debt_by_at_treated_loss cash_by_at_treated_loss sales_growth
-> _treated_loss dividend_payer_treated_loss nol_treated_loss ret_vol_treated_loss"
+. local controls_treated_loss "log_at_treated_loss cash_flows_by_at_treated_loss market_to_book_treated_loss ppent_by_at_treated_loss debt_by_at_treate
+> d_loss cash_by_at_treated_loss sales_growth_treated_loss dividend_payer_treated_loss nol_treated_loss ret_vol_treated_loss"
 
 . 
 . * winsorize at 1% and 99%
-. foreach var in margin_bps log_margin_bps `controls' `deal_controls' `controls_post' `controls_tr
-> eated' `controls_treated_loss' {
+. foreach var in margin_bps log_margin_bps `controls' `deal_controls' `controls_post' `controls_treated' `controls_treated_loss' {
   2.     winsor2 `var', cuts(1 99) replace
   3. }
 
@@ -172,13 +162,11 @@ file ../3. Data/Processed/tranche_level_ds_compa_wlabel.dta saved
 .         gen sp_rating_num = .
   4.         replace sp_rating_num = 21 if sp_rating == "AAA"
   5.         * replace sp_rating_num = 21 if sp_rating == "AA+" (only 1 obs)
-.         replace sp_rating_num = 20 if sp_rating == "AA" | sp_rating == "ilAA" | sp_rating == "AA
-> +"
+.         replace sp_rating_num = 20 if sp_rating == "AA" | sp_rating == "ilAA" | sp_rating == "AA+"
   6.         replace sp_rating_num = 19 if sp_rating == "AA-"
   7.         replace sp_rating_num = 18 if sp_rating == "A+"
   8.         replace sp_rating_num = 17 if sp_rating == "A"
-  9.         replace sp_rating_num = 16 if sp_rating == "A-" | sp_rating == "A-1+" | sp_rating == 
-> "A-2" | sp_rating == "A-3"
+  9.         replace sp_rating_num = 16 if sp_rating == "A-" | sp_rating == "A-1+" | sp_rating == "A-2" | sp_rating == "A-3"
  10.         replace sp_rating_num = 15 if sp_rating == "BBB+"
  11.         replace sp_rating_num = 14 if sp_rating == "BBB"
  12.         replace sp_rating_num = 13 if sp_rating == "BBB-"
@@ -225,11 +213,9 @@ file ../3. Data/Processed/tranche_level_ds_compa_wlabel.dta saved
 (1,921 real changes made)
 
 . 
-. local controls "log_at cash_flows_by_at market_to_book ppent_by_at debt_by_at cash_by_at sales_g
-> rowth dividend_payer nol ret_vol"
+. local controls "log_at cash_flows_by_at market_to_book ppent_by_at debt_by_at cash_by_at sales_growth dividend_payer nol ret_vol"
 
-. local deal_controls "leveraged maturity log_deal_amount_converted secured_dummy tranche_type_dum
-> my tranche_o_a_dummy sponsor_dummy"
+. local deal_controls "leveraged maturity log_deal_amount_converted secured_dummy tranche_type_dummy tranche_o_a_dummy sponsor_dummy"
 
 . local treat_vars "treated treated_post treated_loss treated_loss_post"  
 
@@ -302,8 +288,7 @@ Absorbed degrees of freedom:
 .         drop if sp_rating_num == 0
 (1,921 observations deleted)
 
-.         reghdfe sp_rating_num `treat_vars' `controls' `deal_controls', absorb(year ff_48) vce(cl
-> uster gvkey)
+.         reghdfe sp_rating_num `treat_vars' `controls' `deal_controls', absorb(year ff_48) vce(cluster gvkey)
 (MWFE estimator converged in 6 iterations)
 
 HDFE Linear regression                            Number of obs   =      2,791
@@ -358,10 +343,8 @@ Absorbed degrees of freedom:
 . * save the results (esttab) using overleaf_dir
 . esttab m1 m2 using "$overleaf_dir/sp_rating_robustness.tex", replace ///
 > nodepvars nomti nonum collabels(none) label b(3) se(3) parentheses ///
-> star(* 0.10 ** 0.05 *** 0.01) ar2 plain lines fragment noconstant keep(`treat_vars' `controls' `
-> deal_controls')
-(output written to /Users/zrsong/Dropbox (MIT)/Apps/Overleaf/Tax Incidence and Loan Contract Negot
-> iation/Tables/sp_rating_robustness.tex)
+> star(* 0.10 ** 0.05 *** 0.01) ar2 plain lines fragment noconstant keep(`treat_vars' `controls' `deal_controls')
+(output written to /Users/zrsong/MIT Dropbox/Zirui Song/Apps/Overleaf/Tax Incidence and Loan Contract Negotiations/Tables/sp_rating_robustness.tex)
 
 . est clear
 
@@ -398,18 +381,16 @@ file ../3. Data/Processed/tranche_level_ds_compa_wlabel.dta saved
 . gen treated_loss_eo_post = treated_loss_eo * post
 
 . 
-. local controls "log_at cash_flows_by_at market_to_book ppent_by_at debt_by_at cash_by_at sales_g
-> rowth dividend_payer nol ret_vol"
+. local controls "log_at cash_flows_by_at market_to_book ppent_by_at debt_by_at cash_by_at sales_growth dividend_payer nol ret_vol"
 
-. local deal_controls "leveraged maturity log_deal_amount_converted secured_dummy tranche_type_dum
-> my tranche_o_a_dummy sponsor_dummy"
+. local deal_controls "leveraged maturity log_deal_amount_converted secured_dummy tranche_type_dummy tranche_o_a_dummy sponsor_dummy"
 
-. local controls_post "log_at_post cash_flows_by_at_post market_to_book_post ppent_by_at_post debt
-> _by_at_post cash_by_at_post sales_growth_post dividend_payer_post nol_post ret_vol_post"
+. local controls_post "log_at_post cash_flows_by_at_post market_to_book_post ppent_by_at_post debt_by_at_post cash_by_at_post sales_growth_post dividen
+> d_payer_post nol_post ret_vol_post"
 
 . 
-. reghdfe margin_bps treated treated_post treated_loss treated_loss_post `controls' `deal_controls
-> ', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
+. reghdfe margin_bps treated treated_post treated_loss treated_loss_post `controls' `deal_controls', absorb(year ff_48 sp_rating_num) vce(cluster gvkey
+> )
 (MWFE estimator converged in 7 iterations)
 
 HDFE Linear regression                            Number of obs   =      4,712
@@ -461,8 +442,8 @@ Absorbed degrees of freedom:
 
 . estimates store m1
 
-. reghdfe margin_bps treated treated_post treated_loss treated_loss_post `controls' `controls_post
-> ' `deal_controls', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
+. reghdfe margin_bps treated treated_post treated_loss treated_loss_post `controls' `controls_post' `deal_controls', absorb(year ff_48 sp_rating_num) v
+> ce(cluster gvkey)
 (MWFE estimator converged in 7 iterations)
 
 HDFE Linear regression                            Number of obs   =      4,712
@@ -529,64 +510,63 @@ Absorbed degrees of freedom:
 . esttab m1 m2 using "$overleaf_dir/margin_did_both_rule.tex", replace ///
 > nodepvars nomti nonum collabels(none) label b(3) se(3) parentheses ///
 > star(* 0.10 ** 0.05 *** 0.01) ar2 plain lines fragment noconstant drop(_cons `controls_post')
-(output written to /Users/zrsong/Dropbox (MIT)/Apps/Overleaf/Tax Incidence and Loan Contract Negot
-> iation/Tables/margin_did_both_rule.tex)
+(output written to /Users/zrsong/MIT Dropbox/Zirui Song/Apps/Overleaf/Tax Incidence and Loan Contract Negotiations/Tables/margin_did_both_rule.tex)
 
 . est clear
 
 . 
-. *** robustness dropping 2021 (COVID)
+. *** robustness dropping 2020 and 2021 (COVID)
 . preserve
 
-.         drop if year == 2021
-(578 observations deleted)
+.         drop if year == 2021 | year == 2020
+(870 observations deleted)
 
-.         reghdfe margin_bps treated treated_post treated_loss treated_loss_post `controls' `deal_
-> controls', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
+.         reghdfe margin_bps treated treated_post treated_loss treated_loss_post `controls' `deal_controls', absorb(year ff_48 sp_rating_num) vce(clust
+> er gvkey)
 (MWFE estimator converged in 7 iterations)
 
-HDFE Linear regression                            Number of obs   =      4,134
-Absorbing 3 HDFE groups                           F(  21,   1399) =      69.08
+HDFE Linear regression                            Number of obs   =      3,842
+Absorbing 3 HDFE groups                           F(  21,   1353) =      66.22
 Statistics robust to heteroskedasticity           Prob > F        =     0.0000
-                                                  R-squared       =     0.5502
-                                                  Adj R-squared   =     0.5396
-                                                  Within R-sq.    =     0.3925
-Number of clusters (gvkey)   =      1,400         Root MSE        =   121.5287
+                                                  R-squared       =     0.5553
+                                                  Adj R-squared   =     0.5442
+                                                  Within R-sq.    =     0.3958
+Number of clusters (gvkey)   =      1,354         Root MSE        =   118.9279
 
-                                           (Std. err. adjusted for 1,400 clusters in gvkey)
+                                           (Std. err. adjusted for 1,354 clusters in gvkey)
 -------------------------------------------------------------------------------------------
                           |               Robust
                margin_bps | Coefficient  std. err.      t    P>|t|     [95% conf. interval]
 --------------------------+----------------------------------------------------------------
-                  treated |   1.663451   12.91166     0.13   0.898    -23.66485    26.99175
-             treated_post |   8.537313   16.40444     0.52   0.603    -23.64265    40.71727
-             treated_loss |   39.88023   12.26577     3.25   0.001     15.81894    63.94151
-        treated_loss_post |  -40.42693   16.03785    -2.52   0.012    -71.88776   -8.966094
-                   log_at |  -4.047571   2.643265    -1.53   0.126    -9.232762     1.13762
-         cash_flows_by_at |  -204.7377   60.62424    -3.38   0.001    -323.6619   -85.81348
-           market_to_book |  -1.270363   4.216271    -0.30   0.763    -9.541257    7.000531
-              ppent_by_at |   16.88079   15.23098     1.11   0.268    -12.99724    46.75881
-               debt_by_at |   52.96154   18.29874     2.89   0.004      17.0656    88.85747
-               cash_by_at |   70.00705   27.28605     2.57   0.010     16.48107     123.533
-             sales_growth |  -14.97105   12.20053    -1.23   0.220    -38.90436    8.962264
-           dividend_payer |    7.70676   6.230745     1.24   0.216     -4.51585    19.92937
-                      nol |  -6.021379   5.884966    -1.02   0.306    -17.56569     5.52293
-                  ret_vol |   296.2256   68.93866     4.30   0.000     160.9913    431.4599
-                leveraged |   78.81532   8.830916     8.92   0.000     61.49206    96.13858
-                 maturity |   8.435949   1.962845     4.30   0.000     4.585512    12.28639
-log_deal_amount_converted |  -15.69026   2.840022    -5.52   0.000    -21.26142   -10.11909
-            secured_dummy |   63.27593   7.047139     8.98   0.000     49.45183    77.10003
-       tranche_type_dummy |   77.65675   4.457103    17.42   0.000     68.91343    86.40008
-        tranche_o_a_dummy |   11.89707   6.117569     1.94   0.052    -.1035235    23.89767
-            sponsor_dummy |   94.66578   9.583403     9.88   0.000     75.86639    113.4652
-                    _cons |   164.8288   28.65137     5.75   0.000     108.6245    221.0331
+                  treated |   2.861015   12.83253     0.22   0.824    -22.31281    28.03484
+             treated_post |   19.71123   16.63172     1.19   0.236    -12.91552    52.33798
+             treated_loss |    41.4444   12.38212     3.35   0.001     17.15415    65.73464
+        treated_loss_post |  -52.82569   16.57834    -3.19   0.001    -85.34774   -20.30364
+                   log_at |   -5.65583   2.626011    -2.15   0.031    -10.80733   -.5043348
+         cash_flows_by_at |  -208.4101   61.56432    -3.39   0.001     -329.182   -87.63823
+           market_to_book |  -1.053086    4.19991    -0.25   0.802    -9.292129    7.185956
+              ppent_by_at |   13.67115   15.48986     0.88   0.378    -16.71561    44.05791
+               debt_by_at |   51.51726   19.25029     2.68   0.008      13.7536    89.28092
+               cash_by_at |   51.80828   27.85788     1.86   0.063    -2.841041    106.4576
+             sales_growth |  -11.37889   12.39185    -0.92   0.359    -35.68822    12.93043
+           dividend_payer |   7.180611   6.327775     1.13   0.257    -5.232704    19.59393
+                      nol |  -5.437707   5.940378    -0.92   0.360    -17.09106    6.215644
+                  ret_vol |   247.2948   76.67392     3.23   0.001     96.88207    397.7074
+                leveraged |   74.05278   8.610199     8.60   0.000     57.16199    90.94357
+                 maturity |   9.831232   2.066299     4.76   0.000     5.777735    13.88473
+log_deal_amount_converted |  -16.19467   2.814636    -5.75   0.000     -21.7162   -10.67315
+            secured_dummy |   61.78977   6.907819     8.94   0.000     48.23857    75.34097
+       tranche_type_dummy |   74.80135   4.448103    16.82   0.000     66.07542    83.52728
+        tranche_o_a_dummy |   10.04278   6.160265     1.63   0.103    -2.041932    22.12748
+            sponsor_dummy |   94.89033   9.769133     9.71   0.000     75.72603    114.0546
+                    _cons |   185.7955   28.72956     6.47   0.000     129.4362    242.1548
 -------------------------------------------------------------------------------------------
 
 Absorbed degrees of freedom:
 -------------------------------------------------------+
    Absorbed FE | Categories  - Redundant  = Num. Coefs |
 ---------------+---------------------------------------|
-          year |         9           0           9     |
+          year |         8           0           8     |
          ff_48 |        49           1          48     |
  sp_rating_num |        19           1          18    ?|
 -------------------------------------------------------+
@@ -594,68 +574,80 @@ Absorbed degrees of freedom:
 
 .         estimates store m1
 
-.         reghdfe margin_bps treated treated_post treated_loss treated_loss_post `controls' `contr
-> ols_post' `deal_controls', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
+.         reghdfe margin_bps treated treated_post treated_loss treated_loss_post `controls' `controls_post' `deal_controls', absorb(year ff_48 sp_ratin
+> g_num) vce(cluster gvkey)
 (MWFE estimator converged in 7 iterations)
 
-HDFE Linear regression                            Number of obs   =      4,134
-Absorbing 3 HDFE groups                           F(  31,   1399) =      49.08
+HDFE Linear regression                            Number of obs   =      3,842
+Absorbing 3 HDFE groups                           F(  31,   1353) =      46.64
 Statistics robust to heteroskedasticity           Prob > F        =     0.0000
-                                                  R-squared       =     0.5534
-                                                  Adj R-squared   =     0.5417
-                                                  Within R-sq.    =     0.3968
-Number of clusters (gvkey)   =      1,400         Root MSE        =   121.2471
+                                                  R-squared       =     0.5590
+                                                  Adj R-squared   =     0.5468
+                                                  Within R-sq.    =     0.4008
+Number of clusters (gvkey)   =      1,354         Root MSE        =   118.5901
 
-                                           (Std. err. adjusted for 1,400 clusters in gvkey)
+                                           (Std. err. adjusted for 1,354 clusters in gvkey)
 -------------------------------------------------------------------------------------------
                           |               Robust
                margin_bps | Coefficient  std. err.      t    P>|t|     [95% conf. interval]
 --------------------------+----------------------------------------------------------------
-                  treated |  -2.845636   14.01559    -0.20   0.839    -30.33947     24.6482
-             treated_post |   17.78491    17.9795     0.99   0.323    -17.48477    53.05459
-             treated_loss |   38.36855   12.55817     3.06   0.002     13.73368    63.00341
-        treated_loss_post |  -36.92711   16.95561    -2.18   0.030    -70.18827   -3.665943
-                   log_at |  -4.070324   3.232849    -1.26   0.208    -10.41208     2.27143
-         cash_flows_by_at |  -327.6149   95.38733    -3.43   0.001    -514.7325   -140.4973
-           market_to_book |   6.108012   7.719044     0.79   0.429    -9.034137    21.25016
-              ppent_by_at |   18.50911   19.68526     0.94   0.347     -20.1067    57.12491
-               debt_by_at |   61.97655   26.87681     2.31   0.021      9.25335    114.6997
-               cash_by_at |   70.40154    39.2091     1.80   0.073    -6.513425    147.3165
-             sales_growth |   -3.28661   17.33315    -0.19   0.850    -37.28838    30.71516
-           dividend_payer |   14.81658   8.691401     1.70   0.088       -2.233    31.86617
-                      nol |  -10.87504   8.272603    -1.31   0.189    -27.10309    5.352999
-                  ret_vol |   290.0882   96.04566     3.02   0.003     101.6791    478.4972
-              log_at_post |   .1734154   3.242296     0.05   0.957     -6.18687    6.533701
-    cash_flows_by_at_post |   255.3184   119.8142     2.13   0.033     20.28355    490.3532
-      market_to_book_post |  -14.17648   8.363997    -1.69   0.090    -30.58381    2.230843
-         ppent_by_at_post |  -5.440919   20.85999    -0.26   0.794    -46.36115    35.47931
-          debt_by_at_post |   -12.6491   31.24487    -0.40   0.686    -73.94096    48.64275
-          cash_by_at_post |   .7104271   53.13728     0.01   0.989    -103.5269    104.9478
-        sales_growth_post |  -30.79463   23.97417    -1.28   0.199    -77.82383    16.23457
-      dividend_payer_post |  -15.75421   11.05473    -1.43   0.154    -37.43984    5.931415
-                 nol_post |   7.175517   9.750155     0.74   0.462    -11.95098    26.30202
-             ret_vol_post |   -4.90308   128.6601    -0.04   0.970    -257.2906    247.4845
-                leveraged |   79.28045   8.532432     9.29   0.000     62.54271    96.01819
-                 maturity |   8.634269   1.956083     4.41   0.000     4.797096    12.47144
-log_deal_amount_converted |  -15.47723   2.848695    -5.43   0.000     -21.0654   -9.889051
-            secured_dummy |   62.53824    6.85172     9.13   0.000     49.09749      75.979
-       tranche_type_dummy |   78.01252   4.467678    17.46   0.000     69.24845    86.77658
-        tranche_o_a_dummy |    11.5414   6.038628     1.91   0.056    -.3043409    23.38714
-            sponsor_dummy |   95.20692   9.578816     9.94   0.000     76.41653    113.9973
-                    _cons |   163.6979   28.34459     5.78   0.000     108.0954    219.3003
+                  treated |  -2.552956   13.91451    -0.18   0.854    -29.84932    24.74341
+             treated_post |   30.89562     18.252     1.69   0.091    -4.909678    66.70091
+             treated_loss |   38.04289   12.65728     3.01   0.003     13.21286    62.87292
+        treated_loss_post |  -44.53002   17.18534    -2.59   0.010    -78.24282   -10.81721
+                   log_at |  -5.006513   3.251452    -1.54   0.124    -11.38495    1.371921
+         cash_flows_by_at |  -336.4099   95.05262    -3.54   0.000    -522.8764   -149.9434
+           market_to_book |   5.820742    7.75641     0.75   0.453    -9.395154    21.03664
+              ppent_by_at |   19.23056   19.60245     0.98   0.327    -19.22394    57.68505
+               debt_by_at |   58.40449   26.93063     2.17   0.030     5.574175    111.2348
+               cash_by_at |   67.26639   38.95522     1.73   0.084    -9.152794    143.6856
+             sales_growth |  -4.290781   17.44799    -0.25   0.806    -38.51882    29.93726
+           dividend_payer |   14.51097    8.70199     1.67   0.096    -2.559891    31.58183
+                      nol |  -10.24039   8.276274    -1.24   0.216    -26.47612    5.995329
+                  ret_vol |   277.6912   97.07425     2.86   0.004     87.25885    468.1236
+              log_at_post |  -1.009942   3.141754    -0.32   0.748    -7.173181    5.153297
+    cash_flows_by_at_post |   291.4534   117.1162     2.49   0.013     61.70434    521.2025
+      market_to_book_post |  -14.21128   8.824635    -1.61   0.108    -31.52273    3.100173
+         ppent_by_at_post |  -12.99127   20.85096    -0.62   0.533      -53.895    27.91245
+          debt_by_at_post |  -8.792008   31.38445    -0.28   0.779    -70.35947    52.77545
+          cash_by_at_post |   -33.1345   53.21902    -0.62   0.534    -137.5352    71.26625
+        sales_growth_post |  -23.94347   24.77163    -0.97   0.334    -72.53845     24.6515
+      dividend_payer_post |  -18.75574    11.2867    -1.66   0.097    -40.89707    3.385581
+                 nol_post |   8.337082   9.549831     0.87   0.383      -10.397    27.07117
+             ret_vol_post |  -75.21587   144.7207    -0.52   0.603    -359.1172    208.6855
+                leveraged |   74.47721   8.249763     9.03   0.000      58.2935    90.66093
+                 maturity |   9.983162   2.066649     4.83   0.000     5.928978    14.03735
+log_deal_amount_converted |  -15.96894   2.839662    -5.62   0.000    -21.53956   -10.39832
+            secured_dummy |   61.51664   6.795452     9.05   0.000     48.18587    74.84741
+       tranche_type_dummy |   75.06258   4.450926    16.86   0.000     66.33111    83.79404
+        tranche_o_a_dummy |   9.765147   6.091474     1.60   0.109    -2.184612    21.71491
+            sponsor_dummy |   95.19154   9.699797     9.81   0.000     76.16327    114.2198
+                    _cons |   183.1788   28.32644     6.47   0.000     127.6102    238.7473
 -------------------------------------------------------------------------------------------
 
 Absorbed degrees of freedom:
 -------------------------------------------------------+
    Absorbed FE | Categories  - Redundant  = Num. Coefs |
 ---------------+---------------------------------------|
-          year |         9           0           9     |
+          year |         8           0           8     |
          ff_48 |        49           1          48     |
  sp_rating_num |        19           1          18    ?|
 -------------------------------------------------------+
 ? = number of redundant parameters may be higher
 
 .         estimates store m2
+
+.         
+.         * save the results (esttab) using overleaf_dir
+.         esttab m1 m2 using "$overleaf_dir/margin_did_both_rule_dropcovid.tex", replace ///
+>         nodepvars nomti nonum collabels(none) label b(3) se(3) parentheses ///
+>         star(* 0.10 ** 0.05 *** 0.01) ar2 plain lines fragment noconstant drop(_cons `controls_post')
+(file /Users/zrsong/MIT Dropbox/Zirui Song/Apps/Overleaf/Tax Incidence and Loan Contract Negotiations/Tables/margin_did_both_rule_dropcovid.tex not
+    found)
+(output written to /Users/zrsong/MIT Dropbox/Zirui Song/Apps/Overleaf/Tax Incidence and Loan Contract Negotiations/Tables/margin_did_both_rule_dropcovi
+> d.tex)
+
+.         est clear
 
 . restore
 
@@ -664,8 +656,7 @@ Absorbed degrees of freedom:
 >         DID regressions (30% and Loss: ROBUSTNESS RESULT TABLE 2 and Appendix)
 >         *********/
 . * Firm FE 
-. reghdfe margin_bps treated treated_post treated_loss treated_loss_post `controls' `deal_controls
-> ', absorb(year gvkey) vce(cluster gvkey)
+. reghdfe margin_bps treated treated_post treated_loss treated_loss_post `controls' `deal_controls', absorb(year gvkey) vce(cluster gvkey)
 (dropped 461 singleton observations)
 (MWFE estimator converged in 9 iterations)
 
@@ -717,8 +708,8 @@ Absorbed degrees of freedom:
 
 . estimates store m1
 
-. reghdfe margin_bps treated treated_post treated_loss treated_loss_post `controls' `controls_post
-> ' `deal_controls', absorb(year gvkey) vce(cluster gvkey)
+. reghdfe margin_bps treated treated_post treated_loss treated_loss_post `controls' `controls_post' `deal_controls', absorb(year gvkey) vce(cluster gvk
+> ey)
 (dropped 461 singleton observations)
 (MWFE estimator converged in 9 iterations)
 
@@ -784,22 +775,22 @@ Absorbed degrees of freedom:
 . preserve  
 
 .         /*drop treated treated_post treated_loss treated_loss_post
->         rename (treated_prev_3yr treated_prev_3yr_post treated_loss_prev_3yr treated_loss_prev_3
-> yr_post) (treated treated_post treated_loss treated_loss_post)
->         reghdfe margin_bps treated treated_post treated_loss treated_loss_post `controls' `deal_
-> controls', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
+>         rename (treated_prev_3yr treated_prev_3yr_post treated_loss_prev_3yr treated_loss_prev_3yr_post) (treated treated_post treated_loss treated_l
+> oss_post)
+>         reghdfe margin_bps treated treated_post treated_loss treated_loss_post `controls' `deal_controls', absorb(year ff_48 sp_rating_num) vce(clust
+> er gvkey)
 >         estimates store m3
->         reghdfe margin_bps treated treated_post treated_loss treated_loss_post `controls' `contr
-> ols_post' `deal_controls', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
+>         reghdfe margin_bps treated treated_post treated_loss treated_loss_post `controls' `controls_post' `deal_controls', absorb(year ff_48 sp_ratin
+> g_num) vce(cluster gvkey)
 >         estimates store m4*/
 .         
 .         drop treated treated_post treated_loss treated_loss_post
 
-.         rename (treated_prev_5yr treated_prev_5yr_post treated_loss_prev_5yr treated_loss_prev_5
-> yr_post) (treated treated_post treated_loss treated_loss_post)
+.         rename (treated_prev_5yr treated_prev_5yr_post treated_loss_prev_5yr treated_loss_prev_5yr_post) (treated treated_post treated_loss treated_l
+> oss_post)
 
-.         reghdfe margin_bps treated treated_post treated_loss treated_loss_post `controls' `deal_
-> controls', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
+.         reghdfe margin_bps treated treated_post treated_loss treated_loss_post `controls' `deal_controls', absorb(year ff_48 sp_rating_num) vce(clust
+> er gvkey)
 (MWFE estimator converged in 7 iterations)
 
 HDFE Linear regression                            Number of obs   =      4,712
@@ -851,8 +842,8 @@ Absorbed degrees of freedom:
 
 .         estimates store m5
 
-.         reghdfe margin_bps treated treated_post treated_loss treated_loss_post `controls' `contr
-> ols_post' `deal_controls', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
+.         reghdfe margin_bps treated treated_post treated_loss treated_loss_post `controls' `controls_post' `deal_controls', absorb(year ff_48 sp_ratin
+> g_num) vce(cluster gvkey)
 (MWFE estimator converged in 7 iterations)
 
 HDFE Linear regression                            Number of obs   =      4,712
@@ -920,10 +911,9 @@ Absorbed degrees of freedom:
 . * save the results (esttab) using overleaf_dir
 . esttab m1 m2 m5 m6 using "$overleaf_dir/margin_did_both_rule_robustness.tex", replace ///
 > nodepvars nomti nonum collabels(none) label b(3) se(3) parentheses ///
-> star(* 0.10 ** 0.05 *** 0.01) ar2 plain lines fragment noconstant keep(treated treated_post trea
-> ted_loss treated_loss_post)
-(output written to /Users/zrsong/Dropbox (MIT)/Apps/Overleaf/Tax Incidence and Loan Contract Negot
-> iation/Tables/margin_did_both_rule_robustness.tex)
+> star(* 0.10 ** 0.05 *** 0.01) ar2 plain lines fragment noconstant keep(treated treated_post treated_loss treated_loss_post)
+(output written to /Users/zrsong/MIT Dropbox/Zirui Song/Apps/Overleaf/Tax Incidence and Loan Contract Negotiations/Tables/margin_did_both_rule_robustne
+> ss.tex)
 
 . est clear
 
@@ -932,14 +922,11 @@ Absorbed degrees of freedom:
 . 
 . local treated_base "treated treated_post treated_loss treated_loss_post"
 
-. local treated_next_1yr "treated_next_1yr treated_next_1yr_post treated_loss_next_1yr treated_los
-> s_next_1yr_post"
+. local treated_next_1yr "treated_next_1yr treated_next_1yr_post treated_loss_next_1yr treated_loss_next_1yr_post"
 
-. local treated_next_3yr "treated_next_3yr treated_next_3yr_post treated_loss_next_3yr treated_los
-> s_next_3yr_post"
+. local treated_next_3yr "treated_next_3yr treated_next_3yr_post treated_loss_next_3yr treated_loss_next_3yr_post"
 
-. local treated_next_5yr "treated_next_5yr treated_next_5yr_post treated_loss_next_5yr treated_los
-> s_next_5yr_post"
+. local treated_next_5yr "treated_next_5yr treated_next_5yr_post treated_loss_next_5yr treated_loss_next_5yr_post"
 
 . local treated_eo_all "treated_eo treated_eo_post treated_loss_eo treated_loss_eo_post"
 
@@ -950,8 +937,7 @@ Absorbed degrees of freedom:
 
 .         rename (`treated_next_1yr') (`treated_base')
 
-.         reghdfe margin_bps `treated_base' `controls' `deal_controls', absorb(year ff_48 sp_ratin
-> g_num) vce(cluster gvkey) 
+.         reghdfe margin_bps `treated_base' `controls' `deal_controls', absorb(year ff_48 sp_rating_num) vce(cluster gvkey) 
 (MWFE estimator converged in 7 iterations)
 
 HDFE Linear regression                            Number of obs   =      4,712
@@ -1003,8 +989,7 @@ Absorbed degrees of freedom:
 
 .         estimates store m1
 
-.         reghdfe margin_bps `treated_base' `controls' `controls_post' `deal_controls', absorb(yea
-> r ff_48 sp_rating_num) vce(cluster gvkey)  
+.         reghdfe margin_bps `treated_base' `controls' `controls_post' `deal_controls', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)  
 (MWFE estimator converged in 7 iterations)
 
 HDFE Linear regression                            Number of obs   =      4,712
@@ -1070,11 +1055,9 @@ Absorbed degrees of freedom:
 .         /*
 >         drop `treated_base'
 >         rename (`treated_next_3yr') (`treated_base')
->         reghdfe margin_bps `treated_base' `controls' `deal_controls', absorb(year ff_48 sp_ratin
-> g_num) vce(cluster gvkey) 
+>         reghdfe margin_bps `treated_base' `controls' `deal_controls', absorb(year ff_48 sp_rating_num) vce(cluster gvkey) 
 >         estimates store m3
->         reghdfe margin_bps `treated_base' `controls' `controls_post' `deal_controls', absorb(yea
-> r ff_48 sp_rating_num) vce(cluster gvkey)  
+>         reghdfe margin_bps `treated_base' `controls' `controls_post' `deal_controls', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)  
 >         estimates store m4
 >         */
 .         
@@ -1082,8 +1065,7 @@ Absorbed degrees of freedom:
 
 .         rename (`treated_next_5yr') (`treated_base')
 
-.         reghdfe margin_bps `treated_base' `controls' `deal_controls', absorb(year ff_48 sp_ratin
-> g_num) vce(cluster gvkey) 
+.         reghdfe margin_bps `treated_base' `controls' `deal_controls', absorb(year ff_48 sp_rating_num) vce(cluster gvkey) 
 (MWFE estimator converged in 7 iterations)
 
 HDFE Linear regression                            Number of obs   =      4,712
@@ -1135,8 +1117,7 @@ Absorbed degrees of freedom:
 
 .         estimates store m5
 
-.         reghdfe margin_bps `treated_base' `controls' `controls_post' `deal_controls', absorb(yea
-> r ff_48 sp_rating_num) vce(cluster gvkey)  
+.         reghdfe margin_bps `treated_base' `controls' `controls_post' `deal_controls', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)  
 (MWFE estimator converged in 7 iterations)
 
 HDFE Linear regression                            Number of obs   =      4,712
@@ -1202,13 +1183,11 @@ Absorbed degrees of freedom:
 
 . 
 . * save the results (esttab) using overleaf_dir
-. esttab m1 m2 m5 m6 using "$overleaf_dir/margin_did_both_rule_robustness_forward.tex", replace //
-> /
+. esttab m1 m2 m5 m6 using "$overleaf_dir/margin_did_both_rule_robustness_forward.tex", replace ///
 > nodepvars nomti nonum collabels(none) label b(3) se(3) parentheses ///
-> star(* 0.10 ** 0.05 *** 0.01) ar2 plain lines fragment noconstant keep(treated treated_post trea
-> ted_loss treated_loss_post)
-(output written to /Users/zrsong/Dropbox (MIT)/Apps/Overleaf/Tax Incidence and Loan Contract Negot
-> iation/Tables/margin_did_both_rule_robustness_forward.tex)
+> star(* 0.10 ** 0.05 *** 0.01) ar2 plain lines fragment noconstant keep(treated treated_post treated_loss treated_loss_post)
+(output written to /Users/zrsong/MIT Dropbox/Zirui Song/Apps/Overleaf/Tax Incidence and Loan Contract Negotiations/Tables/margin_did_both_rule_robustne
+> ss_forward.tex)
 
 . est clear
 
@@ -1216,9 +1195,8 @@ Absorbed degrees of freedom:
 . ****** Appendix Tabld D2
 . 
 . *** DID regressions (30% and Loss: Treat X Covariates) ***
-. reghdfe margin_bps treated treated_post treated_loss treated_loss_post `controls' `controls_post
-> ' `controls_treated' `controls_treated_loss' `deal_controls', absorb(year ff_48 sp_rating_num) v
-> ce(cluster gvkey)
+. reghdfe margin_bps treated treated_post treated_loss treated_loss_post `controls' `controls_post' `controls_treated' `controls_treated_loss' `deal_co
+> ntrols', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
 (MWFE estimator converged in 7 iterations)
 
 HDFE Linear regression                            Number of obs   =      4,712
@@ -1300,9 +1278,8 @@ Absorbed degrees of freedom:
 
 . estimates store m1
 
-. *reghdfe log_margin_bps treated treated_post treated_loss treated_loss_post `controls' `controls
-> _post' `controls_treated' `controls_treated_loss' `deal_controls', absorb(year ff_48 sp_rating_n
-> um) vce(cluster gvkey)
+. *reghdfe log_margin_bps treated treated_post treated_loss treated_loss_post `controls' `controls_post' `controls_treated' `controls_treated_loss' `de
+> al_controls', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
 . *estimates store m2
 . 
 . *** DID regressions (30% and Loss: ROBUSTNESS E-balancing) ***
@@ -1343,18 +1320,14 @@ Absorbed degrees of freedom:
 . gen treated_three_post = treated_three * post
 
 . 
-. local controls "log_at cash_flows_by_at market_to_book ppent_by_at debt_by_at cash_by_at sales_g
-> rowth dividend_payer nol ret_vol"
+. local controls "log_at cash_flows_by_at market_to_book ppent_by_at debt_by_at cash_by_at sales_growth dividend_payer nol ret_vol"
 
-. local deal_controls "leveraged maturity log_deal_amount_converted secured_dummy tranche_type_dum
-> my tranche_o_a_dummy sponsor_dummy"
+. local deal_controls "leveraged maturity log_deal_amount_converted secured_dummy tranche_type_dummy tranche_o_a_dummy sponsor_dummy"
 
-. local treated_bi "treated_one treated_one_post treated_two treated_two_post treated_three treate
-> d_three_post"
+. local treated_bi "treated_one treated_one_post treated_two treated_two_post treated_three treated_three_post"
 
 . 
-. reghdfe margin_bps `treated_bi' `controls' `deal_controls', absorb(year ff_48 sp_rating_num) vce
-> (cluster gvkey)
+. reghdfe margin_bps `treated_bi' `controls' `deal_controls', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
 (MWFE estimator converged in 7 iterations)
 
 HDFE Linear regression                            Number of obs   =      4,712
@@ -1416,11 +1389,9 @@ Absorbed degrees of freedom:
 (3,219 real changes made)
 
 . 
-. local controls "log_at cash_flows_by_at market_to_book ppent_by_at debt_by_at cash_by_at sales_g
-> rowth dividend_payer nol ret_vol"
+. local controls "log_at cash_flows_by_at market_to_book ppent_by_at debt_by_at cash_by_at sales_growth dividend_payer nol ret_vol"
 
-. local deal_controls "leveraged maturity log_deal_amount_converted secured_dummy tranche_type_dum
-> my tranche_o_a_dummy sponsor_dummy"
+. local deal_controls "leveraged maturity log_deal_amount_converted secured_dummy tranche_type_dummy tranche_o_a_dummy sponsor_dummy"
 
 . 
 . ebalance treated_all `controls'
@@ -1428,8 +1399,7 @@ Absorbed degrees of freedom:
 
 Data Setup
 Treatment variable:   treated_all
-Covariate adjustment: log_at cash_flows_by_at market_to_book ppent_by_at debt_by_at cash_by_at sal
-> es_growth dividend_payer nol ret_vol 
+Covariate adjustment: log_at cash_flows_by_at market_to_book ppent_by_at debt_by_at cash_by_at sales_growth dividend_payer nol ret_vol 
 
 Optimizing...
 Iteration 1: Max Difference = 27317.3546
@@ -1486,8 +1456,8 @@ dividend_p~r |     .3362      .2233      .6933 |     .3363      .2233       .693
      ret_vol |     .1532    .008228      1.217 |     .1532     .01093      1.221 
 
 . 
-. reghdfe margin_bps treated treated_post treated_loss treated_loss_post `controls' `deal_controls
-> ' [pweight=_webal], absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
+. reghdfe margin_bps treated treated_post treated_loss treated_loss_post `controls' `deal_controls' [pweight=_webal], absorb(year ff_48 sp_rating_num) 
+> vce(cluster gvkey)
 (MWFE estimator converged in 8 iterations)
 
 HDFE Linear regression                            Number of obs   =      4,712
@@ -1539,25 +1509,24 @@ Absorbed degrees of freedom:
 
 . estimates store m3
 
-. *reghdfe log_margin_bps treated treated_post treated_loss treated_loss_post `controls' `deal_con
-> trols' [pweight=_webal], absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
+. *reghdfe log_margin_bps treated treated_post treated_loss treated_loss_post `controls' `deal_controls' [pweight=_webal], absorb(year ff_48 sp_rating_
+> num) vce(cluster gvkey)
 . *estimates store m4
 . 
 . * save the results (esttab) using overleaf_dir
 . esttab m1 m3 using "$overleaf_dir/margin_did_both_rule_robustness_2.tex", replace ///
 > nodepvars nomti nonum collabels(none) label b(3) se(3) parentheses ///
-> star(* 0.10 ** 0.05 *** 0.01) ar2 plain lines fragment noconstant keep(treated treated_post trea
-> ted_loss treated_loss_post)
-(output written to /Users/zrsong/Dropbox (MIT)/Apps/Overleaf/Tax Incidence and Loan Contract Negot
-> iation/Tables/margin_did_both_rule_robustness_2.tex)
+> star(* 0.10 ** 0.05 *** 0.01) ar2 plain lines fragment noconstant keep(treated treated_post treated_loss treated_loss_post)
+(output written to /Users/zrsong/MIT Dropbox/Zirui Song/Apps/Overleaf/Tax Incidence and Loan Contract Negotiations/Tables/margin_did_both_rule_robustne
+> ss_2.tex)
 
 . est clear
 
 . 
 . *** Appendix Table: Log Margin results with prev_3yr and prev_5yr definitions
 . * Appendix Table D1: Logged Margin
-. reghdfe log_margin_bps treated treated_post treated_loss treated_loss_post `controls' `deal_cont
-> rols', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
+. reghdfe log_margin_bps treated treated_post treated_loss treated_loss_post `controls' `deal_controls', absorb(year ff_48 sp_rating_num) vce(cluster g
+> vkey)
 (MWFE estimator converged in 7 iterations)
 
 HDFE Linear regression                            Number of obs   =      4,712
@@ -1609,8 +1578,8 @@ Absorbed degrees of freedom:
 
 . estimates store m1
 
-. reghdfe log_margin_bps treated treated_post treated_loss treated_loss_post `controls' `controls_
-> post' `deal_controls', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
+. reghdfe log_margin_bps treated treated_post treated_loss treated_loss_post `controls' `controls_post' `deal_controls', absorb(year ff_48 sp_rating_nu
+> m) vce(cluster gvkey)
 (MWFE estimator converged in 7 iterations)
 
 HDFE Linear regression                            Number of obs   =      4,712
@@ -1675,22 +1644,22 @@ Absorbed degrees of freedom:
 . preserve
 
 .         /*drop treated treated_post treated_loss treated_loss_post
->         rename (treated_prev_3yr treated_prev_3yr_post treated_loss_prev_3yr treated_loss_prev_3
-> yr_post) (treated treated_post treated_loss treated_loss_post)
->         reghdfe log_margin_bps treated treated_post treated_loss treated_loss_post `controls' `d
-> eal_controls', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
+>         rename (treated_prev_3yr treated_prev_3yr_post treated_loss_prev_3yr treated_loss_prev_3yr_post) (treated treated_post treated_loss treated_l
+> oss_post)
+>         reghdfe log_margin_bps treated treated_post treated_loss treated_loss_post `controls' `deal_controls', absorb(year ff_48 sp_rating_num) vce(c
+> luster gvkey)
 >         estimates store m3
->         reghdfe log_margin_bps treated treated_post treated_loss treated_loss_post `controls' `c
-> ontrols_post' `deal_controls', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
+>         reghdfe log_margin_bps treated treated_post treated_loss treated_loss_post `controls' `controls_post' `deal_controls', absorb(year ff_48 sp_r
+> ating_num) vce(cluster gvkey)
 >         estimates store m4 */
 .         
 .         drop treated treated_post treated_loss treated_loss_post
 
-.         rename (treated_prev_5yr treated_prev_5yr_post treated_loss_prev_5yr treated_loss_prev_5
-> yr_post) (treated treated_post treated_loss treated_loss_post)
+.         rename (treated_prev_5yr treated_prev_5yr_post treated_loss_prev_5yr treated_loss_prev_5yr_post) (treated treated_post treated_loss treated_l
+> oss_post)
 
-.         reghdfe log_margin_bps treated treated_post treated_loss treated_loss_post `controls' `d
-> eal_controls', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
+.         reghdfe log_margin_bps treated treated_post treated_loss treated_loss_post `controls' `deal_controls', absorb(year ff_48 sp_rating_num) vce(c
+> luster gvkey)
 (MWFE estimator converged in 7 iterations)
 
 HDFE Linear regression                            Number of obs   =      4,712
@@ -1742,8 +1711,8 @@ Absorbed degrees of freedom:
 
 .         estimates store m5
 
-.         reghdfe log_margin_bps treated treated_post treated_loss treated_loss_post `controls' `c
-> ontrols_post' `deal_controls', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
+.         reghdfe log_margin_bps treated treated_post treated_loss treated_loss_post `controls' `controls_post' `deal_controls', absorb(year ff_48 sp_r
+> ating_num) vce(cluster gvkey)
 (MWFE estimator converged in 7 iterations)
 
 HDFE Linear regression                            Number of obs   =      4,712
@@ -1810,10 +1779,8 @@ Absorbed degrees of freedom:
 . * save the results (esttab) using overleaf_dir
 . esttab m1 m2 m5 m6 using "$overleaf_dir/log_margin_did_both_rule.tex", replace ///
 > nodepvars nomti nonum collabels(none) label b(3) se(3) parentheses ///
-> star(* 0.10 ** 0.05 *** 0.01) ar2 plain lines fragment noconstant keep(treated treated_post trea
-> ted_loss treated_loss_post)
-(output written to /Users/zrsong/Dropbox (MIT)/Apps/Overleaf/Tax Incidence and Loan Contract Negot
-> iation/Tables/log_margin_did_both_rule.tex)
+> star(* 0.10 ** 0.05 *** 0.01) ar2 plain lines fragment noconstant keep(treated treated_post treated_loss treated_loss_post)
+(output written to /Users/zrsong/MIT Dropbox/Zirui Song/Apps/Overleaf/Tax Incidence and Loan Contract Negotiations/Tables/log_margin_did_both_rule.tex)
 
 . est clear
 
@@ -1833,18 +1800,16 @@ Absorbed degrees of freedom:
 (2,374 observations deleted)
 
 . 
-.         local controls "log_at cash_flows_by_at market_to_book ppent_by_at debt_by_at cash_by_at
->  sales_growth dividend_payer nol ret_vol"
+.         local controls "log_at cash_flows_by_at market_to_book ppent_by_at debt_by_at cash_by_at sales_growth dividend_payer nol ret_vol"
 
-.         local deal_controls "leveraged maturity log_deal_amount_converted secured_dummy tranche_
-> type_dummy tranche_o_a_dummy sponsor_dummy"
+.         local deal_controls "leveraged maturity log_deal_amount_converted secured_dummy tranche_type_dummy tranche_o_a_dummy sponsor_dummy"
 
-.         local controls_post "log_at_post cash_flows_by_at_post market_to_book_post ppent_by_at_p
-> ost debt_by_at_post cash_by_at_post sales_growth_post dividend_payer_post nol_post ret_vol_post"
+.         local controls_post "log_at_post cash_flows_by_at_post market_to_book_post ppent_by_at_post debt_by_at_post cash_by_at_post sales_growth_post
+>  dividend_payer_post nol_post ret_vol_post"
 
 . 
-.         reghdfe margin_bps treated treated_post treated_loss treated_loss_post `controls' `deal_
-> controls', absorb(year gvkey sp_rating_num) vce(cluster gvkey)
+.         reghdfe margin_bps treated treated_post treated_loss treated_loss_post `controls' `deal_controls', absorb(year gvkey sp_rating_num) vce(clust
+> er gvkey)
 (dropped 1 singleton observations)
 (MWFE estimator converged in 19 iterations)
 
@@ -1897,8 +1862,8 @@ Absorbed degrees of freedom:
 
 .         estimates store m1
 
-.         reghdfe margin_bps treated treated_post treated_loss treated_loss_post `controls' `contr
-> ols_post' `deal_controls', absorb(year gvkey sp_rating_num) vce(cluster gvkey)
+.         reghdfe margin_bps treated treated_post treated_loss treated_loss_post `controls' `controls_post' `deal_controls', absorb(year gvkey sp_ratin
+> g_num) vce(cluster gvkey)
 (dropped 1 singleton observations)
 (MWFE estimator converged in 19 iterations)
 
@@ -1965,12 +1930,9 @@ Absorbed degrees of freedom:
 .         * save the results (esttab) using overleaf_dir
 .         esttab m1 m2 using "$overleaf_dir/margin_did_both_rule_balance_panel.tex", replace ///
 >         nodepvars nomti nonum collabels(none) label b(3) se(3) parentheses ///
->         star(* 0.10 ** 0.05 *** 0.01) ar2 plain lines fragment noconstant keep(treated treated_p
-> ost treated_loss treated_loss_post)
-(file /Users/zrsong/Dropbox (MIT)/Apps/Overleaf/Tax Incidence and Loan Contract
-    Negotiation/Tables/margin_did_both_rule_balance_panel.tex not found)
-(output written to /Users/zrsong/Dropbox (MIT)/Apps/Overleaf/Tax Incidence and Loan Contract Negot
-> iation/Tables/margin_did_both_rule_balance_panel.tex)
+>         star(* 0.10 ** 0.05 *** 0.01) ar2 plain lines fragment noconstant keep(treated treated_post treated_loss treated_loss_post)
+(output written to /Users/zrsong/MIT Dropbox/Zirui Song/Apps/Overleaf/Tax Incidence and Loan Contract Negotiations/Tables/margin_did_both_rule_balance_
+> panel.tex)
 
 .         est clear
 
@@ -1983,8 +1945,8 @@ Absorbed degrees of freedom:
 . 
 . *** DID regressions (30% and Loss: Perf Pricing and Num Fin Cov) ***
 . 
-. reghdfe perf_pricing_dummy treated treated_post treated_loss treated_loss_post `controls' `deal_
-> controls', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
+. reghdfe perf_pricing_dummy treated treated_post treated_loss treated_loss_post `controls' `deal_controls', absorb(year ff_48 sp_rating_num) vce(clust
+> er gvkey)
 (MWFE estimator converged in 7 iterations)
 
 HDFE Linear regression                            Number of obs   =      4,712
@@ -2036,8 +1998,8 @@ Absorbed degrees of freedom:
 
 . estimates store m1
 
-. reghdfe num_fin_cov treated treated_post treated_loss treated_loss_post `controls' `deal_control
-> s', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
+. reghdfe num_fin_cov treated treated_post treated_loss treated_loss_post `controls' `deal_controls', absorb(year ff_48 sp_rating_num) vce(cluster gvke
+> y)
 (MWFE estimator converged in 7 iterations)
 
 HDFE Linear regression                            Number of obs   =      4,712
@@ -2090,8 +2052,7 @@ Absorbed degrees of freedom:
 . estimates store m2
 
 . *** DID regressions (covenant tightness)
-. reghdfe pviol treated treated_post treated_loss treated_loss_post `controls' `deal_controls', ab
-> sorb(year ff_48 sp_rating_num) vce(cluster gvkey)
+. reghdfe pviol treated treated_post treated_loss treated_loss_post `controls' `deal_controls', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
 (dropped 2 singleton observations)
 (MWFE estimator converged in 8 iterations)
 
@@ -2147,12 +2108,11 @@ Absorbed degrees of freedom:
 . 
 . *** DID regressions (30% and Loss: Loan Size and Maturity) ***
 . 
-. local deal_controls_2 "leveraged secured_dummy tranche_type_dummy tranche_o_a_dummy sponsor_dumm
-> y"
+. local deal_controls_2 "leveraged secured_dummy tranche_type_dummy tranche_o_a_dummy sponsor_dummy"
 
 . 
-. reghdfe deal_amount_converted treated treated_post treated_loss treated_loss_post `controls' `de
-> al_controls_2', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
+. reghdfe deal_amount_converted treated treated_post treated_loss treated_loss_post `controls' `deal_controls_2', absorb(year ff_48 sp_rating_num) vce(
+> cluster gvkey)
 (MWFE estimator converged in 7 iterations)
 
 HDFE Linear regression                            Number of obs   =      4,712
@@ -2203,8 +2163,8 @@ Absorbed degrees of freedom:
 . estimates store m4
 
 . 
-. reghdfe log_deal_amount_converted treated treated_post treated_loss treated_loss_post `controls'
->  `deal_controls_2', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
+. reghdfe log_deal_amount_converted treated treated_post treated_loss treated_loss_post `controls' `deal_controls_2', absorb(year ff_48 sp_rating_num) 
+> vce(cluster gvkey)
 (MWFE estimator converged in 7 iterations)
 
 HDFE Linear regression                            Number of obs   =      4,712
@@ -2255,8 +2215,8 @@ Absorbed degrees of freedom:
 . estimates store m5
 
 . 
-. reghdfe maturity treated treated_post treated_loss treated_loss_post `controls' `deal_controls_2
-> ', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
+. reghdfe maturity treated treated_post treated_loss treated_loss_post `controls' `deal_controls_2', absorb(year ff_48 sp_rating_num) vce(cluster gvkey
+> )
 (MWFE estimator converged in 7 iterations)
 
 HDFE Linear regression                            Number of obs   =      4,712
@@ -2310,26 +2270,24 @@ Absorbed degrees of freedom:
 . * save the results (esttab) using overleaf_dir
 . esttab m1 m2 m3 m4 m5 m6 using "$overleaf_dir/other_terms_did_both_rule.tex", replace ///
 > nodepvars nomti nonum collabels(none) label b(3) se(3) parentheses ///
-> star(* 0.10 ** 0.05 *** 0.01) ar2 plain lines fragment noconstant keep(treated treated_post trea
-> ted_loss treated_loss_post)
-(output written to /Users/zrsong/Dropbox (MIT)/Apps/Overleaf/Tax Incidence and Loan Contract Negot
-> iation/Tables/other_terms_did_both_rule.tex)
+> star(* 0.10 ** 0.05 *** 0.01) ar2 plain lines fragment noconstant keep(treated treated_post treated_loss treated_loss_post)
+(output written to /Users/zrsong/MIT Dropbox/Zirui Song/Apps/Overleaf/Tax Incidence and Loan Contract Negotiations/Tables/other_terms_did_both_rule.tex
+> )
 
 . est clear
 
 . 
 . *********** Dynamic Regressions ***********
-. local dynamic_treated "treated_year_2014 treated_year_2015 treated_year_2016 treated_year_2018 t
-> reated_year_2019 treated_year_2020 treated_year_2021 treated_year_2022 treated_year_2023"
+. local dynamic_treated "treated_year_2014 treated_year_2015 treated_year_2016 treated_year_2018 treated_year_2019 treated_year_2020 treated_year_2021 
+> treated_year_2022 treated_year_2023"
 
-. local dynamic_treated_loss "treated_loss_year_2014 treated_loss_year_2015 treated_loss_year_2016
->  treated_loss_year_2018 treated_loss_year_2019 treated_loss_year_2020 treated_loss_year_2021 tre
-> ated_loss_year_2022 treated_loss_year_2023"
+. local dynamic_treated_loss "treated_loss_year_2014 treated_loss_year_2015 treated_loss_year_2016 treated_loss_year_2018 treated_loss_year_2019 treate
+> d_loss_year_2020 treated_loss_year_2021 treated_loss_year_2022 treated_loss_year_2023"
 
 . 
 . *** Both Rule ***
-. reghdfe margin_bps treated treated_loss `dynamic_treated' `dynamic_treated_loss' `controls' `dea
-> l_controls', absorb(year ff_48 sp_rating_num) vce(cluster ff_48)
+. reghdfe margin_bps treated treated_loss `dynamic_treated' `dynamic_treated_loss' `controls' `deal_controls', absorb(year ff_48 sp_rating_num) vce(clu
+> ster ff_48)
 (MWFE estimator converged in 7 iterations)
 
 HDFE Linear regression                            Number of obs   =      4,712
@@ -2403,16 +2361,16 @@ Absorbed degrees of freedom:
 
 . 
 . esttab mat(res) using "$overleaf_dir/margin_did_dynamic_both_ff48.csv", replace mlab(none)
-(output written to /Users/zrsong/Dropbox (MIT)/Apps/Overleaf/Tax Incidence and Loan Contract Negot
-> iation/Tables/margin_did_dynamic_both_ff48.csv)
+(output written to /Users/zrsong/MIT Dropbox/Zirui Song/Apps/Overleaf/Tax Incidence and Loan Contract Negotiations/Tables/margin_did_dynamic_both_ff48.
+> csv)
 
 . 
 . * drop 2020 and re run the regression
 . drop if year == 2020
 (292 observations deleted)
 
-. reghdfe margin_bps treated treated_loss `dynamic_treated' `dynamic_treated_loss' `controls' `dea
-> l_controls', absorb(year ff_48 sp_rating_num) vce(cluster ff_48)
+. reghdfe margin_bps treated treated_loss `dynamic_treated' `dynamic_treated_loss' `controls' `deal_controls', absorb(year ff_48 sp_rating_num) vce(clu
+> ster ff_48)
 (MWFE estimator converged in 7 iterations)
 note: treated_year_2020 omitted because of collinearity
 note: treated_loss_year_2020 omitted because of collinearity
@@ -2487,15 +2445,13 @@ Absorbed degrees of freedom:
 . mat res = c , srdvcovbt
 
 . 
-. esttab mat(res) using "$overleaf_dir/margin_did_dynamic_both_ff48_no2020.csv", replace mlab(none
-> )
-(output written to /Users/zrsong/Dropbox (MIT)/Apps/Overleaf/Tax Incidence and Loan Contract Negot
-> iation/Tables/margin_did_dynamic_both_ff48_no2020.csv)
+. esttab mat(res) using "$overleaf_dir/margin_did_dynamic_both_ff48_no2020.csv", replace mlab(none)
+(output written to /Users/zrsong/MIT Dropbox/Zirui Song/Apps/Overleaf/Tax Incidence and Loan Contract Negotiations/Tables/margin_did_dynamic_both_ff48_
+> no2020.csv)
 
 . 
 . *** Loss ***
-. reghdfe margin_bps treated_loss `dynamic_treated_loss' `controls' `deal_controls', absorb(year f
-> f_48 sp_rating_num) vce(cluster ff_48)
+. reghdfe margin_bps treated_loss `dynamic_treated_loss' `controls' `deal_controls', absorb(year ff_48 sp_rating_num) vce(cluster ff_48)
 (MWFE estimator converged in 7 iterations)
 note: treated_loss_year_2020 omitted because of collinearity
 
@@ -2560,16 +2516,15 @@ Absorbed degrees of freedom:
 
 . 
 . esttab mat(res) using "$overleaf_dir/margin_did_dynamic_loss_ff48.csv", replace mlab(none)
-(output written to /Users/zrsong/Dropbox (MIT)/Apps/Overleaf/Tax Incidence and Loan Contract Negot
-> iation/Tables/margin_did_dynamic_loss_ff48.csv)
+(output written to /Users/zrsong/MIT Dropbox/Zirui Song/Apps/Overleaf/Tax Incidence and Loan Contract Negotiations/Tables/margin_did_dynamic_loss_ff48.
+> csv)
 
 . 
 . * drop 2020 and re run the regression
 . drop if year == 2020
 (0 observations deleted)
 
-. reghdfe margin_bps treated_loss `dynamic_treated_loss' `controls' `deal_controls', absorb(year f
-> f_48 sp_rating_num) vce(cluster ff_48)
+. reghdfe margin_bps treated_loss `dynamic_treated_loss' `controls' `deal_controls', absorb(year ff_48 sp_rating_num) vce(cluster ff_48)
 (MWFE estimator converged in 7 iterations)
 note: treated_loss_year_2020 omitted because of collinearity
 
@@ -2633,16 +2588,14 @@ Absorbed degrees of freedom:
 . mat res = c , srdvcovbt
 
 . 
-. esttab mat(res) using "$overleaf_dir/margin_did_dynamic_loss_ff48_no2020.csv", replace mlab(none
-> )
-(output written to /Users/zrsong/Dropbox (MIT)/Apps/Overleaf/Tax Incidence and Loan Contract Negot
-> iation/Tables/margin_did_dynamic_loss_ff48_no2020.csv)
+. esttab mat(res) using "$overleaf_dir/margin_did_dynamic_loss_ff48_no2020.csv", replace mlab(none)
+(output written to /Users/zrsong/MIT Dropbox/Zirui Song/Apps/Overleaf/Tax Incidence and Loan Contract Negotiations/Tables/margin_did_dynamic_loss_ff48_
+> no2020.csv)
 
 . 
 . *** 30% Rule ***
 . 
-. reghdfe margin_bps treated `dynamic_treated' `controls' `deal_controls', absorb(year ff_48 sp_ra
-> ting_num) vce(cluster ff_48)
+. reghdfe margin_bps treated `dynamic_treated' `controls' `deal_controls', absorb(year ff_48 sp_rating_num) vce(cluster ff_48)
 (MWFE estimator converged in 7 iterations)
 note: treated_year_2020 omitted because of collinearity
 
@@ -2707,12 +2660,10 @@ Absorbed degrees of freedom:
 
 . 
 . esttab mat(res) using "$overleaf_dir/margin_did_dynamic_ff48.csv", replace mlab(none)
-(output written to /Users/zrsong/Dropbox (MIT)/Apps/Overleaf/Tax Incidence and Loan Contract Negot
-> iation/Tables/margin_did_dynamic_ff48.csv)
+(output written to /Users/zrsong/MIT Dropbox/Zirui Song/Apps/Overleaf/Tax Incidence and Loan Contract Negotiations/Tables/margin_did_dynamic_ff48.csv)
 
 . 
-. reghdfe margin_bps treated `dynamic_treated' `controls' `deal_controls', absorb(year gvkey sp_ra
-> ting_num) vce(cluster gvkey)
+. reghdfe margin_bps treated `dynamic_treated' `controls' `deal_controls', absorb(year gvkey sp_rating_num) vce(cluster gvkey)
 (dropped 472 singleton observations)
 (MWFE estimator converged in 20 iterations)
 note: treated_year_2020 omitted because of collinearity
@@ -2778,13 +2729,11 @@ Absorbed degrees of freedom:
 
 . 
 . esttab mat(res) using "$overleaf_dir/margin_did_dynamic_gvkey.csv", replace mlab(none)
-(output written to /Users/zrsong/Dropbox (MIT)/Apps/Overleaf/Tax Incidence and Loan Contract Negot
-> iation/Tables/margin_did_dynamic_gvkey.csv)
+(output written to /Users/zrsong/MIT Dropbox/Zirui Song/Apps/Overleaf/Tax Incidence and Loan Contract Negotiations/Tables/margin_did_dynamic_gvkey.csv)
 
 . 
 . *********** Dynamic Regressions (num of financial covenants) ***********
-. reghdfe num_fin_cov treated `dynamic_treated' `controls' `deal_controls', absorb(year ff_48 sp_r
-> ating_num) vce(cluster ff_48)
+. reghdfe num_fin_cov treated `dynamic_treated' `controls' `deal_controls', absorb(year ff_48 sp_rating_num) vce(cluster ff_48)
 (MWFE estimator converged in 7 iterations)
 note: treated_year_2020 omitted because of collinearity
 
@@ -2849,12 +2798,11 @@ Absorbed degrees of freedom:
 
 . 
 . esttab mat(res) using "$overleaf_dir/num_fin_cov_did_dynamic_ff48.csv", replace mlab(none)
-(output written to /Users/zrsong/Dropbox (MIT)/Apps/Overleaf/Tax Incidence and Loan Contract Negot
-> iation/Tables/num_fin_cov_did_dynamic_ff48.csv)
+(output written to /Users/zrsong/MIT Dropbox/Zirui Song/Apps/Overleaf/Tax Incidence and Loan Contract Negotiations/Tables/num_fin_cov_did_dynamic_ff48.
+> csv)
 
 . 
-. reghdfe num_fin_cov treated `dynamic_treated' `controls' `deal_controls', absorb(year gvkey sp_r
-> ating_num) vce(cluster gvkey)
+. reghdfe num_fin_cov treated `dynamic_treated' `controls' `deal_controls', absorb(year gvkey sp_rating_num) vce(cluster gvkey)
 (dropped 472 singleton observations)
 (MWFE estimator converged in 20 iterations)
 note: treated_year_2020 omitted because of collinearity
@@ -2920,13 +2868,12 @@ Absorbed degrees of freedom:
 
 . 
 . esttab mat(res) using "$overleaf_dir/num_fin_cov_did_dynamic_gvkey.csv", replace mlab(none)
-(output written to /Users/zrsong/Dropbox (MIT)/Apps/Overleaf/Tax Incidence and Loan Contract Negot
-> iation/Tables/num_fin_cov_did_dynamic_gvkey.csv)
+(output written to /Users/zrsong/MIT Dropbox/Zirui Song/Apps/Overleaf/Tax Incidence and Loan Contract Negotiations/Tables/num_fin_cov_did_dynamic_gvkey
+> .csv)
 
 . 
 . *********** Dynamic Regressions (perf_pricing_dummy) ***********
-. reghdfe perf_pricing_dummy treated `dynamic_treated' `controls' `deal_controls', absorb(year ff_
-> 48 sp_rating_num) vce(cluster ff_48)
+. reghdfe perf_pricing_dummy treated `dynamic_treated' `controls' `deal_controls', absorb(year ff_48 sp_rating_num) vce(cluster ff_48)
 (MWFE estimator converged in 7 iterations)
 note: treated_year_2020 omitted because of collinearity
 
@@ -2990,14 +2937,12 @@ Absorbed degrees of freedom:
 . mat res = c , srdvcovbt
 
 . 
-. esttab mat(res) using "$overleaf_dir/perf_pricing_dummy_did_dynamic_ff48.csv", replace mlab(none
-> )
-(output written to /Users/zrsong/Dropbox (MIT)/Apps/Overleaf/Tax Incidence and Loan Contract Negot
-> iation/Tables/perf_pricing_dummy_did_dynamic_ff48.csv)
+. esttab mat(res) using "$overleaf_dir/perf_pricing_dummy_did_dynamic_ff48.csv", replace mlab(none)
+(output written to /Users/zrsong/MIT Dropbox/Zirui Song/Apps/Overleaf/Tax Incidence and Loan Contract Negotiations/Tables/perf_pricing_dummy_did_dynami
+> c_ff48.csv)
 
 . 
-. reghdfe perf_pricing_dummy treated `dynamic_treated' `controls' `deal_controls', absorb(year gvk
-> ey sp_rating_num) vce(cluster gvkey)
+. reghdfe perf_pricing_dummy treated `dynamic_treated' `controls' `deal_controls', absorb(year gvkey sp_rating_num) vce(cluster gvkey)
 (dropped 472 singleton observations)
 (MWFE estimator converged in 20 iterations)
 note: treated_year_2020 omitted because of collinearity
@@ -3062,15 +3007,13 @@ Absorbed degrees of freedom:
 . mat res = c , srdvcovbt
 
 . 
-. esttab mat(res) using "$overleaf_dir/perf_pricing_dummy_did_dynamic_gvkey.csv", replace mlab(non
-> e)
-(output written to /Users/zrsong/Dropbox (MIT)/Apps/Overleaf/Tax Incidence and Loan Contract Negot
-> iation/Tables/perf_pricing_dummy_did_dynamic_gvkey.csv)
+. esttab mat(res) using "$overleaf_dir/perf_pricing_dummy_did_dynamic_gvkey.csv", replace mlab(none)
+(output written to /Users/zrsong/MIT Dropbox/Zirui Song/Apps/Overleaf/Tax Incidence and Loan Contract Negotiations/Tables/perf_pricing_dummy_did_dynami
+> c_gvkey.csv)
 
 . 
 . *********** Dynamic Regressions (sweep_dummy) ***********
-. reghdfe sweep_dummy treated `dynamic_treated' `controls' `deal_controls', absorb(year ff_48 sp_r
-> ating_num) vce(cluster ff_48)
+. reghdfe sweep_dummy treated `dynamic_treated' `controls' `deal_controls', absorb(year ff_48 sp_rating_num) vce(cluster ff_48)
 (MWFE estimator converged in 7 iterations)
 note: treated_year_2020 omitted because of collinearity
 
@@ -3135,12 +3078,11 @@ Absorbed degrees of freedom:
 
 . 
 . esttab mat(res) using "$overleaf_dir/sweep_dummy_did_dynamic_ff48.csv", replace mlab(none)
-(output written to /Users/zrsong/Dropbox (MIT)/Apps/Overleaf/Tax Incidence and Loan Contract Negot
-> iation/Tables/sweep_dummy_did_dynamic_ff48.csv)
+(output written to /Users/zrsong/MIT Dropbox/Zirui Song/Apps/Overleaf/Tax Incidence and Loan Contract Negotiations/Tables/sweep_dummy_did_dynamic_ff48.
+> csv)
 
 . 
-. reghdfe sweep_dummy treated `dynamic_treated' `controls' `deal_controls', absorb(year gvkey sp_r
-> ating_num) vce(cluster gvkey)
+. reghdfe sweep_dummy treated `dynamic_treated' `controls' `deal_controls', absorb(year gvkey sp_rating_num) vce(cluster gvkey)
 (dropped 472 singleton observations)
 (MWFE estimator converged in 20 iterations)
 note: treated_year_2020 omitted because of collinearity
@@ -3206,46 +3148,40 @@ Absorbed degrees of freedom:
 
 . 
 . esttab mat(res) using "$overleaf_dir/sweep_dummy_did_dynamic_gvkey.csv", replace mlab(none)
-(output written to /Users/zrsong/Dropbox (MIT)/Apps/Overleaf/Tax Incidence and Loan Contract Negot
-> iation/Tables/sweep_dummy_did_dynamic_gvkey.csv)
+(output written to /Users/zrsong/MIT Dropbox/Zirui Song/Apps/Overleaf/Tax Incidence and Loan Contract Negotiations/Tables/sweep_dummy_did_dynamic_gvkey
+> .csv)
 
 . 
 . *********** Binscatters ***********
 . * binscatters
-. binscatter margin_bps year, by(treated_loss) controls(`controls' `deal_controls' i.ff_48 i.sp_ra
-> ting_num) legend(label(1 "Control (Loss)") label(2 "Treated (Loss)") position(1) ring(0)) msymbo
-> l(o X) mcolor(blue red) lcolor(blue red) ///
-> xtitle("Year") ytitle("Interest Spread (Basis Points)") xline(2018) xlabel(2014(1)2023) savegrap
-> h("$fig_dir/binscatter_margin_bps_treated_loss.png") replace
-file /Users/zrsong/Dropbox (MIT)/Apps/Overleaf/Tax Incidence and Loan Contract
-    Negotiation/Figures/binscatter_margin_bps_treated_loss.png saved as PNG format
+. binscatter margin_bps year, by(treated_loss) controls(`controls' `deal_controls' i.ff_48 i.sp_rating_num) legend(label(1 "Control (Loss)") label(2 "T
+> reated (Loss)") position(1) ring(0)) msymbol(o X) mcolor(blue red) lcolor(blue red) ///
+> xtitle("Year") ytitle("Interest Spread (Basis Points)") xline(2018) xlabel(2014(1)2023) savegraph("$fig_dir/binscatter_margin_bps_treated_loss.png") 
+> replace
+file /Users/zrsong/MIT Dropbox/Zirui Song/Apps/Overleaf/Tax Incidence and Loan Contract Negotiations/Figures/binscatter_margin_bps_treated_loss.png
+    saved as PNG format
 
 . 
-. binscatter log_margin_bps year, by(treated_loss) controls(`controls' `deal_controls' i.ff_48 i.s
-> p_rating_num) legend(label(1 "Control (Loss)") label(2 "Treated (Loss)") position(1) ring(0)) ms
-> ymbol(o X) mcolor(blue red) lcolor(blue red) ///
-> xtitle("Year") ytitle("Log Interest Spread") xline(2018) xlabel(2014(1)2023) savegraph("$fig_dir
-> /binscatter_log_margin_bps_treated_loss.png") replace
-file /Users/zrsong/Dropbox (MIT)/Apps/Overleaf/Tax Incidence and Loan Contract
-    Negotiation/Figures/binscatter_log_margin_bps_treated_loss.png saved as PNG format
+. binscatter log_margin_bps year, by(treated_loss) controls(`controls' `deal_controls' i.ff_48 i.sp_rating_num) legend(label(1 "Control (Loss)") label(
+> 2 "Treated (Loss)") position(1) ring(0)) msymbol(o X) mcolor(blue red) lcolor(blue red) ///
+> xtitle("Year") ytitle("Log Interest Spread") xline(2018) xlabel(2014(1)2023) savegraph("$fig_dir/binscatter_log_margin_bps_treated_loss.png") replace
+file /Users/zrsong/MIT Dropbox/Zirui Song/Apps/Overleaf/Tax Incidence and Loan Contract
+    Negotiations/Figures/binscatter_log_margin_bps_treated_loss.png saved as PNG format
 
 . 
-. binscatter margin_bps year, by(treated) controls(`controls' `deal_controls' i.ff_48 i.sp_rating_
-> num) legend(label(1 "Control (30% rule)") label(2 "Treated (30% rule)") position(1) ring(0)) msy
-> mbol(o X) mcolor(blue red) lcolor(blue red) ///
-> xtitle("Year") ytitle("Interest Spread (Basis Points)") xline(2018) xlabel(2014(1)2023) savegrap
-> h("$fig_dir/binscatter_margin_bps_treated.png") replace
-file /Users/zrsong/Dropbox (MIT)/Apps/Overleaf/Tax Incidence and Loan Contract
-    Negotiation/Figures/binscatter_margin_bps_treated.png saved as PNG format
+. binscatter margin_bps year, by(treated) controls(`controls' `deal_controls' i.ff_48 i.sp_rating_num) legend(label(1 "Control (30% rule)") label(2 "Tr
+> eated (30% rule)") position(1) ring(0)) msymbol(o X) mcolor(blue red) lcolor(blue red) ///
+> xtitle("Year") ytitle("Interest Spread (Basis Points)") xline(2018) xlabel(2014(1)2023) savegraph("$fig_dir/binscatter_margin_bps_treated.png") repla
+> ce
+file /Users/zrsong/MIT Dropbox/Zirui Song/Apps/Overleaf/Tax Incidence and Loan Contract Negotiations/Figures/binscatter_margin_bps_treated.png saved
+    as PNG format
 
 . 
-. binscatter log_margin_bps year, by(treated) controls(`controls' `deal_controls' i.ff_48 i.sp_rat
-> ing_num) legend(label(1 "Control (30% rule)") label(2 "Treated (30% rule)") position(1) ring(0))
->  msymbol(o X) mcolor(blue red) lcolor(blue red) ///
-> xtitle("Year") ytitle("Log Interest Spread") xline(2018) xlabel(2014(1)2023) savegraph("$fig_dir
-> /binscatter_log_margin_bps_treated.png") replace
-file /Users/zrsong/Dropbox (MIT)/Apps/Overleaf/Tax Incidence and Loan Contract
-    Negotiation/Figures/binscatter_log_margin_bps_treated.png saved as PNG format
+. binscatter log_margin_bps year, by(treated) controls(`controls' `deal_controls' i.ff_48 i.sp_rating_num) legend(label(1 "Control (30% rule)") label(2
+>  "Treated (30% rule)") position(1) ring(0)) msymbol(o X) mcolor(blue red) lcolor(blue red) ///
+> xtitle("Year") ytitle("Log Interest Spread") xline(2018) xlabel(2014(1)2023) savegraph("$fig_dir/binscatter_log_margin_bps_treated.png") replace
+file /Users/zrsong/MIT Dropbox/Zirui Song/Apps/Overleaf/Tax Incidence and Loan Contract Negotiations/Figures/binscatter_log_margin_bps_treated.png
+    saved as PNG format
 
 . 
 . /***********
@@ -3325,11 +3261,9 @@ file /var/folders/n2/pgdf58ms1yd3ch8xjn9fmpmm0000gq/T//S_14667.000007 saved as .
 
 . 
 . * firm-level 
-. local controls "log_at cash_flows_by_at market_to_book ppent_by_at debt_by_at cash_by_at sales_g
-> rowth dividend_payer nol ret_vol"
+. local controls "log_at cash_flows_by_at market_to_book ppent_by_at debt_by_at cash_by_at sales_growth dividend_payer nol ret_vol"
 
-. local deal_controls "leveraged maturity log_deal_amount_converted secured_dummy tranche_type_dum
-> my tranche_o_a_dummy sponsor_dummy"
+. local deal_controls "leveraged maturity log_deal_amount_converted secured_dummy tranche_type_dummy tranche_o_a_dummy sponsor_dummy"
 
 . local treat_vars "treated treated_post treated_loss treated_loss_post"
 
@@ -3352,8 +3286,7 @@ file /var/folders/n2/pgdf58ms1yd3ch8xjn9fmpmm0000gq/T//S_14667.000007 saved as .
 (13 missing values generated)
 
 . 
-. reghdfe margin_bps treated_loss treated_loss_post `controls' `deal_controls', absorb(year gvkey 
-> sp_rating_num) 
+. reghdfe margin_bps treated_loss treated_loss_post `controls' `deal_controls', absorb(year gvkey sp_rating_num) 
 (dropped 1 singleton observations)
 (MWFE estimator converged in 19 iterations)
 
@@ -3401,8 +3334,7 @@ Absorbed degrees of freedom:
 ? = number of redundant parameters may be higher
 
 . 
-. reg margin_bps `treat_vars' `controls' `deal_controls' i.year i.gvkey ib2.sp_rating_num if incre
-> ase_competition == 1
+. reg margin_bps `treat_vars' `controls' `deal_controls' i.year i.gvkey ib2.sp_rating_num if increase_competition == 1
 note: 1b.gvkey identifies no observations in the sample.
 note: 315318.gvkey omitted because of collinearity.
 note: 2b.sp_rating_num identifies no observations in the sample.
@@ -3685,8 +3617,7 @@ log_deal_amount_converted |  -11.16902   4.710413    -2.37   0.018    -20.41346 
 . estimates store m1 
 
 . 
-. reg margin_bps `treat_vars' `controls' `deal_controls' i.year i.gvkey ib2.sp_rating_num if incre
-> ase_competition == 0
+. reg margin_bps `treat_vars' `controls' `deal_controls' i.year i.gvkey ib2.sp_rating_num if increase_competition == 0
 note: 1b.gvkey identifies no observations in the sample.
 note: 264387.gvkey omitted because of collinearity.
 note: 2b.sp_rating_num identifies no observations in the sample.
@@ -4641,11 +4572,9 @@ file ../3. Data/Processed/tranche_level_ds_compa_wlabel_withcomp.dta saved
 
 . 
 . * regressions
-. local controls "log_at cash_flows_by_at market_to_book ppent_by_at debt_by_at cash_by_at sales_g
-> rowth dividend_payer nol ret_vol"
+. local controls "log_at cash_flows_by_at market_to_book ppent_by_at debt_by_at cash_by_at sales_growth dividend_payer nol ret_vol"
 
-. local deal_controls "leveraged maturity log_deal_amount_converted secured_dummy tranche_type_dum
-> my tranche_o_a_dummy sponsor_dummy"
+. local deal_controls "leveraged maturity log_deal_amount_converted secured_dummy tranche_type_dummy tranche_o_a_dummy sponsor_dummy"
 
 . local treat_vars "treated treated_post treated_loss treated_loss_post"
 
@@ -4656,8 +4585,7 @@ file ../3. Data/Processed/tranche_level_ds_compa_wlabel_withcomp.dta saved
 . fvset base 1 gvkey
 
 . 
-. reg margin_bps `treat_vars' `controls' `deal_controls' i.year i.ff_48 ib2.sp_rating_num if incre
-> ase_competition_ind == 1
+. reg margin_bps `treat_vars' `controls' `deal_controls' i.year i.ff_48 ib2.sp_rating_num if increase_competition_ind == 1
 note: 1b.ff_48 identifies no observations in the sample.
 note: 47.ff_48 omitted because of collinearity.
 note: 2b.sp_rating_num identifies no observations in the sample.
@@ -4752,8 +4680,7 @@ log_deal_amount_converted |  -20.68993   2.984011    -6.93   0.000    -26.54206 
 . estimates store m1
 
 . 
-. reg margin_bps `treat_vars' `controls' `deal_controls' i.year i.ff_48 ib2.sp_rating_num if incre
-> ase_competition_ind == 0
+. reg margin_bps `treat_vars' `controls' `deal_controls' i.year i.ff_48 ib2.sp_rating_num if increase_competition_ind == 0
 note: 1b.ff_48 identifies no observations in the sample.
 note: 49.ff_48 omitted because of collinearity.
 note: 2b.sp_rating_num identifies no observations in the sample.
@@ -5058,8 +4985,8 @@ m2_lnvar                  |
 . esttab m1 m2 using "$overleaf_dir/margin_did_both_rule_competition.tex", replace ///
 > nodepvars nomti nonum collabels(none) label b(3) se(3) parentheses ///
 > star(* 0.10 ** 0.05 *** 0.01) ar2 plain lines fragment noconstant keep(`treat_vars')
-(output written to /Users/zrsong/Dropbox (MIT)/Apps/Overleaf/Tax Incidence and Loan Contract Negot
-> iation/Tables/margin_did_both_rule_competition.tex)
+(output written to /Users/zrsong/MIT Dropbox/Zirui Song/Apps/Overleaf/Tax Incidence and Loan Contract Negotiations/Tables/margin_did_both_rule_competit
+> ion.tex)
 
 . est clear
 
@@ -5076,12 +5003,10 @@ m2_lnvar                  |
 . gen post_inc_comp_ind = post * increase_competition_ind
 
 . 
-. local triple_inter "treated_post_inc_comp_ind treated_loss_post_inc_comp_ind treated_inc_comp_in
-> d treated_loss_inc_comp_ind post_inc_comp_ind"
+. local triple_inter "treated_post_inc_comp_ind treated_loss_post_inc_comp_ind treated_inc_comp_ind treated_loss_inc_comp_ind post_inc_comp_ind"
 
 . 
-. reghdfe margin_bps `treat_vars' `triple_inter' `controls' `deal_controls', absorb(year ff_48 sp_
-> rating_num) vce(cluster gvkey)
+. reghdfe margin_bps `treat_vars' `triple_inter' `controls' `deal_controls', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
 (MWFE estimator converged in 7 iterations)
 
 HDFE Linear regression                            Number of obs   =      4,701
@@ -5153,20 +5078,17 @@ Absorbed degrees of freedom:
 . gen treated_loss_post_relationship = treated_loss_relationship * post
 
 . 
-. local controls "log_at cash_flows_by_at market_to_book ppent_by_at debt_by_at cash_by_at sales_g
-> rowth dividend_payer nol ret_vol"
+. local controls "log_at cash_flows_by_at market_to_book ppent_by_at debt_by_at cash_by_at sales_growth dividend_payer nol ret_vol"
 
-. local deal_controls "leveraged maturity log_deal_amount_converted secured_dummy tranche_type_dum
-> my tranche_o_a_dummy sponsor_dummy"
+. local deal_controls "leveraged maturity log_deal_amount_converted secured_dummy tranche_type_dummy tranche_o_a_dummy sponsor_dummy"
 
 . local treat_vars "treated treated_post treated_loss treated_loss_post"
 
-. local relationship_vars "relationship post_relationship treated_relationship treated_post_relati
-> onship treated_loss_relationship treated_loss_post_relationship"
+. local relationship_vars "relationship post_relationship treated_relationship treated_post_relationship treated_loss_relationship treated_loss_post_re
+> lationship"
 
 . 
-. reghdfe margin_bps `treat_vars' `relationship_vars' `controls' `deal_controls', absorb(year ff_4
-> 8 sp_rating_num) vce(cluster gvkey)
+. reghdfe margin_bps `treat_vars' `relationship_vars' `controls' `deal_controls', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
 (MWFE estimator converged in 7 iterations)
 
 HDFE Linear regression                            Number of obs   =      4,712
@@ -5224,8 +5146,7 @@ Absorbed degrees of freedom:
 
 . estimates store m1
 
-. reghdfe log_margin_bps `treat_vars' `relationship_vars' `controls' `deal_controls', absorb(year 
-> ff_48 sp_rating_num) vce(cluster gvkey)
+. reghdfe log_margin_bps `treat_vars' `relationship_vars' `controls' `deal_controls', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
 (MWFE estimator converged in 7 iterations)
 
 HDFE Linear regression                            Number of obs   =      4,712
@@ -5283,9 +5204,8 @@ Absorbed degrees of freedom:
 
 . estimates store m2
 
-. reghdfe margin_bps treated_loss treated_loss_post relationship post_relationship treated_loss_re
-> lationship treated_loss_post_relationship `controls' `deal_controls', absorb(year ff_48 sp_ratin
-> g_num) vce(cluster gvkey)
+. reghdfe margin_bps treated_loss treated_loss_post relationship post_relationship treated_loss_relationship treated_loss_post_relationship `controls' 
+> `deal_controls', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
 (MWFE estimator converged in 7 iterations)
 
 HDFE Linear regression                            Number of obs   =      4,712
@@ -5339,9 +5259,8 @@ Absorbed degrees of freedom:
 
 . estimates store m3
 
-. reghdfe log_margin_bps treated_loss treated_loss_post relationship post_relationship treated_los
-> s_relationship  treated_loss_post_relationship `controls' `deal_controls', absorb(year ff_48 sp_
-> rating_num) vce(cluster gvkey)
+. reghdfe log_margin_bps treated_loss treated_loss_post relationship post_relationship treated_loss_relationship  treated_loss_post_relationship `contr
+> ols' `deal_controls', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
 (MWFE estimator converged in 7 iterations)
 
 HDFE Linear regression                            Number of obs   =      4,712
@@ -5399,10 +5318,9 @@ Absorbed degrees of freedom:
 . * save the results (esttab) using overleaf_dir
 . esttab m1 m2 m3 m4 using "$overleaf_dir/margin_did_both_rule_relationship.tex", replace ///
 > nodepvars nomti nonum collabels(none) label b(3) se(3) parentheses ///
-> star(* 0.10 ** 0.05 *** 0.01) ar2 plain lines fragment noconstant keep(`treat_vars' `relationshi
-> p_vars')
-(output written to /Users/zrsong/Dropbox (MIT)/Apps/Overleaf/Tax Incidence and Loan Contract Negot
-> iation/Tables/margin_did_both_rule_relationship.tex)
+> star(* 0.10 ** 0.05 *** 0.01) ar2 plain lines fragment noconstant keep(`treat_vars' `relationship_vars')
+(output written to /Users/zrsong/MIT Dropbox/Zirui Song/Apps/Overleaf/Tax Incidence and Loan Contract Negotiations/Tables/margin_did_both_rule_relation
+> ship.tex)
 
 . est clear
 
@@ -5424,18 +5342,14 @@ Absorbed degrees of freedom:
 .         
 . local treat_vars "treated treated_post treated_loss treated_loss_post"
 
-. local reputation_vars "reputation post_reputation treated_reputation treated_post_reputation tre
-> ated_loss_reputation treated_loss_post_reputation"
+. local reputation_vars "reputation post_reputation treated_reputation treated_post_reputation treated_loss_reputation treated_loss_post_reputation"
 
-. local controls "log_at cash_flows_by_at market_to_book ppent_by_at debt_by_at cash_by_at sales_g
-> rowth dividend_payer nol ret_vol"
+. local controls "log_at cash_flows_by_at market_to_book ppent_by_at debt_by_at cash_by_at sales_growth dividend_payer nol ret_vol"
 
-. local deal_controls "leveraged maturity log_deal_amount_converted secured_dummy tranche_type_dum
-> my tranche_o_a_dummy sponsor_dummy"
+. local deal_controls "leveraged maturity log_deal_amount_converted secured_dummy tranche_type_dummy tranche_o_a_dummy sponsor_dummy"
 
 . 
-. reghdfe margin_bps `treat_vars' `reputation_vars' `controls' `deal_controls', absorb(year ff_48 
-> sp_rating_num) vce(cluster gvkey)
+. reghdfe margin_bps `treat_vars' `reputation_vars' `controls' `deal_controls', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
 (MWFE estimator converged in 7 iterations)
 
 HDFE Linear regression                            Number of obs   =      4,712
@@ -5493,8 +5407,7 @@ Absorbed degrees of freedom:
 
 . estimates store m1
 
-. reghdfe log_margin_bps `treat_vars' `reputation_vars' `controls' `deal_controls', absorb(year ff
-> _48 sp_rating_num) vce(cluster gvkey)
+. reghdfe log_margin_bps `treat_vars' `reputation_vars' `controls' `deal_controls', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
 (MWFE estimator converged in 7 iterations)
 
 HDFE Linear regression                            Number of obs   =      4,712
@@ -5552,9 +5465,8 @@ Absorbed degrees of freedom:
 
 . estimates store m2
 
-. reghdfe margin_bps treated_loss treated_loss_post reputation post_reputation treated_loss_reputa
-> tion treated_loss_post_reputation `controls' `deal_controls', absorb(year ff_48 sp_rating_num) v
-> ce(cluster gvkey)
+. reghdfe margin_bps treated_loss treated_loss_post reputation post_reputation treated_loss_reputation treated_loss_post_reputation `controls' `deal_co
+> ntrols', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
 (MWFE estimator converged in 7 iterations)
 
 HDFE Linear regression                            Number of obs   =      4,712
@@ -5608,9 +5520,8 @@ Absorbed degrees of freedom:
 
 . estimates store m3
 
-. reghdfe log_margin_bps treated_loss treated_loss_post reputation post_reputation treated_loss_re
-> putation  treated_loss_post_reputation `controls' `deal_controls', absorb(year ff_48 sp_rating_n
-> um) vce(cluster gvkey)
+. reghdfe log_margin_bps treated_loss treated_loss_post reputation post_reputation treated_loss_reputation  treated_loss_post_reputation `controls' `de
+> al_controls', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
 (MWFE estimator converged in 7 iterations)
 
 HDFE Linear regression                            Number of obs   =      4,712
@@ -5668,10 +5579,9 @@ Absorbed degrees of freedom:
 . * save the results (esttab) using overleaf_dir
 . esttab m1 m2 m3 m4 using "$overleaf_dir/margin_did_both_rule_reputation.tex", replace ///
 > nodepvars nomti nonum collabels(none) label b(3) se(3) parentheses ///
-> star(* 0.10 ** 0.05 *** 0.01) ar2 plain lines fragment noconstant keep(`treat_vars' `reputation_
-> vars')
-(output written to /Users/zrsong/Dropbox (MIT)/Apps/Overleaf/Tax Incidence and Loan Contract Negot
-> iation/Tables/margin_did_both_rule_reputation.tex)
+> star(* 0.10 ** 0.05 *** 0.01) ar2 plain lines fragment noconstant keep(`treat_vars' `reputation_vars')
+(output written to /Users/zrsong/MIT Dropbox/Zirui Song/Apps/Overleaf/Tax Incidence and Loan Contract Negotiations/Tables/margin_did_both_rule_reputati
+> on.tex)
 
 . est clear
 
@@ -5680,11 +5590,9 @@ Absorbed degrees of freedom:
 .         use "../3. Data/Processed/tranche_level_ds_compa_wlabel.dta", clear
 
 . 
-. local controls "log_at cash_flows_by_at market_to_book ppent_by_at debt_by_at cash_by_at sales_g
-> rowth dividend_payer nol ret_vol"
+. local controls "log_at cash_flows_by_at market_to_book ppent_by_at debt_by_at cash_by_at sales_growth dividend_payer nol ret_vol"
 
-. local deal_controls "leveraged maturity log_deal_amount_converted secured_dummy tranche_type_dum
-> my tranche_o_a_dummy sponsor_dummy"
+. local deal_controls "leveraged maturity log_deal_amount_converted secured_dummy tranche_type_dummy tranche_o_a_dummy sponsor_dummy"
 
 . local treat_vars "treated treated_post treated_loss treated_loss_post"
 
@@ -5694,8 +5602,7 @@ Absorbed degrees of freedom:
 . fvset base 1 gvkey
 
 . 
-. reg margin_bps `treat_vars' `controls' `deal_controls' i.year i.ff_48 ib2.sp_rating_num if relat
-> ionship == 1
+. reg margin_bps `treat_vars' `controls' `deal_controls' i.year i.ff_48 ib2.sp_rating_num if relationship == 1
 note: 2b.sp_rating_num identifies no observations in the sample.
 note: 20.sp_rating_num omitted because of collinearity.
 
@@ -5818,8 +5725,7 @@ log_deal_amount_converted |  -9.334201   2.535795    -3.68   0.000    -14.30748 
 . estimates store m1
 
 . 
-. reg margin_bps `treat_vars' `controls' `deal_controls' i.year i.ff_48 ib2.sp_rating_num if relat
-> ionship == 0
+. reg margin_bps `treat_vars' `controls' `deal_controls' i.year i.ff_48 ib2.sp_rating_num if relationship == 0
 note: 1b.ff_48 identifies no observations in the sample.
 note: 49.ff_48 omitted because of collinearity.
 note: 2b.sp_rating_num identifies no observations in the sample.
@@ -6185,8 +6091,7 @@ m2_lnvar                  |
          Prob > chi2 =    0.1677
 
 . 
-. reg margin_bps `treat_vars' `controls' `deal_controls' i.year i.ff_48 ib2.sp_rating_num if reput
-> ation == 1
+. reg margin_bps `treat_vars' `controls' `deal_controls' i.year i.ff_48 ib2.sp_rating_num if reputation == 1
 note: 2b.sp_rating_num identifies no observations in the sample.
 note: 20.sp_rating_num omitted because of collinearity.
 
@@ -6310,8 +6215,7 @@ log_deal_amount_converted |  -5.550692    2.05079    -2.71   0.007    -9.572061 
 . estimates store m3
 
 . 
-. reg margin_bps `treat_vars' `controls' `deal_controls' i.year i.ff_48 ib2.sp_rating_num if reput
-> ation == 0
+. reg margin_bps `treat_vars' `controls' `deal_controls' i.year i.ff_48 ib2.sp_rating_num if reputation == 0
 note: 1b.ff_48 identifies no observations in the sample.
 note: 49.ff_48 omitted because of collinearity.
 note: 2b.sp_rating_num identifies no observations in the sample.
@@ -6680,8 +6584,8 @@ m4_lnvar                  |
 . esttab m1 m2 m3 m4 using "$overleaf_dir/margin_did_both_rule_mechanism.tex", replace ///
 > nodepvars nomti nonum collabels(none) label b(3) se(3) parentheses ///
 > star(* 0.10 ** 0.05 *** 0.01) ar2 plain lines fragment noconstant keep(`treat_vars')
-(output written to /Users/zrsong/Dropbox (MIT)/Apps/Overleaf/Tax Incidence and Loan Contract Negot
-> iation/Tables/margin_did_both_rule_mechanism.tex)
+(output written to /Users/zrsong/MIT Dropbox/Zirui Song/Apps/Overleaf/Tax Incidence and Loan Contract Negotiations/Tables/margin_did_both_rule_mechanis
+> m.tex)
 
 . est clear
 
@@ -6690,11 +6594,9 @@ m4_lnvar                  |
 . use "../3. Data/Processed/tranche_level_ds_compa_wlabel.dta", clear
 
 . 
-. local controls "log_at cash_flows_by_at market_to_book ppent_by_at debt_by_at cash_by_at sales_g
-> rowth dividend_payer nol ret_vol"
+. local controls "log_at cash_flows_by_at market_to_book ppent_by_at debt_by_at cash_by_at sales_growth dividend_payer nol ret_vol"
 
-. local deal_controls "leveraged maturity log_deal_amount_converted secured_dummy tranche_type_dum
-> my tranche_o_a_dummy sponsor_dummy"
+. local deal_controls "leveraged maturity log_deal_amount_converted secured_dummy tranche_type_dummy tranche_o_a_dummy sponsor_dummy"
 
 . local treat_vars "treated treated_post treated_loss treated_loss_post"
 
@@ -6714,8 +6616,7 @@ m4_lnvar                  |
 . fvset base 1 ff_48
 
 . 
-. reg margin_bps `treat_vars' `controls' `deal_controls' i.year i.ff_48 ib2.sp_rating_num if relat
-> ionship == 1
+. reg margin_bps `treat_vars' `controls' `deal_controls' i.year i.ff_48 ib2.sp_rating_num if relationship == 1
 note: 2b.sp_rating_num identifies no observations in the sample.
 note: 20.sp_rating_num omitted because of collinearity.
 
@@ -6837,8 +6738,7 @@ log_deal_amount_converted |   -11.1948   2.953029    -3.79   0.000    -16.98754 
 . estimates store m1
 
 . 
-. reg margin_bps `treat_vars' `controls' `deal_controls' i.year i.ff_48 ib2.sp_rating_num if relat
-> ionship == 0
+. reg margin_bps `treat_vars' `controls' `deal_controls' i.year i.ff_48 ib2.sp_rating_num if relationship == 0
 note: 1b.ff_48 identifies no observations in the sample.
 note: 49.ff_48 omitted because of collinearity.
 note: 2b.sp_rating_num identifies no observations in the sample.
@@ -7199,8 +7099,7 @@ m2_lnvar                  |
          Prob > chi2 =    0.3726
 
 . 
-. reg margin_bps `treat_vars' `controls' `deal_controls' i.year i.ff_48 ib2.sp_rating_num if reput
-> ation == 1
+. reg margin_bps `treat_vars' `controls' `deal_controls' i.year i.ff_48 ib2.sp_rating_num if reputation == 1
 note: 2b.sp_rating_num identifies no observations in the sample.
 note: 20.sp_rating_num omitted because of collinearity.
 
@@ -7321,8 +7220,7 @@ log_deal_amount_converted |  -7.733368   2.417888    -3.20   0.001    -12.47557 
 . estimates store m3
 
 . 
-. reg margin_bps `treat_vars' `controls' `deal_controls' i.year i.ff_48 ib2.sp_rating_num if reput
-> ation == 0
+. reg margin_bps `treat_vars' `controls' `deal_controls' i.year i.ff_48 ib2.sp_rating_num if reputation == 0
 note: 1b.ff_48 identifies no observations in the sample.
 note: 49.ff_48 omitted because of collinearity.
 note: 2b.sp_rating_num identifies no observations in the sample.
@@ -7716,11 +7614,9 @@ m4_lnvar                  |
 . gen log_deal_amount_converted = log(deal_amount_converted)
 
 . 
-. local controls "log_at cash_flows_by_at market_to_book ppent_by_at debt_by_at cash_by_at sales_g
-> rowth dividend_payer nol ret_vol"
+. local controls "log_at cash_flows_by_at market_to_book ppent_by_at debt_by_at cash_by_at sales_growth dividend_payer nol ret_vol"
 
-. local deal_controls "leveraged maturity log_deal_amount_converted secured_dummy tranche_type_dum
-> my tranche_o_a_dummy sponsor_dummy"
+. local deal_controls "leveraged maturity log_deal_amount_converted secured_dummy tranche_type_dummy tranche_o_a_dummy sponsor_dummy"
 
 . 
 . * generate interaction between controls and post
@@ -7731,13 +7627,12 @@ m4_lnvar                  |
   5. }
 
 . 
-. local controls_post "log_at_post cash_flows_by_at_post market_to_book_post ppent_by_at_post debt
-> _by_at_post cash_by_at_post sales_growth_post dividend_payer_post nol_post ret_vol_post"
+. local controls_post "log_at_post cash_flows_by_at_post market_to_book_post ppent_by_at_post debt_by_at_post cash_by_at_post sales_growth_post dividen
+> d_payer_post nol_post ret_vol_post"
 
 . 
 . * winsorize at 1% and 99%
-. foreach var in margin_bps log_margin_bps `controls' `deal_controls' `controls_post' `controls_tr
-> eated' `controls_treated_loss' {
+. foreach var in margin_bps log_margin_bps `controls' `deal_controls' `controls_post' `controls_treated' `controls_treated_loss' {
   2.     winsor2 `var', cuts(1 99) replace
   3. }
 
@@ -7821,8 +7716,8 @@ m4_lnvar                  |
 (2,691 real changes made)
 
 .         
-. reghdfe margin_bps treated treated_post treated_loss treated_loss_post `controls' `deal_controls
-> ', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
+. reghdfe margin_bps treated treated_post treated_loss treated_loss_post `controls' `deal_controls', absorb(year ff_48 sp_rating_num) vce(cluster gvkey
+> )
 (dropped 1 singleton observations)
 (MWFE estimator converged in 7 iterations)
 
@@ -7875,8 +7770,8 @@ Absorbed degrees of freedom:
 
 . estimates store m1
 
-. reghdfe margin_bps treated treated_post treated_loss treated_loss_post `controls' `controls_post
-> ' `deal_controls', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
+. reghdfe margin_bps treated treated_post treated_loss treated_loss_post `controls' `controls_post' `deal_controls', absorb(year ff_48 sp_rating_num) v
+> ce(cluster gvkey)
 (dropped 1 singleton observations)
 (MWFE estimator converged in 7 iterations)
 
@@ -7944,17 +7839,238 @@ Absorbed degrees of freedom:
 . esttab m1 m2 using "$overleaf_dir/margin_did_both_rule_falsification.tex", replace ///
 > nodepvars nomti nonum collabels(none) label b(3) se(3) parentheses ///
 > star(* 0.10 ** 0.05 *** 0.01) ar2 plain lines fragment noconstant drop(_cons `controls_post')
-(output written to /Users/zrsong/Dropbox (MIT)/Apps/Overleaf/Tax Incidence and Loan Contract Negot
-> iation/Tables/margin_did_both_rule_falsification.tex)
+(output written to /Users/zrsong/MIT Dropbox/Zirui Song/Apps/Overleaf/Tax Incidence and Loan Contract Negotiations/Tables/margin_did_both_rule_falsific
+> ation.tex)
 
 . est clear
 
 . 
+. /***********
+>         Robustness Tests 
+>         ***********/
+. 
+. use "../3. Data/Processed/tranche_level_ds_compa_wlabel.dta", clear
+
+. 
+. replace interest_expense_total_excess = interest_expense_total_excess/xint
+(1,493 real changes made)
+
+. gen interest_expense_excess_post = interest_expense_total_excess * post
+
+. 
+. label var interest_expense_total_excess "Excess Interest Expense"
+
+. label var interest_expense_excess_post "Excess Interest Expense x Post"
+
+. 
+. local controls "log_at cash_flows_by_at market_to_book ppent_by_at debt_by_at cash_by_at sales_growth dividend_payer nol ret_vol"
+
+. local deal_controls "leveraged maturity log_deal_amount_converted secured_dummy tranche_type_dummy tranche_o_a_dummy sponsor_dummy"
+
+. local controls_post "log_at_post cash_flows_by_at_post market_to_book_post ppent_by_at_post debt_by_at_post cash_by_at_post sales_growth_post dividen
+> d_payer_post nol_post ret_vol_post"
+
+. 
+. * keep only 
+. binscatter margin_bps interest_expense_total_excess, controls(`controls' `deal_controls') by(post)
+
+. 
+. reghdfe margin_bps interest_expense_total_excess interest_expense_excess_post `controls' `deal_controls', absorb(year ff_48 sp_rating_num) vce(cluste
+> r gvkey)
+(MWFE estimator converged in 7 iterations)
+
+HDFE Linear regression                            Number of obs   =      4,712
+Absorbing 3 HDFE groups                           F(  19,   1518) =      79.94
+Statistics robust to heteroskedasticity           Prob > F        =     0.0000
+                                                  R-squared       =     0.5468
+                                                  Adj R-squared   =     0.5376
+                                                  Within R-sq.    =     0.3890
+Number of clusters (gvkey)   =      1,519         Root MSE        =   121.1098
+
+                                               (Std. err. adjusted for 1,519 clusters in gvkey)
+-----------------------------------------------------------------------------------------------
+                              |               Robust
+                   margin_bps | Coefficient  std. err.      t    P>|t|     [95% conf. interval]
+------------------------------+----------------------------------------------------------------
+interest_expense_total_excess |   64.52525   13.33532     4.84   0.000     38.36764    90.68286
+ interest_expense_excess_post |  -52.08616   16.00508    -3.25   0.001    -83.48058   -20.69173
+                       log_at |  -5.053335   2.534831    -1.99   0.046    -10.02548   -.0811926
+             cash_flows_by_at |  -164.3167   53.52737    -3.07   0.002    -269.3121   -59.32123
+               market_to_book |  -1.817783   3.594493    -0.51   0.613    -8.868481    5.232915
+                  ppent_by_at |   21.39808   14.76197     1.45   0.147    -7.557943    50.35411
+                   debt_by_at |   49.52419   16.52543     3.00   0.003     17.10909    81.93928
+                   cash_by_at |   48.39719   24.33617     1.99   0.047      .661114    96.13326
+                 sales_growth |  -3.617937   11.19765    -0.32   0.747    -25.58244    18.34656
+               dividend_payer |   7.082618   5.915541     1.20   0.231    -4.520881    18.68612
+                          nol |  -5.688796   5.766072    -0.99   0.324    -16.99911    5.621515
+                      ret_vol |   184.8472   54.53593     3.39   0.001     77.87345     291.821
+                    leveraged |   80.81563   8.186489     9.87   0.000      64.7576    96.87366
+                     maturity |   8.540677    1.83627     4.65   0.000     4.938781    12.14257
+    log_deal_amount_converted |  -16.01125    2.74484    -5.83   0.000    -21.39533   -10.62717
+                secured_dummy |   64.05868    6.72917     9.52   0.000     50.85923    77.25814
+           tranche_type_dummy |   74.82457   4.217691    17.74   0.000     66.55145    83.09769
+            tranche_o_a_dummy |   9.652488   5.791833     1.67   0.096    -1.708355    21.01333
+                sponsor_dummy |   85.11315   8.811515     9.66   0.000     67.82911    102.3972
+                        _cons |   182.7637   26.97421     6.78   0.000      129.853    235.6743
+-----------------------------------------------------------------------------------------------
+
+Absorbed degrees of freedom:
+-------------------------------------------------------+
+   Absorbed FE | Categories  - Redundant  = Num. Coefs |
+---------------+---------------------------------------|
+          year |        10           0          10     |
+         ff_48 |        49           1          48     |
+ sp_rating_num |        19           1          18    ?|
+-------------------------------------------------------+
+? = number of redundant parameters may be higher
+
+. estimates store m1
+
+. 
+. *drop if year == 2020 | year == 2021 
+. 
+. reghdfe margin_bps interest_expense_total_excess interest_expense_excess_post `controls' `deal_controls' `controls_post', absorb(year ff_48 sp_rating
+> _num) vce(cluster gvkey)
+(MWFE estimator converged in 7 iterations)
+
+HDFE Linear regression                            Number of obs   =      4,712
+Absorbing 3 HDFE groups                           F(  29,   1518) =      55.42
+Statistics robust to heteroskedasticity           Prob > F        =     0.0000
+                                                  R-squared       =     0.5494
+                                                  Adj R-squared   =     0.5392
+                                                  Within R-sq.    =     0.3925
+Number of clusters (gvkey)   =      1,519         Root MSE        =   120.8959
+
+                                               (Std. err. adjusted for 1,519 clusters in gvkey)
+-----------------------------------------------------------------------------------------------
+                              |               Robust
+                   margin_bps | Coefficient  std. err.      t    P>|t|     [95% conf. interval]
+------------------------------+----------------------------------------------------------------
+interest_expense_total_excess |    55.7739   14.33519     3.89   0.000     27.65502    83.89278
+ interest_expense_excess_post |   -36.9212   18.20911    -2.03   0.043    -72.63888   -1.203518
+                       log_at |  -3.543048   3.199958    -1.11   0.268    -9.819854    2.733758
+             cash_flows_by_at |  -288.4675   91.78549    -3.14   0.002    -468.5073   -108.4277
+               market_to_book |   5.865167   7.653137     0.77   0.444    -9.146675    20.87701
+                  ppent_by_at |   21.80639   18.98045     1.15   0.251     -15.4243    59.03708
+                   debt_by_at |   60.41762   24.27949     2.49   0.013     12.79272    108.0425
+                   cash_by_at |   60.94335   38.67212     1.58   0.115     -14.9131    136.7998
+                 sales_growth |  -.4950794    16.8236    -0.03   0.977    -33.49504    32.50488
+               dividend_payer |   14.56364   8.654732     1.68   0.093    -2.412863    31.54013
+                          nol |  -10.94816   8.257521    -1.33   0.185    -27.14552    5.249198
+                      ret_vol |   250.6434   94.71063     2.65   0.008     64.86589     436.421
+                    leveraged |   81.17276   7.864239    10.32   0.000     65.74684    96.59868
+                     maturity |   8.547765   1.837442     4.65   0.000     4.943571    12.15196
+    log_deal_amount_converted |  -15.78707   2.768358    -5.70   0.000    -21.21728   -10.35686
+                secured_dummy |   63.70768   6.568234     9.70   0.000      50.8239    76.59145
+           tranche_type_dummy |   74.96565   4.245202    17.66   0.000     66.63857    83.29274
+            tranche_o_a_dummy |   9.533946   5.671236     1.68   0.093    -1.590342    20.65823
+                sponsor_dummy |   85.17496   8.813056     9.66   0.000      67.8879     102.462
+                  log_at_post |  -2.536877   3.261307    -0.78   0.437    -8.934022    3.860267
+        cash_flows_by_at_post |   221.0701   116.8312     1.89   0.059     -8.09759    450.2379
+          market_to_book_post |  -12.75703   8.288357    -1.54   0.124    -29.01487    3.500813
+             ppent_by_at_post |  -3.155456   20.80412    -0.15   0.879    -43.96333    37.65241
+              debt_by_at_post |  -16.93747   28.63366    -0.59   0.554    -73.10319    39.22825
+              cash_by_at_post |  -18.87201   49.14197    -0.38   0.701    -115.2654    77.52134
+            sales_growth_post |  -9.902303   22.79855    -0.43   0.664    -54.62229    34.81769
+          dividend_payer_post |  -14.04721   10.68956    -1.31   0.189    -35.01509    6.920664
+                     nol_post |   8.235839    9.68291     0.85   0.395    -10.75746    27.22914
+                 ret_vol_post |  -114.2827   115.2298    -0.99   0.321    -340.3092    111.7438
+                        _cons |   181.1902   26.70156     6.79   0.000     128.8144    233.5661
+-----------------------------------------------------------------------------------------------
+
+Absorbed degrees of freedom:
+-------------------------------------------------------+
+   Absorbed FE | Categories  - Redundant  = Num. Coefs |
+---------------+---------------------------------------|
+          year |        10           0          10     |
+         ff_48 |        49           1          48     |
+ sp_rating_num |        19           1          18    ?|
+-------------------------------------------------------+
+? = number of redundant parameters may be higher
+
+. estimates store m2
+
+. 
+. * save the results (esttab) using overleaf_dir
+. esttab m1 m2 using "$overleaf_dir/margin_ie_excess.tex", replace ///
+> nodepvars nomti nonum collabels(none) label b(3) se(3) parentheses ///
+> star(* 0.10 ** 0.05 *** 0.01) ar2 plain lines fragment noconstant drop(_cons `controls_post')
+(output written to /Users/zrsong/MIT Dropbox/Zirui Song/Apps/Overleaf/Tax Incidence and Loan Contract Negotiations/Tables/margin_ie_excess.tex)
+
+. est clear
+
+. 
+. *** split by median
+. 
+. bysort year: egen median_excess = median(interest_expense_total_excess)
+
+. bysort year: egen p80_excess = pctile(interest_expense_total_excess), p(80)
+
+. *gen next_year_excess_treat = 1 if next_year_excess_interest_total > median_excess
+. gen ie_excess_treat = 1 if interest_expense_total_excess > 0
+(3,219 missing values generated)
+
+. replace ie_excess_treat = 0 if ie_excess_treat == .
+(3,219 real changes made)
+
+. 
+. gen ie_excess_treat_post = ie_excess_treat * post
+
+. 
+. reghdfe margin_bps ie_excess_treat ie_excess_treat_post `controls' `deal_controls', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
+(MWFE estimator converged in 7 iterations)
+
+HDFE Linear regression                            Number of obs   =      4,712
+Absorbing 3 HDFE groups                           F(  19,   1518) =      78.65
+Statistics robust to heteroskedasticity           Prob > F        =     0.0000
+                                                  R-squared       =     0.5428
+                                                  Adj R-squared   =     0.5335
+                                                  Within R-sq.    =     0.3836
+Number of clusters (gvkey)   =      1,519         Root MSE        =   121.6422
+
+                                           (Std. err. adjusted for 1,519 clusters in gvkey)
+-------------------------------------------------------------------------------------------
+                          |               Robust
+               margin_bps | Coefficient  std. err.      t    P>|t|     [95% conf. interval]
+--------------------------+----------------------------------------------------------------
+          ie_excess_treat |   28.23736   10.33841     2.73   0.006     7.958286    48.51643
+     ie_excess_treat_post |  -20.31312   12.03857    -1.69   0.092    -43.92712    3.300872
+                   log_at |  -5.197444   2.548045    -2.04   0.042     -10.1955   -.1993836
+         cash_flows_by_at |  -194.3299   55.37624    -3.51   0.000     -302.952   -85.70789
+           market_to_book |  -1.273958   3.616441    -0.35   0.725    -8.367708    5.819792
+              ppent_by_at |   25.49359   15.06901     1.69   0.091     -4.06469    55.05187
+               debt_by_at |   45.23717   17.05054     2.65   0.008     11.79206    78.68227
+               cash_by_at |   51.69253   24.33141     2.12   0.034     3.965786    99.41928
+             sales_growth |  -3.527862   11.29514    -0.31   0.755     -25.6836    18.62787
+           dividend_payer |     6.1085   5.927437     1.03   0.303    -5.518333    17.73533
+                      nol |  -6.060667   5.815125    -1.04   0.297     -17.4672    5.345864
+                  ret_vol |   208.1386   54.76001     3.80   0.000     100.7253    315.5519
+                leveraged |   79.82969   8.332249     9.58   0.000     63.48575    96.17362
+                 maturity |   8.385832   1.836223     4.57   0.000     4.784029    11.98764
+log_deal_amount_converted |  -16.47415    2.73837    -6.02   0.000    -21.84554   -11.10276
+            secured_dummy |    64.4449   6.802031     9.47   0.000     51.10252    77.78727
+       tranche_type_dummy |   74.84685   4.241785    17.65   0.000     66.52647    83.16723
+        tranche_o_a_dummy |   9.854298   5.796639     1.70   0.089     -1.51597    21.22457
+            sponsor_dummy |   84.88862   8.858098     9.58   0.000     67.51321     102.264
+                    _cons |   190.0316   27.04142     7.03   0.000     136.9891    243.0741
+-------------------------------------------------------------------------------------------
+
+Absorbed degrees of freedom:
+-------------------------------------------------------+
+   Absorbed FE | Categories  - Redundant  = Num. Coefs |
+---------------+---------------------------------------|
+          year |        10           0          10     |
+         ff_48 |        49           1          48     |
+ sp_rating_num |        19           1          18    ?|
+-------------------------------------------------------+
+? = number of redundant parameters may be higher
+
+. 
+. 
 . *** close log
 . log close
       name:  <unnamed>
-       log:  /Users/zrsong/MIT Dropbox/Zirui Song/Research Projects/MPS_Interest Deductibility and
->  Debt Contracting/4. Code/Dealscan_Analysis.log
+       log:  /Users/zrsong/MIT Dropbox/Zirui Song/Research Projects/MPS_Interest Deductibility and Debt Contracting/4. Code/Dealscan_Analysis.log
   log type:  text
- closed on:  29 Jan 2025, 13:59:58
---------------------------------------------------------------------------------------------------
+ closed on:  31 Jan 2025, 13:24:30
+-------------------------------------------------------------------------------------------------------------------------------------------------------
