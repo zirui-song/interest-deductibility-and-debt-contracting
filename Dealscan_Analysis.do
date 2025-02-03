@@ -270,8 +270,8 @@ est clear
 ****** Appendix Tabld D2
 
 *** DID regressions (30% and Loss: Treat X Covariates) ***
-reghdfe margin_bps treated treated_post treated_loss treated_loss_post `controls' `controls_post' `controls_treated' `controls_treated_loss' `deal_controls', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
-estimates store m1
+*reghdfe margin_bps treated treated_post treated_loss treated_loss_post `controls' `controls_post' `controls_treated' `controls_treated_loss' `deal_controls', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
+*estimates store m1
 *reghdfe log_margin_bps treated treated_post treated_loss treated_loss_post `controls' `controls_post' `controls_treated' `controls_treated_loss' `deal_controls', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
 *estimates store m2
 
@@ -312,11 +312,11 @@ ebalance treated_all `controls'
 
 reghdfe margin_bps treated treated_post treated_loss treated_loss_post `controls' `deal_controls' [pweight=_webal], absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
 estimates store m3
-*reghdfe log_margin_bps treated treated_post treated_loss treated_loss_post `controls' `deal_controls' [pweight=_webal], absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
+reghdfe margin_bps treated treated_post treated_loss treated_loss_post `controls' `deal_controls' `controls_post' [pweight=_webal], absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
 *estimates store m4
 
 * save the results (esttab) using overleaf_dir
-esttab m1 m3 using "$overleaf_dir/margin_did_both_rule_robustness_2.tex", replace ///
+esttab m3 using "$overleaf_dir/margin_did_both_rule_robustness_2.tex", replace ///
 nodepvars nomti nonum collabels(none) label b(3) se(3) parentheses ///
 star(* 0.10 ** 0.05 *** 0.01) ar2 plain lines fragment noconstant keep(treated treated_post treated_loss treated_loss_post)
 est clear
