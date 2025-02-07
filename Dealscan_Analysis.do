@@ -171,27 +171,36 @@ local controls "log_at cash_flows_by_at market_to_book ppent_by_at debt_by_at ca
 local deal_controls "leveraged maturity log_deal_amount_converted secured_dummy tranche_type_dummy tranche_o_a_dummy sponsor_dummy"
 local controls_post "log_at_post cash_flows_by_at_post market_to_book_post ppent_by_at_post debt_by_at_post cash_by_at_post sales_growth_post dividend_payer_post nol_post ret_vol_post"
 
-reghdfe margin_bps treated treated_post treated_loss treated_loss_post `controls' `deal_controls', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
+*** check results with no covariates
+reghdfe margin_bps treated treated_post treated_loss treated_loss_post `deal_controls', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
 estimates store m1
-reghdfe margin_bps treated treated_post treated_loss treated_loss_post `controls' `controls_post' `deal_controls', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
+
+reghdfe margin_bps treated treated_post treated_loss treated_loss_post `controls' `deal_controls', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
 estimates store m2
+reghdfe margin_bps treated treated_post treated_loss treated_loss_post `controls' `controls_post' `deal_controls', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
+estimates store m3
 
 * save the results (esttab) using overleaf_dir
-esttab m1 m2 using "$overleaf_dir/margin_did_both_rule.tex", replace ///
+esttab m1 m2 m3 using "$overleaf_dir/margin_did_both_rule.tex", replace ///
 nodepvars nomti nonum collabels(none) label b(3) se(3) parentheses ///
 star(* 0.10 ** 0.05 *** 0.01) ar2 plain lines fragment noconstant drop(_cons `controls_post')
 est clear
 
+local controls "log_at cash_flows_by_at market_to_book ppent_by_at debt_by_at cash_by_at sales_growth dividend_payer nol ret_vol"
+
+
 *** robustness dropping 2020 and 2021 (COVID)
 preserve
 	drop if year == 2021 | year == 2020
-	reghdfe margin_bps treated treated_post treated_loss treated_loss_post `controls' `deal_controls', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
+	reghdfe margin_bps treated treated_post treated_loss treated_loss_post `deal_controls', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
 	estimates store m1
-	reghdfe margin_bps treated treated_post treated_loss treated_loss_post `controls' `controls_post' `deal_controls', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
+	reghdfe margin_bps treated treated_post treated_loss treated_loss_post `controls' `deal_controls', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
 	estimates store m2
+	reghdfe margin_bps treated treated_post treated_loss treated_loss_post `controls' `controls_post' `deal_controls', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
+	estimates store m3
 	
 	* save the results (esttab) using overleaf_dir
-	esttab m1 m2 using "$overleaf_dir/margin_did_both_rule_dropcovid.tex", replace ///
+	esttab m1 m2 m3 using "$overleaf_dir/margin_did_both_rule_dropcovid.tex", replace ///
 	nodepvars nomti nonum collabels(none) label b(3) se(3) parentheses ///
 	star(* 0.10 ** 0.05 *** 0.01) ar2 plain lines fragment noconstant drop(_cons `controls_post')
 	est clear
@@ -201,9 +210,10 @@ restore
 	DID regressions (30% and Loss: ROBUSTNESS RESULT TABLE 2 and Appendix)
 	*********/
 * Firm FE 
-reghdfe margin_bps treated treated_post treated_loss treated_loss_post `controls' `deal_controls', absorb(year gvkey) vce(cluster gvkey)
+reghdfe margin_bps treated treated_post treated_loss treated_loss_post `deal_controls', absorb(year gvkey sp_rating_num) vce(cluster gvkey)
+reghdfe margin_bps treated treated_post treated_loss treated_loss_post `controls' `deal_controls', absorb(year gvkey sp_rating_num) vce(cluster gvkey)
 estimates store m1
-reghdfe margin_bps treated treated_post treated_loss treated_loss_post `controls' `controls_post' `deal_controls', absorb(year gvkey) vce(cluster gvkey)
+reghdfe margin_bps treated treated_post treated_loss treated_loss_post `controls' `controls_post' `deal_controls', absorb(year gvkey sp_rating_num) vce(cluster gvkey)
 estimates store m2
 * 3-year and 5-year look backs
 preserve  
@@ -852,14 +862,16 @@ label variable treated_loss "Excess Interest (Loss)"
 label variable treated_loss_post "Excess Interest (Loss) x Post"
 	
 clean_rating
-	
-reghdfe margin_bps treated treated_post treated_loss treated_loss_post `controls' `deal_controls', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
+
+reghdfe margin_bps treated treated_post treated_loss treated_loss_post `deal_controls', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
 estimates store m1
-reghdfe margin_bps treated treated_post treated_loss treated_loss_post `controls' `controls_post' `deal_controls', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
+reghdfe margin_bps treated treated_post treated_loss treated_loss_post `controls' `deal_controls', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
 estimates store m2
+reghdfe margin_bps treated treated_post treated_loss treated_loss_post `controls' `controls_post' `deal_controls', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
+estimates store m3
 
 * save the results (esttab) using overleaf_dir
-esttab m1 m2 using "$overleaf_dir/margin_did_both_rule_falsification.tex", replace ///
+esttab m1 m2 m3 using "$overleaf_dir/margin_did_both_rule_falsification.tex", replace ///
 nodepvars nomti nonum collabels(none) label b(3) se(3) parentheses ///
 star(* 0.10 ** 0.05 *** 0.01) ar2 plain lines fragment noconstant drop(_cons `controls_post')
 est clear
@@ -882,16 +894,19 @@ local controls_post "log_at_post cash_flows_by_at_post market_to_book_post ppent
 * keep only 
 binscatter margin_bps excess_interest_scaled, controls(`controls' `deal_controls') by(post)
 
-reghdfe margin_bps excess_interest_scaled excess_interest_scaled_post `controls' `deal_controls', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
+reghdfe margin_bps excess_interest_scaled excess_interest_scaled_post `deal_controls', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
 estimates store m1
+
+reghdfe margin_bps excess_interest_scaled excess_interest_scaled_post `controls' `deal_controls', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
+estimates store m2
 
 *drop if year == 2020 | year == 2021 
 
 reghdfe margin_bps excess_interest_scaled excess_interest_scaled_post `controls' `deal_controls' `controls_post', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
-estimates store m2
+estimates store m3
 
 * save the results (esttab) using overleaf_dir
-esttab m1 m2 using "$overleaf_dir/margin_ie_excess.tex", replace ///
+esttab m1 m2 m3 using "$overleaf_dir/margin_ie_excess.tex", replace ///
 nodepvars nomti nonum collabels(none) label b(3) se(3) parentheses ///
 star(* 0.10 ** 0.05 *** 0.01) ar2 plain lines fragment noconstant drop(_cons `controls_post')
 est clear
