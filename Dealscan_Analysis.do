@@ -38,8 +38,13 @@ foreach var in `controls' {
 	gen `var'_treated = `var' * treated
 	gen `var'_treated_loss = `var' * treated_loss
 }
+foreach var in `deal_controls' {
+	gen `var'_post = `var' * post
+}
 
 local controls_post "log_at_post cash_flows_by_at_post market_to_book_post ppent_by_at_post debt_by_at_post cash_by_at_post sales_growth_post dividend_payer_post nol_post ret_vol_post"
+local deal_controls_post "leveraged_post maturity_post log_deal_amount_converted_post secured_dummy_post tranche_type_dummy_post tranche_o_a_dummy_post sponsor_dummy_post"
+
 local controls_treated "log_at_treated cash_flows_by_at_treated market_to_book_treated ppent_by_at_treated debt_by_at_treated cash_by_at_treated sales_growth_treated dividend_payer_treated nol_treated ret_vol_treated"
 local controls_treated_loss "log_at_treated_loss cash_flows_by_at_treated_loss market_to_book_treated_loss ppent_by_at_treated_loss debt_by_at_treated_loss cash_by_at_treated_loss sales_growth_treated_loss dividend_payer_treated_loss nol_treated_loss ret_vol_treated_loss"
 
@@ -179,6 +184,8 @@ reghdfe margin_bps treated treated_post treated_loss treated_loss_post `controls
 estimates store m2
 reghdfe margin_bps treated treated_post treated_loss treated_loss_post `controls' `controls_post' `deal_controls', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
 estimates store m3
+reghdfe margin_bps treated treated_post treated_loss treated_loss_post `controls' `controls_post' `deal_controls' `deal_controls_post', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
+
 
 * save the results (esttab) using overleaf_dir
 esttab m1 m2 m3 using "$overleaf_dir/margin_did_both_rule.tex", replace ///
@@ -856,10 +863,10 @@ label variable tranche_o_a_dummy "Origination"
 label variable sponsor_dummy "Sponsored"
 
 label variable treated "Excess Interest (30\% Rule)"
-label variable post "Post"
-label variable treated_post "Excess Interest (30\% Rule) x Post"
+label variable post "Post2014"
+label variable treated_post "Excess Interest (30\% Rule) x Post2014"
 label variable treated_loss "Excess Interest (Loss)"
-label variable treated_loss_post "Excess Interest (Loss) x Post"
+label variable treated_loss_post "Excess Interest (Loss) x Post2014"
 	
 clean_rating
 
