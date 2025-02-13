@@ -178,12 +178,17 @@ local controls_post "log_at_post cash_flows_by_at_post market_to_book_post ppent
 
 *** check results with no covariates
 reghdfe margin_bps treated treated_post treated_loss treated_loss_post `deal_controls', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
+test treated_post + treated_loss_post = 0
 estimates store m1
 
 reghdfe margin_bps treated treated_post treated_loss treated_loss_post `controls' `deal_controls', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
+test treated_post + treated_loss_post = 0
 estimates store m2
+
 reghdfe margin_bps treated treated_post treated_loss treated_loss_post `controls' `controls_post' `deal_controls', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
+test treated_post + treated_loss_post = 0
 estimates store m3
+
 reghdfe margin_bps treated treated_post treated_loss treated_loss_post `controls' `controls_post' `deal_controls' `deal_controls_post', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
 
 
