@@ -194,7 +194,7 @@ estimates store m4
 reghdfe log_deal_amount_converted `treat_vars' `controls' `deal_controls_2', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
 estimates store m5
 
-reghdfe maturity `treat_vars' `controls' `deal_controls_2', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
+reghdfe maturity treated treated_post treated_loss treated_loss_post `controls' `deal_controls_2', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
 estimates store m6
 
 * save the results (esttab) using overleaf_dir
