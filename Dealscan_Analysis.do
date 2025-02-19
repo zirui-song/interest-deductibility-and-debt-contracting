@@ -910,7 +910,9 @@ local deal_controls "leveraged maturity log_deal_amount_converted secured_dummy 
 local controls_post "log_at_post cash_flows_by_at_post market_to_book_post ppent_by_at_post debt_by_at_post cash_by_at_post sales_growth_post dividend_payer_post nol_post ret_vol_post"
 
 * keep only 
-binscatter margin_bps excess_interest_scaled, controls(`controls' `deal_controls') by(post)
+binscatter margin_bps excess_interest_scaled, controls(`controls' `deal_controls') by(post) ///  
+    xtitle("Excess Interest Expense (Scaled)") ///
+    ytitle("Margin (bps)") 
 
 reghdfe margin_bps excess_interest_scaled excess_interest_scaled_post `deal_controls', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
 estimates store m1
