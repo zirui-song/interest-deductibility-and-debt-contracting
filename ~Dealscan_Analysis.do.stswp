@@ -963,7 +963,7 @@ egen p25_excess = pctile(excess_interest_scaled) if excess_interest_scaled > 0, 
 gen ie_excess_q4 = 1 if excess_interest_scaled > 0.9
 gen ie_excess_q3 = 1 if inrange(excess_interest_scaled, 0.6, 0.9)
 gen ie_excess_q2 = 1 if inrange(excess_interest_scaled, 0.30001, 0.5999)
-gen ie_excess_q1 = 1 if inrange(excess_interest_scaled, 0.0001, 0.3)
+gen ie_excess_q1 = 1 if inrange(excess_interest_scaled, 0, 0.3)
 
 forv i = 1/4 {
 	replace ie_excess_q`i' = 0 if excess_interest_scaled == 0
@@ -974,7 +974,7 @@ forv i = 1/4 {
 	gen ie_excess_q`i'_post = ie_excess_q`i' * post
 }
 
-local treat_quartiles "ie_excess_q1 ie_excess_q1_post ie_excess_q2 ie_excess_q2_post ie_excess_q3 ie_excess_q3_post ie_excess_q4 ie_excess_q4_post"
+local treat_quartiles "ie_excess_q2 ie_excess_q2_post ie_excess_q2 ie_excess_q2_post ie_excess_q3 ie_excess_q3_post ie_excess_q4 ie_excess_q4_post"
 
 reghdfe margin_bps `treat_quartiles' `controls' `deal_controls', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
 
