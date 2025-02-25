@@ -30,6 +30,7 @@ replace treated_loss = 0 if treated_loss == .
 gen treated_loss_post = treated_loss * post
 
 keep if year >= 2014
+drop if year == 2020 | year == 2021
 
 *** generate loss firm list
 preserve 
@@ -45,7 +46,7 @@ gen log_margin_bps = log(margin_bps)
 gen log_at = log(at)
 gen log_deal_amount_converted = log(deal_amount_converted)
 
-local controls "log_at cash_flows_by_at market_to_book ppent_by_at debt_by_at cash_by_at sales_growth dividend_payer nol ret_vol"
+local controls "log_at market_to_book ppent_by_at debt_by_at cash_by_at dividend_payer ret_vol"
 local deal_controls "leveraged maturity log_deal_amount_converted secured_dummy tranche_type_dummy tranche_o_a_dummy sponsor_dummy"
 
 * generate interaction between controls and post
@@ -54,15 +55,15 @@ foreach var in `controls' {
 	gen `var'_treated = `var' * treated
 }
 
-local controls_post "log_at_post cash_flows_by_at_post market_to_book_post ppent_by_at_post debt_by_at_post cash_by_at_post sales_growth_post dividend_payer_post nol_post ret_vol_post"
-local controls_treated "log_at_treated cash_flows_by_at_treated market_to_book_treated ppent_by_at_treated debt_by_at_treated cash_by_at_treated sales_growth_treated dividend_payer_treated nol_treated ret_vol_treated"
+local controls_post "log_at_post market_to_book_post ppent_by_at_post debt_by_at_post cash_by_at_post dividend_payer_post ret_vol_post"
+local controls_treated "log_at_treated market_to_book_treated ppent_by_at_treated debt_by_at_treated cash_by_at_treated dividend_payer_treated ret_vol_treated"
 
 * winsorize at 1% and 99%
 foreach var in margin_bps log_margin_bps `controls' `deal_controls' `controls_post' `controls_treated' `controls_treated_loss' {
     winsor2 `var', cuts(1 99) replace
 }
 
-local controls "log_at cash_flows_by_at market_to_book ppent_by_at debt_by_at cash_by_at sales_growth dividend_payer nol ret_vol"
+local controls "log_at market_to_book ppent_by_at debt_by_at cash_by_at dividend_payer ret_vol"
 local deal_controls "leveraged maturity log_deal_amount_converted secured_dummy tranche_type_dummy tranche_o_a_dummy sponsor_dummy"
 
 * label controls and treated, post, and treated_post
@@ -129,9 +130,6 @@ replace sp_rating_num = 2  if sp_rating == "C"
 replace sp_rating_num = 1  if sp_rating == "D"
 replace sp_rating_num = 0 if sp_rating_num == .
 
-local controls "log_at cash_flows_by_at market_to_book ppent_by_at debt_by_at cash_by_at sales_growth dividend_payer nol ret_vol"
-local deal_controls "leveraged maturity log_deal_amount_converted secured_dummy tranche_type_dummy tranche_o_a_dummy sponsor_dummy"
-
 gen not_rated = 1 if sp_rating_num == 0
 replace not_rated = 0 if not_rated == .
 
@@ -153,9 +151,9 @@ save "../3. Data/Processed/tranche_level_ds_compa_wlabel1.dta", replace
 
 use "../3. Data/Processed/tranche_level_ds_compa_wlabel1.dta", clear
 
-local controls "log_at cash_flows_by_at market_to_book ppent_by_at debt_by_at cash_by_at sales_growth dividend_payer nol ret_vol"
+local controls "log_at market_to_book ppent_by_at debt_by_at cash_by_at dividend_payer ret_vol"
 local deal_controls "leveraged maturity log_deal_amount_converted secured_dummy tranche_type_dummy tranche_o_a_dummy sponsor_dummy"
-local controls_post "log_at_post cash_flows_by_at_post market_to_book_post ppent_by_at_post debt_by_at_post cash_by_at_post sales_growth_post dividend_payer_post nol_post ret_vol_post"
+local controls_post "log_at_post market_to_book_post ppent_by_at_post debt_by_at_post cash_by_at_post dividend_payer_post ret_vol_post"
 local treat_vars "treated1 treated1_post treated3 treated3_post"
 
 reghdfe margin_bps `treat_vars' `deal_controls' sp_rating_num, absorb(year ff_48) vce(cluster gvkey)
@@ -200,7 +198,7 @@ estimates store m6
 * save the results (esttab) using overleaf_dir
 esttab m1 m2 m3 m4 m5 m6 using "$overleaf_dir/other_terms_did_both_rule_alt.tex", replace ///
 nodepvars nomti nonum collabels(none) label b(3) se(3) parentheses ///
-star(* 0.10 ** 0.05 *** 0.01) ar2 plain lines fragment noconstant keep(treated treated_post treated_loss treated_loss_post)
+star(* 0.10 ** 0.05 *** 0.01) ar2 plain lines fragment noconstant keep(`treat_vars')
 est clear
 
 
@@ -234,15 +232,24 @@ est clear
 /***********
 	Exposure Regression 
 	***********/
+
+	use "../3. Data/Processed/tranche_level_ds_compa_wlabel1.dta", clear
 	
 gen excess_interest_30_post = excess_interest_30 * post
 gen excess_interest_loss_post = excess_interest_loss * post
+gen excess_interest_scaled_post = excess_interest_scaled * post 
+
+
 label variable excess_interest_30 "Excess Interest (30\% Rule)"
 label variable excess_interest_loss "Excess Interest (Loss)"
 label variable excess_interest_30_post "Excess Interest (30\% Rule) X Post"
 label variable excess_interest_loss_post "Excess Interest (Loss) X Post"
 
 local treated_vars "excess_interest_30 excess_interest_loss"
+
+local controls "log_at market_to_book ppent_by_at debt_by_at cash_by_at dividend_payer ret_vol"
+local deal_controls "leveraged maturity log_deal_amount_converted secured_dummy tranche_type_dummy tranche_o_a_dummy sponsor_dummy"
+local controls_post "log_at_post market_to_book_post ppent_by_at_post debt_by_at_post cash_by_at_post dividend_payer_post ret_vol_post"
 	
 reghdfe next_year_excess_interest_total	`treated_vars' `controls' `deal_controls', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
 estimates store m1
@@ -260,6 +267,24 @@ nodepvars nomti nonum collabels(none) label b(3) se(3) parentheses ///
 star(* 0.10 ** 0.05 *** 0.01) ar2 plain lines fragment noconstant keep(`treated_vars' `controls' `deal_controls')
 est clear
 
+reghdfe next_year_excess_interest_total	excess_interest_scaled `controls' `deal_controls', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
+estimates store m1
+reghdfe next_year_excess_interest_total excess_interest_scaled `controls' `controls_post' `deal_controls', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
+estimates store m2
+
+reghdfe next_year_excess_interest_total	excess_interest_scaled `controls' `deal_controls', absorb(year gvkey sp_rating_num) vce(cluster gvkey)
+estimates store m3
+reghdfe next_year_excess_interest_total excess_interest_scaled `controls' `controls_post' `deal_controls', absorb(year gvkey sp_rating_num) vce(cluster gvkey)
+estimates store m4
+
+* save the results (esttab) using overleaf_dir
+esttab m1 m2 m3 m4 using "$overleaf_dir/next_year_excess_interest_total_validation_cts.tex", replace ///
+nodepvars nomti nonum collabels(none) label b(3) se(3) parentheses ///
+star(* 0.10 ** 0.05 *** 0.01) ar2 plain lines fragment noconstant keep(excess_interest_scaled `controls' `deal_controls')
+est clear
+
+binscatter next_year_excess_interest_total	excess_interest_scaled
+
 *** Margin on net_year_excess_interest_total 
 
 use "../3. Data/Processed/tranche_level_ds_compa_wlabel1.dta", clear
@@ -270,7 +295,7 @@ corr interest_expense_total_excess next_year_excess_interest_total
 
 *drop if year == 2020 | year == 2021
 
-local controls "log_at cash_flows_by_at market_to_book ppent_by_at debt_by_at cash_by_at sales_growth dividend_payer nol ret_vol"
+local controls "log_at market_to_book ppent_by_at debt_by_at cash_by_at dividend_payer ret_vol"
 local deal_controls "leveraged maturity log_deal_amount_converted secured_dummy tranche_type_dummy tranche_o_a_dummy sponsor_dummy"
 
 gen next_year_excess_post = next_year_excess_interest_total * post

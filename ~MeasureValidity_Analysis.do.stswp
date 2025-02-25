@@ -23,7 +23,7 @@ gen ppent_by_at = ppent/at
 gen debt_by_at = debt/at
 gen cash_by_at = che/at
 
-local controls "log_at market_to_book ppent_by_at debt_by_at cash_by_at dividend_payer ret_vol"
+local controls "log_at market_to_book ppent_by_at debt_by_at cash_by_at dividend_payer nol ret_vol"
 
 gen post = 1 if fyear >= 2018
 replace post = 0 if post == .
