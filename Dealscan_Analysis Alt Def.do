@@ -267,6 +267,8 @@ nodepvars nomti nonum collabels(none) label b(3) se(3) parentheses ///
 star(* 0.10 ** 0.05 *** 0.01) ar2 plain lines fragment noconstant keep(`treated_vars' `controls' `deal_controls')
 est clear
 
+label variable excess_interest_scaled "Excess Interest Expense (Scaled)"
+
 reghdfe next_year_excess_interest_total	excess_interest_scaled `controls' `deal_controls', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
 estimates store m1
 reghdfe next_year_excess_interest_total excess_interest_scaled `controls' `controls_post' `deal_controls', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
