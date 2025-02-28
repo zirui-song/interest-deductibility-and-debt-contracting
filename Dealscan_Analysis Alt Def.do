@@ -285,7 +285,17 @@ nodepvars nomti nonum collabels(none) label b(3) se(3) parentheses ///
 star(* 0.10 ** 0.05 *** 0.01) ar2 plain lines fragment noconstant keep(excess_interest_scaled `controls' `deal_controls')
 est clear
 
-binscatter next_year_excess_interest_total	excess_interest_scaled
+*** BINSCATTERS
+binscatter next_year_excess_interest_total excess_interest_scaled, ///
+	xtitle("Current-Year Excess Interest Expense (Scaled)") ///
+    ytitle("Next-Year Excess Interest Expense (Scaled)") 
+graph export "$fig_dir/binscatter_ie_current_next.png", as(png) replace	
+
+binscatter next_year_excess_interest_total excess_interest_scaled, ///
+    controls(`controls' `deal_controls') ///
+    xtitle("Current-Year Excess Interest Expense (Scaled)") ///
+    ytitle("Next-Year Excess Interest Expense (Scaled)")
+graph export "$fig_dir/binscatter_ie_current_next_wcontrols.png", as(png) replace	
 
 *** Margin on net_year_excess_interest_total 
 

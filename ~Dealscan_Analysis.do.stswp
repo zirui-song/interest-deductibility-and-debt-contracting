@@ -1,4 +1,4 @@
-log using Dealscan_Analysis.log, replace
+*log using Dealscan_Analysis.log, replace
 
 use "../3. Data/Processed/tranche_level_ds_compa.dta", clear
 
@@ -92,7 +92,7 @@ foreach var of varlist *_sweep {
 }
 
 * label controls and treated, post, and treated_post
-label variable log_at "Log Total Assets"
+label variable log_at "Ln(Total Assets)"
 label variable cash_flows_by_at "Cash Flows / Assets"
 label variable market_to_book "Market to Book Ratio"
 label variable ppent_by_at "PP\&E / Assets"
@@ -100,7 +100,7 @@ label variable debt_by_at "Debt / Assets"
 label variable cash_by_at "Cash / Assets"
 label variable sales_growth "Sales Growth"
 label variable dividend_payer "Dividend Payer"
-label variable z_score "Z-Score"
+label variable z_score "Z-Scor
 label variable nol "Net Operating Loss"
 label variable ret_buy_and_hold "Buy and Hold Return"
 label variable ret_vol "Return Volatility"
@@ -193,22 +193,40 @@ nodepvars nomti nonum collabels(none) label b(3) se(3) parentheses ///
 star(* 0.10 ** 0.05 *** 0.01) ar2 plain lines fragment noconstant keep(`treat_vars' `controls' `deal_controls')
 est clear
 
-* LHS Sample Composition Tests (Continuous Measure)
-	reghdfe not_rated excess_interest_scaled excess_interest_scaled_post `controls' `deal_controls', absorb(year ff_48) vce(cluster gvkey)
+* LHS Sample Composition Tests (30% and Loss)
+reghdfe not_rated excess_interest_scaled excess_interest_scaled_post `controls' `deal_controls', absorb(year ff_48) vce(cluster gvkey)
 estimates store m3
-	reghdfe not_rated `treat_quartiles' `controls' `deal_controls', absorb(year ff_48) vce(cluster gvkey)
+reghdfe not_rated `treat_vars' `controls' `deal_controls', absorb(year ff_48) vce(cluster gvkey)
 estimates store m4
 preserve 
 	drop if sp_rating_num == 0
 	reghdfe sp_rating_num excess_interest_scaled excess_interest_scaled_post `controls' `deal_controls', absorb(year ff_48) vce(cluster gvkey)
 	estimates store m1
-	reghdfe sp_rating_num `treat_quartiles' `controls' `deal_controls', absorb(year ff_48) vce(cluster gvkey)
+	reghdfe sp_rating_num `treat_vars' `controls' `deal_controls', absorb(year ff_48) vce(cluster gvkey)
 	estimates store m2
 restore
 * save the results (esttab) using overleaf_dir
-esttab m1 m2 m3 m4 using "$overleaf_dir/sp_rating_continuous.tex", replace ///
+esttab m1 m2 m3 m4 using "$overleaf_dir/sp_rating_robustness_both.tex", replace ///
 nodepvars nomti nonum collabels(none) label b(3) se(3) parentheses ///
-star(* 0.10 ** 0.05 *** 0.01) ar2 plain lines fragment noconstant keep(excess_interest_scaled excess_interest_scaled_post `treat_quartiles')
+star(* 0.10 ** 0.05 *** 0.01) ar2 plain lines fragment noconstant keep(excess_interest_scaled excess_interest_scaled_post `treat_vars')
+est clear
+
+* LHS Sample Composition Tests (Continuous Measure)
+	reghdfe not_rated excess_interest_scaled excess_interest_scaled_post `controls' `deal_controls', absorb(year ff_48) vce(cluster gvkey)
+estimates store m3
+	reghdfe not_rated excess_interest_scaled excess_interest_scaled_post `controls' `controls_post' `deal_controls', absorb(year ff_48) vce(cluster gvkey)
+estimates store m4
+preserve 
+	drop if sp_rating_num == 0
+	reghdfe sp_rating_num excess_interest_scaled excess_interest_scaled_post `controls' `deal_controls', absorb(year ff_48) vce(cluster gvkey)
+	estimates store m1
+	reghdfe sp_rating_num excess_interest_scaled excess_interest_scaled_post `controls' `controls_post' `deal_controls', absorb(year ff_48) vce(cluster gvkey)
+	estimates store m2
+restore
+* save the results (esttab) using overleaf_dir
+esttab m1 m2 using "$overleaf_dir/sp_rating_continuous.tex", replace ///
+nodepvars nomti nonum collabels(none) label b(3) se(3) parentheses ///
+star(* 0.10 ** 0.05 *** 0.01) ar2 plain lines fragment noconstant keep(excess_interest_scaled excess_interest_scaled_post `controls' `deal_controls')
 est clear
 
 *** DID regressions (30% and Loss: MAIN RESULT TABLE 1) ***
@@ -433,29 +451,31 @@ restore
 
 *** DID regressions (30% and Loss: Perf Pricing and Num Fin Cov) ***
 
-reghdfe perf_pricing_dummy treated treated_post treated_loss treated_loss_post `controls' `deal_controls', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
+reghdfe perf_pricing_dummy treated treated_post treated_loss treated_loss_post `controls' `deal_controls' `controls_post', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
 estimates store m1
-reghdfe num_fin_cov treated treated_post treated_loss treated_loss_post `controls' `deal_controls', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
+reghdfe sweep_dummy treated treated_post treated_loss treated_loss_post `controls' `deal_controls' `controls_post', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
 estimates store m2
-*** DID regressions (covenant tightness)
-reghdfe pviol treated treated_post treated_loss treated_loss_post `controls' `deal_controls', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
+reghdfe num_fin_cov treated treated_post treated_loss treated_loss_post `controls' `deal_controls' `controls_post', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
 estimates store m3
+*** DID regressions (covenant tightness)
+reghdfe pviol treated treated_post treated_loss treated_loss_post `controls' `deal_controls' `controls_post', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
+estimates store m4
 
 *** DID regressions (30% and Loss: Loan Size and Maturity) ***
 
 local deal_controls_2 "leveraged secured_dummy tranche_type_dummy tranche_o_a_dummy sponsor_dummy"
 
-reghdfe deal_amount_converted treated treated_post treated_loss treated_loss_post `controls' `deal_controls_2', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
-estimates store m4
-
-reghdfe log_deal_amount_converted treated treated_post treated_loss treated_loss_post `controls' `deal_controls_2', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
+reghdfe deal_amount_converted treated treated_post treated_loss treated_loss_post `controls' `controls_post' maturity `deal_controls_2', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
 estimates store m5
 
-reghdfe maturity treated treated_post treated_loss treated_loss_post `controls' `deal_controls_2', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
+reghdfe log_deal_amount_converted treated treated_post treated_loss treated_loss_post `controls' `controls_post' maturity `deal_controls_2', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
 estimates store m6
 
+reghdfe maturity treated treated_post treated_loss treated_loss_post `controls'  `controls_post' log_deal_amount_converted `deal_controls_2', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
+estimates store m7
+
 * save the results (esttab) using overleaf_dir
-esttab m1 m2 m3 m4 m5 m6 using "$overleaf_dir/other_terms_did_both_rule.tex", replace ///
+esttab m5 m6 m7 m1 m2 m3 m4 using "$overleaf_dir/other_terms_did_both_rule.tex", replace ///
 nodepvars nomti nonum collabels(none) label b(3) se(3) parentheses ///
 star(* 0.10 ** 0.05 *** 0.01) ar2 plain lines fragment noconstant keep(treated treated_post treated_loss treated_loss_post)
 est clear
@@ -669,17 +689,74 @@ gen excess_interest_scaled_post = excess_interest_scaled * post
 label variable excess_interest_scaled "Excess Interest Expense (Scaled)"
 label variable excess_interest_scaled_post "Excess Interest Expense (Scaled) x Post"
 
-reghdfe margin_bps excess_interest_scaled excess_interest_scaled_post `deal_controls', absorb(year##ff_48 sp_rating_num) vce(cluster gvkey)
+reghdfe margin_bps excess_interest_scaled excess_interest_scaled_post `controls' `controls_post' `deal_controls', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
 estimates store m1
-reghdfe margin_bps excess_interest_scaled excess_interest_scaled_post `controls' `deal_controls', absorb(year##ff_48 sp_rating_num) vce(cluster gvkey)
+
+* save the results (esttab) using overleaf_dir
+esttab m1 using "$overleaf_dir/margin_did_both_rule_falsification_cts.tex", replace ///
+nodepvars nomti nonum collabels(none) label b(3) se(3) parentheses ///
+star(* 0.10 ** 0.05 *** 0.01) ar2 plain lines fragment noconstant drop(_cons `controls_post')
+est clear
+
+** quartile splits
+gen ie_excess_q4 = 1 if excess_interest_scaled > 0.89999
+gen ie_excess_q3 = 1 if inrange(excess_interest_scaled, 0.6, 0.89999)
+gen ie_excess_q2 = 1 if inrange(excess_interest_scaled, 0.300001, 0.59999)
+gen ie_excess_q1 = 1 if inrange(excess_interest_scaled, 0.00001, 0.3)
+
+forv i = 1/4 {
+	replace ie_excess_q`i' = 0 if excess_interest_scaled == 0
+	replace ie_excess_q`i' = 0 if ie_excess_q`i' == .
+}
+
+forv i = 1/4 {
+	gen ie_excess_q`i'_post = ie_excess_q`i' * post
+}
+
+label var ie_excess_q1 "Excess Interest Expense Q1"
+label var ie_excess_q2 "Excess Interest Expense Q2"
+label var ie_excess_q3 "Excess Interest Expense Q3"
+label var ie_excess_q4 "Excess Interest Expense Q4"
+label var ie_excess_q1_post "Excess Interest Expense Q1 x Post2014"
+label var ie_excess_q2_post "Excess Interest Expense Q2 x Post2014"
+label var ie_excess_q3_post "Excess Interest Expense Q3 x Post2014"
+label var ie_excess_q4_post "Excess Interest Expense Q4 x Post2014"
+
+local treat_cts "excess_interest_scaled excess_interest_scaled_post"
+local treat_quartiles "ie_excess_q1 ie_excess_q1_post ie_excess_q2 ie_excess_q2_post ie_excess_q3 ie_excess_q3_post ie_excess_q4 ie_excess_q4_post"
+
+gen treated_one = 1 if treated == 1 & treated_loss == 0
+replace treated_one = 0 if treated_one == .
+gen treated_one_post = treated_one * post
+
+gen treated_two = 1 if treated == 0 & treated_loss == 1
+replace treated_two = 0 if treated_two == .
+gen treated_two_post = treated_two * post
+ 
+gen treated_three = 1 if treated == 1 & treated_loss == 1
+replace treated_three = 0 if treated_three == .
+gen treated_three_post = treated_three * post
+
+local treated_bi "treated_one treated_one_post treated_two treated_two_post treated_three treated_three_post"
+label var treated_one "Excess Interest (30\% Rule Only)"
+label var treated_two "Excess Interest (Loss Only)"
+label var treated_three "Excess Interest (Both Rule)"
+label var treated_one_post "Excess Interest (30\% Rule Only) x Post2014"
+label var treated_two_post "Excess Interest (Loss Only) x Post2014"
+label var treated_three_post "Excess Interest (Both Rule) x Post2014"
+
+* Mix of these measures
+reghdfe margin_bps treated treated_post treated_loss treated_loss_post `controls' `controls_post' `deal_controls', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
+estimates store m1
+reghdfe margin_bps `treated_bi' `controls' `controls_post' `deal_controls', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
 estimates store m2
-reghdfe margin_bps excess_interest_scaled excess_interest_scaled_post `controls' `controls_post' `deal_controls', absorb(yea##ff_48 sp_rating_num) vce(cluster gvkey)
+reghdfe margin_bps `treat_quartiles' `controls' `controls_post' `deal_controls', absorb(yea ff_48 sp_rating_num) vce(cluster gvkey)
 estimates store m3
 
 * save the results (esttab) using overleaf_dir
-esttab m1 m2 m3 using "$overleaf_dir/margin_did_both_rule_falsification_cts.tex", replace ///
+esttab m3 m1 m2 using "$overleaf_dir/margin_did_both_rule_falsification_all.tex", replace ///
 nodepvars nomti nonum collabels(none) label b(3) se(3) parentheses ///
-star(* 0.10 ** 0.05 *** 0.01) ar2 plain lines fragment noconstant drop(_cons `controls_post')
+star(* 0.10 ** 0.05 *** 0.01) ar2 plain lines fragment noconstant drop(_cons `controls' `controls_post' `deal_controls')
 est clear
 
 /***********
@@ -694,9 +771,21 @@ use "../3. Data/Processed/tranche_level_ds_compa_wlabel.dta", clear
 drop if year == 2020 | year == 2021 
 
 *** binscatter
-binscatter margin_bps excess_interest_scaled, controls(`controls' `deal_controls') by(post) ///  
+binscatter margin_bps excess_interest_scaled if excess_interest_scaled > 0 , controls(`controls' `deal_controls') by(post) ///  
     xtitle("Excess Interest Expense (Scaled)") ///
     ytitle("Margin (bps)") 
+	
+graph export "$fig_dir/binscatter_margin_ie_prepost.png", as(png) replace	
+
+
+reg margin_bps `controls' `deal_controls'
+predict margin_resid, residual
+reg excess_interest_scaled `controls' `deal_controls' if excess_interest_scaled
+predict excess_interest_resid, residual
+binscatter margin_resid excess_interest_resid, by(post) ///
+    xtitle("Residualized Excess Interest Expense (Scaled)") ///
+    ytitle("Residualized Margin (bps)")	
+
 
 reghdfe margin_bps excess_interest_scaled excess_interest_scaled_post `deal_controls', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
 estimates store m1
@@ -715,31 +804,51 @@ nodepvars nomti nonum collabels(none) label b(3) se(3) parentheses ///
 star(* 0.10 ** 0.05 *** 0.01) ar2 plain lines fragment noconstant drop(_cons `controls_post')
 est clear
 
+reghdfe log_margin_bps excess_interest_scaled excess_interest_scaled_post `deal_controls', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
+estimates store m1
+
+reghdfe log_margin_bps excess_interest_scaled excess_interest_scaled_post `controls' `deal_controls', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
+estimates store m2
+
+*reghdfe margin_bps excess_interest_scaled excess_interest_scaled_post `controls' `deal_controls', absorb(year gvkey sp_rating_num) vce(cluster gvkey)
+
+reghdfe log_margin_bps excess_interest_scaled excess_interest_scaled_post `controls' `deal_controls' `controls_post', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
+estimates store m3
+
+* save the results (esttab) using overleaf_dir
+esttab m1 m2 m3 using "$overleaf_dir/log_margin_ie_excess.tex", replace ///
+nodepvars nomti nonum collabels(none) label b(3) se(3) parentheses ///
+star(* 0.10 ** 0.05 *** 0.01) ar2 plain lines fragment noconstant drop(_cons `controls_post')
+est clear
+
+
 *** DID regressions (30% and Loss: Perf Pricing and Num Fin Cov) ***
 
-reghdfe perf_pricing_dummy excess_interest_scaled excess_interest_scaled_post `controls' `deal_controls', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
+reghdfe perf_pricing_dummy excess_interest_scaled excess_interest_scaled_post `controls' `deal_controls' `controls_post', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
 estimates store m1
-reghdfe num_fin_cov excess_interest_scaled excess_interest_scaled_post `controls' `deal_controls', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
+reghdfe sweep_dummy excess_interest_scaled excess_interest_scaled_post `controls' `deal_controls' `controls_post', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
 estimates store m2
-*** DID regressions (covenant tightness)
-reghdfe pviol excess_interest_scaled excess_interest_scaled_post `controls' `deal_controls', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
+reghdfe num_fin_cov excess_interest_scaled excess_interest_scaled_post `controls' `deal_controls' `controls_post', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
 estimates store m3
+*** DID regressions (covenant tightness)
+reghdfe pviol excess_interest_scaled excess_interest_scaled_post `controls' `deal_controls' `controls_post', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
+estimates store m4
 
 *** DID regressions (30% and Loss: Loan Size and Maturity) ***
 
 local deal_controls_2 "leveraged secured_dummy tranche_type_dummy tranche_o_a_dummy sponsor_dummy"
 
-reghdfe deal_amount_converted excess_interest_scaled excess_interest_scaled_post `controls' `deal_controls_2', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
-estimates store m4
-
-reghdfe log_deal_amount_converted excess_interest_scaled excess_interest_scaled_post `controls' `deal_controls_2', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
+reghdfe deal_amount_converted excess_interest_scaled excess_interest_scaled_post `controls' `controls_post' maturity `deal_controls_2', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
 estimates store m5
 
-reghdfe maturity excess_interest_scaled excess_interest_scaled_post `controls' `deal_controls_2', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
+reghdfe log_deal_amount_converted excess_interest_scaled excess_interest_scaled_post `controls' `controls_post' maturity  `deal_controls_2', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
 estimates store m6
 
+reghdfe maturity excess_interest_scaled excess_interest_scaled_post `controls' `controls_post' log_deal_amount_converted `deal_controls_2', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
+estimates store m7
+
 * save the results (esttab) using overleaf_dir
-esttab m1 m2 m3 m4 m5 m6 using "$overleaf_dir/other_terms_ie_excess.tex", replace ///
+esttab m5 m6 m7 m1 m2 m3 m4 using "$overleaf_dir/other_terms_ie_excess.tex", replace ///
 nodepvars nomti nonum collabels(none) label b(3) se(3) parentheses ///
 star(* 0.10 ** 0.05 *** 0.01) ar2 plain lines fragment noconstant keep(excess_interest_scaled excess_interest_scaled_post)
 est clear
@@ -766,6 +875,14 @@ reghdfe margin_bps `treat_quartiles' `controls' `deal_controls', absorb(year ff_
 
 corr margin_bps `treat_quartiles' `controls' `deal_controls'
 
+*** Dynamic Diff-in-diffs
+levelsof year, local(years)  // Get all unique years
+foreach y of local years {
+    gen excess_interest_scaled_`y' = excess_interest_scaled * (year == `y')
+}
+local dynamic_ie_excess "excess_interest_scaled_2014 excess_interest_scaled_2015 excess_interest_scaled_2016 excess_interest_scaled_2018 excess_interest_scaled_2019 excess_interest_scaled_2022 excess_interest_scaled_2023"
+
+reghdfe margin_bps excess_interest_scaled `dynamic_ie_excess' `controls' `deal_controls' `controls_post', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
 
 /***********
 	Mechanism Tests
@@ -1061,9 +1178,9 @@ local deal_controls "leveraged maturity log_deal_amount_converted secured_dummy 
 local controls_post "log_at_post market_to_book_post ppent_by_at_post debt_by_at_post cash_by_at_post  dividend_payer_post ret_vol_post"
 local treat_vars "treated treated_post treated_loss treated_loss_post"
 
-reghdfe margin_bps excess_interest_scaled excess_interest_scaled_post `controls' `deal_controls' `controls_post'if not_rated == 1 , absorb(year ff_48 sp_rating_num) vce(cluster gvkey) 
+reghdfe margin_bps excess_interest_scaled excess_interest_scaled_post `controls' `deal_controls' `controls_post' if not_rated == 1 , absorb(year ff_48 sp_rating_num) vce(cluster gvkey) 
 
-reghdfe margin_bps excess_interest_scaled excess_interest_scaled_post `controls' `deal_controls' `controls_post'if not_rated == 0 , absorb(year ff_48 sp_rating_num) vce(cluster gvkey) 
+reghdfe margin_bps excess_interest_scaled excess_interest_scaled_post `controls' `deal_controls' `controls_post' if not_rated == 0 , absorb(year ff_48 sp_rating_num) vce(cluster gvkey) 
 
 *** generate indicator that each gvkey has both pre and post periods 
 bysort gvkey: egen max_post = max(post)
@@ -1108,4 +1225,4 @@ test [m3_mean]treated_loss_post = [m4_mean]treated_loss_post
 
 
 *** close log
-log close
+*log close
