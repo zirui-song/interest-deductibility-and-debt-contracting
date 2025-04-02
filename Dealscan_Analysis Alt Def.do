@@ -286,6 +286,11 @@ star(* 0.10 ** 0.05 *** 0.01) ar2 plain lines fragment noconstant keep(excess_in
 est clear
 
 *** BINSCATTERS
+
+binsreg next_year_excess_interest_total excess_interest_scaled `controls' `deal_controls', nbins(50)
+
+
+* original binscatter
 binscatter next_year_excess_interest_total excess_interest_scaled, ///
 	xtitle("Current-Year Excess Interest Expense (Scaled)") ///
     ytitle("Next-Year Excess Interest Expense (Scaled)") 
