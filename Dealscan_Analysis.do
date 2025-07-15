@@ -251,6 +251,11 @@ estimates store m10
 esttab m1 m2 m3 m4 m5 m6 m7 m8 m9 m10 using "$overleaf_dir/next_year_risk_tests.tex", replace ///
 nodepvars nomti nonum collabels(none) label b(3) se(3) parentheses ///
 star(* 0.10 ** 0.05 *** 0.01) ar2 plain lines fragment noconstant keep(excess_interest_scaled excess_interest_scaled_post    `controls' `deal_controls')
+
+* save results without controls
+esttab m1 m2 m3 m4 m5 m6 m7 m8 m9 m10 using "$overleaf_dir/next_year_risk_tests_noctrl.tex", replace ///
+nodepvars nomti nonum collabels(none) label b(3) se(3) parentheses ///
+star(* 0.10 ** 0.05 *** 0.01) ar2 plain lines fragment noconstant keep(excess_interest_scaled excess_interest_scaled_post)
 est clear
 
 *** DID regressions (30% and Loss: MAIN RESULT TABLE 1) ***
@@ -739,6 +744,11 @@ estimates store m1
 esttab m1 using "$overleaf_dir/margin_did_both_rule_falsification_cts.tex", replace ///
 nodepvars nomti nonum collabels(none) label b(3) se(3) parentheses ///
 star(* 0.10 ** 0.05 *** 0.01) ar2 plain lines fragment noconstant drop(_cons `controls_post')
+
+* save the results (esttab) using overleaf_dir
+esttab m1 using "$overleaf_dir/margin_did_both_rule_falsification_cts_noctrl.tex", replace ///
+nodepvars nomti nonum collabels(none) label b(3) se(3) parentheses ///
+star(* 0.10 ** 0.05 *** 0.01) ar2 plain lines fragment noconstant drop(_cons `controls_post' `controls' `deal_controls')
 est clear
 
 ** quartile splits
@@ -798,7 +808,7 @@ reghdfe margin_bps `treat_quartiles' `controls' `controls_post' `deal_controls',
 estimates store m3
 
 * save the results (esttab) using overleaf_dir
-esttab m3 m1 m2 using "$overleaf_dir/margin_did_both_rule_falsification_all.tex", replace ///
+esttab m3 using "$overleaf_dir/margin_did_both_rule_falsification_all.tex", replace ///
 nodepvars nomti nonum collabels(none) label b(3) se(3) parentheses ///
 star(* 0.10 ** 0.05 *** 0.01) ar2 plain lines fragment noconstant drop(_cons `controls' `controls_post' `deal_controls')
 est clear
@@ -826,17 +836,22 @@ estimates store m1
 reghdfe margin_bps excess_interest_scaled excess_interest_scaled_post `controls' `deal_controls' `controls_post' [pweight=_webal], absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
 estimates store m2
 
+reghdfe margin_bps `treat_quartiles' `controls' `deal_controls' [pweight=_webal], absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
+estimates store m3
+reghdfe margin_bps `treat_quartiles' `controls' `deal_controls' `controls_post' [pweight=_webal], absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
+estimates store m4
+
 reghdfe margin_bps treated treated_post treated_loss treated_loss_post `controls' `deal_controls' [pweight=_webal], absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
 test treated_post + treated_loss_post = 0
-estimates store m3
+estimates store m5
 reghdfe margin_bps treated treated_post treated_loss treated_loss_post `controls' `deal_controls' `controls_post' [pweight=_webal], absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
 test treated_post + treated_loss_post = 0
-estimates store m4
+estimates store m6
 
 * save the results (esttab) using overleaf_dir
 esttab m1 m2 m3 m4 using "$overleaf_dir/margin_did_both_rule_robustness_ebal.tex", replace ///
 nodepvars nomti nonum collabels(none) label b(3) se(3) parentheses ///
-star(* 0.10 ** 0.05 *** 0.01) ar2 plain lines fragment noconstant keep(excess_interest_scaled excess_interest_scaled_post treated treated_post treated_loss treated_loss_post)
+star(* 0.10 ** 0.05 *** 0.01) ar2 plain lines fragment noconstant keep(excess_interest_scaled excess_interest_scaled_post `treat_quartiles')
 est clear
 
 
@@ -867,8 +882,6 @@ estimates store m1
 reghdfe margin_bps excess_interest_scaled excess_interest_scaled_post `controls' `deal_controls', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
 estimates store m2
 
-*reghdfe margin_bps excess_interest_scaled excess_interest_scaled_post `controls' `deal_controls', absorb(year gvkey sp_rating_num) vce(cluster gvkey)
-
 reghdfe margin_bps excess_interest_scaled excess_interest_scaled_post `controls' `deal_controls' `controls_post', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
 estimates store m3
 
@@ -876,6 +889,11 @@ estimates store m3
 esttab m1 m2 m3 using "$overleaf_dir/margin_ie_excess.tex", replace ///
 nodepvars nomti nonum collabels(none) label b(3) se(3) parentheses ///
 star(* 0.10 ** 0.05 *** 0.01) ar2 plain lines fragment noconstant drop(_cons `controls_post')
+
+* save one without control variables 
+esttab m1 m2 m3 using "$overleaf_dir/margin_ie_excess_noctrl.tex", replace ///
+nodepvars nomti nonum collabels(none) label b(3) se(3) parentheses ///
+star(* 0.10 ** 0.05 *** 0.01) ar2 plain lines fragment noconstant drop(_cons `controls_post' `controls' `deal_controls')
 est clear
 
 reghdfe log_margin_bps excess_interest_scaled excess_interest_scaled_post `deal_controls', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
@@ -892,7 +910,6 @@ esttab m1 m2 m3 using "$overleaf_dir/log_margin_ie_excess.tex", replace ///
 nodepvars nomti nonum collabels(none) label b(3) se(3) parentheses ///
 star(* 0.10 ** 0.05 *** 0.01) ar2 plain lines fragment noconstant drop(_cons `controls_post')
 est clear
-
 
 *** DID regressions (30% and Loss: Perf Pricing and Num Fin Cov) ***
 
@@ -973,6 +990,34 @@ foreach y of local years {
 local dynamic_ie_excess "excess_interest_scaled_2014 excess_interest_scaled_2015 excess_interest_scaled_2016 excess_interest_scaled_2018 excess_interest_scaled_2019 excess_interest_scaled_2022 excess_interest_scaled_2023"
 
 reghdfe margin_bps excess_interest_scaled `dynamic_ie_excess' `controls' `deal_controls' `controls_post', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
+
+************ ROBUSTNESS (MNC / Pifo txfo)
+replace pifo = 0 if pifo == .
+replace mnc = 0 if (pifo == 0 & txfo == 0)
+
+preserve 
+	keep if mnc == 0
+	reghdfe margin_bps excess_interest_scaled excess_interest_scaled_post `deal_controls', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
+	estimates store m1
+	reghdfe margin_bps excess_interest_scaled excess_interest_scaled_post `controls' `deal_controls', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
+	estimates store m2
+	reghdfe margin_bps excess_interest_scaled excess_interest_scaled_post `controls' `deal_controls' `controls_post', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
+	estimates store m3
+restore
+
+	lab var pifo "Pretax Foreign Income"
+	reghdfe margin_bps excess_interest_scaled excess_interest_scaled_post pifo `deal_controls', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
+	estimates store m4
+	reghdfe margin_bps excess_interest_scaled excess_interest_scaled_post pifo `controls' `deal_controls', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
+	estimates store m5
+	reghdfe margin_bps excess_interest_scaled excess_interest_scaled_post pifo `controls' `deal_controls' `controls_post', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
+	estimates store m6
+	
+* save the results (esttab) using overleaf_dir
+esttab m1 m2 m3 m4 m5 m6 using "$overleaf_dir/margin_ie_excess_pifo_robust.tex", replace ///
+nodepvars nomti nonum collabels(none) label b(3) se(3) parentheses ///
+star(* 0.10 ** 0.05 *** 0.01) ar2 plain lines fragment noconstant keep(excess_interest_scaled excess_interest_scaled_post)
+est clear
 
 /***********
 	Mechanism Tests
