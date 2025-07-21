@@ -1,4 +1,4 @@
-*log using Dealscan_Analysis.log, replace
+log using Dealscan_Analysis.log, replace
 
 cd "/Users/zrsong/MIT Dropbox/Zirui Song/Research Projects/MPS_Interest Deductibility and Debt Contracting/4. Code"
 
@@ -15,6 +15,11 @@ global fig_dir "/Users/zrsong/MIT Dropbox/Zirui Song/Apps/Overleaf/Tax Incidence
 
 keep if year >= 2014
 drop if year == 2020 | year == 2021
+
+* drop finance and utilities
+* generate FF-12 Industry
+* sicff sic, ind(12)
+* drop if ff_12 == 8 | ff_12 == 11
 
 * Check if the directory exists, if not create it
 cap mkdir "$overleaf_dir"
@@ -1534,4 +1539,4 @@ reghdfe margin_bps excess_interest_scaled excess_interest_scaled_post `controls'
 estimates store m3
 
 *** close log
-*log close
+log close
