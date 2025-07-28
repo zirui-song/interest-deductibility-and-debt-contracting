@@ -861,9 +861,38 @@ est clear
 
 
 *** Firm FEs
-reghdfe margin_bps excess_interest_scaled excess_interest_scaled_post, absorb(year gvkey sp_rating_num) vce(cluster gvkey)
+reghdfe margin_bps excess_interest_scaled excess_interest_scaled_post `controls' `deal_controls' `controls_post', absorb(year gvkey sp_rating_num) vce(cluster gvkey)
 estimates store m1
 
+*** Lender FEs (no variation on the lender side)
+
+preserve 
+	keep if primary_role == "Admin agent"
+	* continuous measure
+	reghdfe margin_bps excess_interest_scaled excess_interest_scaled_post `deal_controls', absorb(year ff_48 sp_rating_num lender_parent_id) vce(cluster gvkey)
+	estimates store m1
+
+	reghdfe margin_bps excess_interest_scaled excess_interest_scaled_post `controls' `deal_controls', absorb(year ff_48 sp_rating_num lender_parent_id) vce(cluster gvkey)
+	estimates store m2
+
+	reghdfe margin_bps excess_interest_scaled excess_interest_scaled_post `controls' `deal_controls' `controls_post', absorb(year ff_48 sp_rating_num lender_parent_id) vce(cluster gvkey)
+	estimates store m3
+
+	* quartile exposure
+	reghdfe margin_bps `treat_quartiles' `deal_controls', absorb(year ff_48 sp_rating_num lender_parent_id) vce(cluster gvkey)
+	estimates store m4
+
+	reghdfe margin_bps `treat_quartiles' `controls' `deal_controls', absorb(year ff_48 sp_rating_num lender_parent_id) vce(cluster gvkey)
+	estimates store m5
+
+	reghdfe margin_bps `treat_quartiles' `controls' `deal_controls' `controls_post', absorb(year ff_48 sp_rating_num lender_parent_id) vce(cluster gvkey)
+	estimates store m6
+
+	* save the results (esttab) using overleaf_dir
+	esttab m1 m2 m3 m4 m5 m6 using "$overleaf_dir/margin_ie_excess_lenderfe.tex", replace ///
+	nodepvars nomti nonum collabels(none) label b(3) se(3) parentheses ///
+	star(* 0.10 ** 0.05 *** 0.01) ar2 plain lines fragment noconstant drop(_cons `controls_post' `deal_controls' `controls')
+restore
 
 *** binscatter
 binscatter margin_bps excess_interest_scaled, controls(`controls' `deal_controls') by(post) ///  
@@ -1036,9 +1065,11 @@ use "../3. Data/Processed/tranche_level_ds_compa_wlabel.dta", clear
 *keep if year <= 2017
 bysort gvkey: egen avg_number_of_lead_byfirm = mean(number_of_lead_arrangers)
 egen median_number_of_lead = median(avg_number_of_lead_byfirm)
+egen p33_number_of_lead_byfirm = pctile(avg_number_of_lead_byfirm), p(33)
+egen p67_number_of_lead_byfirm = pctile(avg_number_of_lead_byfirm), p(67)
 
-gen high_competition = 1 if avg_number_of_lead_byfirm >= median_number_of_lead
-replace high_competition = 0 if high_competition == .
+gen high_competition = 1 if avg_number_of_lead_byfirm > p67_number_of_lead_byfirm
+replace high_competition = 0 if avg_number_of_lead_byfirm < p33_number_of_lead_byfirm
 
 keep gvkey high_competition
 duplicates drop 
@@ -1099,8 +1130,11 @@ bysort ff_48: egen number_of_firms = nvals(gvkey)
 replace number_of_lead_byindustry = number_of_lead_byindustry/number_of_firms
 
 egen median_number_of_lead = median(number_of_lead_byindustry)
-gen high_competition_industry = 1 if number_of_lead_byindustry >= median_number_of_lead
-replace high_competition_industry = 0 if high_competition_industry == .
+egen p33_number_of_lead = pctile(number_of_lead_byindustry), p(33)
+egen p67_number_of_lead = pctile(number_of_lead_byindustry), p(67)
+
+gen high_competition_industry = 1 if number_of_lead_byindustry > p67_number_of_lead
+replace high_competition_industry = 0 if number_of_lead_byindustry < p33_number_of_lead
 
 keep ff_48 high_competition_industry
 duplicates drop 
@@ -1115,6 +1149,9 @@ merge m:1 ff_48 using `industry_competition_mesaure', nogen
 save "../3. Data/Processed/tranche_level_ds_compa_wlabel_withcomp.dta", replace
 
 use "../3. Data/Processed/tranche_level_ds_compa_wlabel_withcomp.dta", clear
+local controls "log_at market_to_book ppent_by_at debt_by_at cash_by_at dividend_payer ret_vol"
+local deal_controls "leveraged maturity log_deal_amount_converted secured_dummy tranche_type_dummy tranche_o_a_dummy sponsor_dummy"
+local treat_vars "treated treated_post treated_loss treated_loss_post"
 
 *** industry-level cross-sectional 
 replace lender_parent_id = lender_id if lender_parent_id == .
@@ -1132,9 +1169,6 @@ gen increase_competition_ind = 1 if diff_num_lead_byind > median_diff_num_lead_b
 replace increase_competition_ind = 0 if diff_num_lead_byind <= median_diff_num_lead_byind
 
 * regressions
-local controls "log_at market_to_book ppent_by_at debt_by_at cash_by_at dividend_payer ret_vol"
-local deal_controls "leveraged maturity log_deal_amount_converted secured_dummy tranche_type_dummy tranche_o_a_dummy sponsor_dummy"
-local treat_vars "treated treated_post treated_loss treated_loss_post"
 
 /*** split sample tests
 fvset base 1 ff_48
@@ -1171,16 +1205,28 @@ test [m1_mean]excess_interest_scaled_post = [m2_mean]excess_interest_scaled_post
 
 est clear 
 
-reg margin_bps excess_interest_scaled excess_interest_scaled_post `controls' `deal_controls' `controls_post' i.year i.ff_48 ib2.sp_rating_num if high_competition_industry == 1
+reg margin_bps excess_interest_scaled excess_interest_scaled_post `controls' `deal_controls' `controls_post' i.year i.ff_48 ib2.sp_rating_num if high_competition_industry == 0
 estimates store m1
 
-reg margin_bps excess_interest_scaled excess_interest_scaled_post `controls' `deal_controls' `controls_post' i.year i.ff_48 ib2.sp_rating_num if high_competition_industry == 0
+reg margin_bps excess_interest_scaled excess_interest_scaled_post `controls' `deal_controls' `controls_post' i.year i.ff_48 ib2.sp_rating_num if high_competition_industry == 1
 estimates store m2
 
 suest m1 m2, vce(cluster gvkey)
 test [m1_mean]excess_interest_scaled = [m2_mean]excess_interest_scaled
 test [m1_mean]excess_interest_scaled_post = [m2_mean]excess_interest_scaled_post
 
+/* firm-level competition
+
+reg margin_bps excess_interest_scaled excess_interest_scaled_post `controls' `deal_controls' `controls_post' i.year i.ff_48 ib2.sp_rating_num if high_competition == 1
+estimates store m3
+
+reg margin_bps excess_interest_scaled excess_interest_scaled_post `controls' `deal_controls' `controls_post' i.year i.ff_48 ib2.sp_rating_num if high_competition == 0
+estimates store m4
+
+suest m3 m4, vce(cluster gvkey)
+test [m3_mean]excess_interest_scaled = [m4_mean]excess_interest_scaled
+test [m3_mean]excess_interest_scaled_post = [m4_mean]excess_interest_scaled_post
+*/
 * save the results (esttab) using overleaf_dir
 esttab m1 m2 using "$overleaf_dir/margin_did_both_rule_competition_cts.tex", replace ///
 nodepvars nomti nonum collabels(none) label b(3) se(3) parentheses ///
@@ -1234,13 +1280,16 @@ merge m:1 gvkey year using "../3. Data/Raw/LinnWeagley_Constraint_Data_2025_01.d
 keep if _merge == 3
 
 bysort ff_48: egen median_lw_debtcon_full = median(lw_debtcon_full)
-gen high_debtcon = 1 if lw_debtcon_full > median_lw_debtcon_full
-replace high_debtcon = 0 if high_debtcon == .
+bysort ff_48: egen p33_lw_debtcon_full = pctile(lw_debtcon_full), p(33)
+bysort ff_48: egen p67_lw_debtcon_full = pctile(lw_debtcon_full), p(67)
 
-reg margin_bps excess_interest_scaled excess_interest_scaled_post `controls' `deal_controls' `controls_post' i.year i.ff_48 ib2.sp_rating_num if high_debtcon == 1
-estimates store m1
+gen high_debtcon = 1 if lw_debtcon_full >= p67_lw_debtcon_full
+replace high_debtcon = 0 if lw_debtcon_full <= p33_lw_debtcon_full
 
 reg margin_bps excess_interest_scaled excess_interest_scaled_post `controls' `deal_controls' `controls_post' i.year i.ff_48 ib2.sp_rating_num if high_debtcon == 0
+estimates store m1
+
+reg margin_bps excess_interest_scaled excess_interest_scaled_post `controls' `deal_controls' `controls_post' i.year i.ff_48 ib2.sp_rating_num if high_debtcon == 1
 estimates store m2
 
 suest m1 m2, vce(cluster ff_48)
@@ -1537,6 +1586,19 @@ estimates store m2
 
 reghdfe margin_bps excess_interest_scaled excess_interest_scaled_post `controls' `deal_controls' `controls_post' if CLO_ratings == 0, absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
 estimates store m3
+
+*** descriptives 
+use "../3. Data/Processed/tranche_level_ds_compa_wlabel.dta", clear
+
+bysort sp_rating: egen margin_max = max(margin_bps)
+bysort sp_rating: egen margin_p75 = pctile(margin_bps), p(75)
+bysort sp_rating: egen margin_min = min(margin_bps)
+bysort sp_rating: egen margin_p25 = pctile(margin_bps), p(25)
+bysort sp_rating: egen margin_mean = mean(margin_bps)
+
+collapse (first) margin_min margin_p25 margin_mean margin_p75 margin_max, by(sp_rating)
+
+export delimited "../3. Data/Processed/margin_range_by_sp_rating.csv", replace
 
 *** close log
 log close

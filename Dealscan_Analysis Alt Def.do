@@ -1,13 +1,13 @@
 *log using Dealscan_Analysis.log, replace
 
 if "`c(hostname)'" == "mphill-surface4" {
-global overleaf_dir "C:\Users\mphill\Dropbox\Apps\Overleaf\Tax Incidence and Loan Contract Negotiations\Tables"
-global fig_dir "C:\Users\mphill\Dropbox\Apps\Overleaf\Tax Incidence and Loan Contract Negotiations\Figures"
+global overleaf_dir "C:\Users\mphill\Dropbox\Apps\Overleaf\Tax Incidence and Loan Contract Terms\Tables"
+global fig_dir "C:\Users\mphill\Dropbox\Apps\Overleaf\Tax Incidence and Loan Contract Terms\Figures"
 	
 }
 
-global overleaf_dir "/Users/zrsong/MIT Dropbox/Zirui Song/Apps/Overleaf/Tax Incidence and Loan Contract Negotiations/Tables"
-global fig_dir "/Users/zrsong/MIT Dropbox/Zirui Song/Apps/Overleaf/Tax Incidence and Loan Contract Negotiations/Figures"
+global overleaf_dir "/Users/zrsong/MIT Dropbox/Zirui Song/Apps/Overleaf/Tax Incidence and Loan Contract Terms/Tables"
+global fig_dir "/Users/zrsong/MIT Dropbox/Zirui Song/Apps/Overleaf/Tax Incidence and Loan Contract Terms/Figures"
 
 
 * Check if the directory exists, if not create it
