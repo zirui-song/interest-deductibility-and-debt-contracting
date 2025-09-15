@@ -910,6 +910,21 @@ binscatter margin_resid excess_interest_resid, by(post) ///
     ytitle("Residualized Margin (bps)")	
 */
 
+************************************	MAIN RESULTS	******************************
+
+*** VIF Analysis ***
+local controls "log_at market_to_book ppent_by_at debt_by_at cash_by_at dividend_payer ret_vol"
+local deal_controls "leveraged maturity log_deal_amount_converted secured_dummy tranche_type_dummy tranche_o_a_dummy sponsor_dummy"
+local controls_post "log_at_post market_to_book_post ppent_by_at_post debt_by_at_post cash_by_at_post dividend_payer_post ret_vol_post"	
+
+reg margin_bps excess_interest_scaled excess_interest_scaled_post `deal_controls' i.year i.ff_48 i.sp_rating_num
+estat vif
+reg margin_bps excess_interest_scaled excess_interest_scaled_post `deal_controls' `controls' i.year i.ff_48 i.sp_rating_num
+estat vif
+reg margin_bps excess_interest_scaled excess_interest_scaled_post `deal_controls' `controls' `controls_post' i.year i.ff_48 i.sp_rating_num
+estat vif
+*** *** *** 
+
 reghdfe margin_bps excess_interest_scaled excess_interest_scaled_post `deal_controls', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
 estimates store m1
 
@@ -945,7 +960,58 @@ nodepvars nomti nonum collabels(none) label b(3) se(3) parentheses ///
 star(* 0.10 ** 0.05 *** 0.01) ar2 plain lines fragment noconstant drop(_cons `controls_post')
 est clear
 
-*** DID regressions (30% and Loss: Perf Pricing and Num Fin Cov) ***
+************************************	MAIN RESULTS (Dynamic)	******************************
+
+local years 2014 2015 2016 2017 2018 2019 2022 2023
+* generate year-specific treated dummies
+foreach y of local years {
+    gen treated_all_year_`y' = (treated_all == 1 & year == `y')
+    replace treated_all_year_`y' = 0 if treated_all != 1 | year != `y'
+	gen indicator_year_`y' = 1 if year == `y'
+	replace indicator_year_`y' = 0 if indicator_year_`y' == .
+	gen excess_interest_scaled_year_`y' = excess_interest_scaled * indicator_year_`y'
+}
+
+local dynamic_treated_all "treated_all_year_2015 treated_all_year_2016 treated_all_year_2017  treated_all_year_2018 treated_all_year_2019 treated_all_year_2022 treated_all_year_2023"
+
+local dynamic_treated_excess_interest "excess_interest_scaled_year_2014 excess_interest_scaled_year_2015 excess_interest_scaled_year_2016 excess_interest_scaled_year_2018 excess_interest_scaled_year_2019 excess_interest_scaled_year_2022 excess_interest_scaled_year_2023"
+
+* Q3 and Q4
+gen treated_q = 1 if ie_excess_q3 == 1 | ie_excess_q4 == 1
+replace treated_q = 0 if treated_q == .
+
+foreach y of local years {
+    gen treated_q_year_`y' = (treated_q == 1 & year == `y')
+    replace treated_q_year_`y' = 0 if treated_q != 1 | year != `y'
+}
+
+local dynamic_treated_q "treated_q_year_2015 treated_q_year_2016 treated_q_year_2017 treated_q_year_2018 treated_q_year_2019 treated_q_year_2022 treated_q_year_2023"
+
+*** Both Rule ***
+reghdfe margin_bps treated_all `dynamic_treated_all' `controls' `deal_controls', absorb(year ff_48 sp_rating_num) vce(cluster ff_48)
+mat c = e(b)'
+mata st_matrix("srdvcovbt",sqrt(diagonal(st_matrix("e(V)"))))
+mat res = c , srdvcovbt
+
+esttab mat(res) using "$overleaf_dir/margin_did_dynamic_all_ff48.csv", replace mlab(none)
+
+*** Treated (Q3 and Q4) ***
+reghdfe margin_bps treated_q `dynamic_treated_q' `controls' `deal_controls', absorb(year ff_48 sp_rating_num) vce(cluster ff_48)
+mat c = e(b)'
+mata st_matrix("srdvcovbt",sqrt(diagonal(st_matrix("e(V)"))))
+mat res = c , srdvcovbt
+
+esttab mat(res) using "$overleaf_dir/margin_did_dynamic_q_ff48.csv", replace mlab(none)
+
+*** Excess Interest ***
+reghdfe margin_bps excess_interest_scaled `dynamic_treated_excess_interest' `controls' `deal_controls', absorb(year ff_48 sp_rating_num) vce(cluster ff_48)
+mat c = e(b)'
+mata st_matrix("srdvcovbt",sqrt(diagonal(st_matrix("e(V)"))))
+mat res = c , srdvcovbt
+
+esttab mat(res) using "$overleaf_dir/margin_ie_excess_dynamic.csv", replace mlab(none)
+
+*** DID regressions (Perf Pricing and Num Fin Cov) ***
 
 reghdfe perf_pricing_dummy excess_interest_scaled excess_interest_scaled_post `controls' `deal_controls' `controls_post', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
 estimates store m1
@@ -957,7 +1023,7 @@ estimates store m3
 reghdfe pviol excess_interest_scaled excess_interest_scaled_post `controls' `deal_controls' `controls_post', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
 estimates store m4
 
-*** DID regressions (30% and Loss: Loan Size and Maturity) ***
+*** DID regressions (Loan Size and Maturity) ***
 
 local deal_controls_2 "leveraged secured_dummy tranche_type_dummy tranche_o_a_dummy sponsor_dummy"
 
