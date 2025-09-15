@@ -1568,6 +1568,8 @@ plt.savefig(f'{overleaf_dir}/Figures/margin_did_dynamic_loss_ff48.png')
 
 # Analysis on Persistence of Treatment Groups
 
+# generate list of gvkey from tranche_level_ds_compa
+gvkey_list = tranche_level_ds_compa['gvkey'].unique()
 # Merge with gvkey_list
 gvkey_list = pd.DataFrame(gvkey_list)
 # rename columns to gvkey
