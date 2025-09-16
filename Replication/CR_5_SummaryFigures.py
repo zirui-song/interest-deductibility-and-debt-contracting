@@ -13,7 +13,7 @@ os.makedirs(os.path.join(overleaf_dir, 'Tables'), exist_ok=True)
 os.makedirs(os.path.join(overleaf_dir, 'Figures'), exist_ok=True)
 
 # Read in the processed data with all variables already generated and filtered
-tranche_level_ds_compa = pd.read_csv(os.path.join(processed_dir, 'tranche_level_ds_compa_all.csv'))
+tranche_level_ds_compa = pd.read_csv(os.path.join(processed_dir, 'tranche_level_ds_compa_filtered.csv'))
 
 variable_labels_groups = {
     'excess_interest_scaled': 'Excess Interest Expense (Scaled)',

@@ -235,10 +235,12 @@ compa['loss_before_interest_expense'] = _ind.where(~_mask_na, other=pd.NA).astyp
 # Market to book
 compa['market_to_book'] = (compa['debt'] + compa['pstk'] + (compa['prcc_f'] * compa['csho'])) / compa['at']
 
-# MNC (indicator = 1 if pifo or txfo non-zero; NA if either missing)
-_mask_na = compa[['pifo', 'txfo']].isna().any(axis=1)
-_ind = (compa['pifo'] != 0) | (compa['txfo'] != 0)
-compa['mnc'] = _ind.where(~_mask_na, other=pd.NA).astype('Int64')
+# replace txfo and pifo with 0 if missing
+compa['txfo'] = compa['txfo'].fillna(0)
+compa['pifo'] = compa['pifo'].fillna(0)
+
+# MNC (indicator = 1 if pifo or txfo non-zero)
+compa['mnc'] = (compa['pifo'] != 0) | (compa['txfo'] != 0)
 
 # Net interest
 compa['net_interest'] = compa['xint'] - compa['idit']

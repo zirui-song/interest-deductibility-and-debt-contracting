@@ -10,7 +10,7 @@ raw_dir = os.path.join('..', '..', '3. Data', 'Raw')
 # Read in the processed data
 comp_crspa_merged = pd.read_csv(os.path.join(processed_dir, "comp_crspa_merged.csv"))
 
-# Ratings Data
+# Ratings Data (2010 to 2024 Downloaded from WRDS)
 ciq_ratings = pd.read_csv(os.path.join(raw_dir, "ciq_ratings.csv"))
 # keep gvkey rating_date ratingsymbol
 ciq_ratings = ciq_ratings[['gvkey', 'ratingdate', 'currentratingsymbol']]
@@ -36,6 +36,22 @@ balanced_ratings = ciq_ratings.set_index(['gvkey', 'rating_year']).reindex(full_
 balanced_ratings['currentratingsymbol'] = balanced_ratings.groupby('gvkey')['currentratingsymbol'].ffill()
 
 # Dealscan
+
+# Define the start and end dates
+# start_date = '2009-01-01'
+# end_date = '2024-06-30'
+# Query the dealscan syndicated loan data
+#query = f"""
+#    SELECT *
+#    FROM tr_dealscan.dealscan
+#    WHERE deal_active_date >= '{start_date}' AND deal_active_date <= '{end_date}'
+#"""
+
+# Execute the query and fetch the data
+#dealscan_data = db.raw_sql(query)
+# Save the data to a CSV file
+#dealscan_data.to_csv('../Data/Raw/dealscan_data.csv', index=False)
+
 # import dealscan data 
 dealscan_data = pd.read_csv(os.path.join(raw_dir, "dealscan_data.csv"))
 
@@ -156,6 +172,22 @@ dealscan_comp_crspa_merged = dealscan_comp_crspa_merged.loc[:, ~dealscan_comp_cr
 # change tranche_active_date and tranche_maturity date to datetime
 dealscan_comp_crspa_merged['tranche_active_date'] = pd.to_datetime(dealscan_comp_crspa_merged['tranche_active_date'])
 dealscan_comp_crspa_merged['tranche_maturity_date'] = pd.to_datetime(dealscan_comp_crspa_merged['tranche_maturity_date'])
+
+# Sort so that rows with 'primary_role' == 'Admin agent' come first, 'Arranger' comes second, 'Syndication agent' comes third, and everything else comes last
+role_priority = {
+    'Admin agent': 0,
+    'Arranger': 1,
+    'Syndication agent': 2
+}
+
+# Assign a priority value to each row based on 'primary_role'
+dealscan_comp_crspa_merged['role_priority'] = dealscan_comp_crspa_merged['primary_role'].map(role_priority).fillna(3)
+
+# Sort by the new priority column (and keep previous sort order for ties)
+dealscan_comp_crspa_merged = dealscan_comp_crspa_merged.sort_values(['role_priority'] + [col for col in dealscan_comp_crspa_merged.columns if col != 'role_priority'])
+
+# Drop the helper column
+dealscan_comp_crspa_merged = dealscan_comp_crspa_merged.drop(columns=['role_priority'])
 
 # collapse by lpc_tranche_id and keep only the first entry 
 tranche_level_ds_compa = dealscan_comp_crspa_merged.groupby(['lpc_tranche_id']).agg({
@@ -627,16 +659,38 @@ tranche_level_ds_compa.loc[:, 'post'] = (tranche_level_ds_compa['year'] > 2017).
 tranche_level_ds_compa = tranche_level_ds_compa.dropna(subset='ff_48')
 tranche_level_ds_compa = tranche_level_ds_compa[(tranche_level_ds_compa['at'] > 0) & (tranche_level_ds_compa['margin_bps'] > 0)]
 
-# drop year == 2024
-tranche_level_ds_compa = tranche_level_ds_compa[tranche_level_ds_compa['year'] != 2024]
-# drop year == 2020 and 2021
-tranche_level_ds_compa = tranche_level_ds_compa[tranche_level_ds_compa['year'] != 2020]
-tranche_level_ds_compa = tranche_level_ds_compa[tranche_level_ds_compa['year'] != 2021]
+# Define variables of interest for downstream tables/figures
+variable_labels = {
+    'excess_interest_scaled': 'Excess Interest Expense (Scaled)',
+    'deal_amount_converted': 'Loan Amount ($Million)',
+    'leveraged': 'Leveraged',
+    'margin_bps': 'Interest Spread (Basis Points)',
+    'maturity': 'Maturity (Years)',
+    'number_of_lead_arrangers': 'Number of Lead Arrangers',
+    'secured_dummy': 'Secured',
+    'sponsor_dummy': 'Sponsored',
+    'tranche_o_a_dummy': 'Origination',
+    'tranche_type_dummy': 'Term Loan',
+    'total_asset': 'Assets ($Billion)',
+    'cash_by_at': 'Cash / Assets',
+    'debt_by_at': 'Debt / Assets',
+    'dividend_payer': 'Dividend Payer',
+    'ppent_by_at': 'PP&E / Assets',
+    'ret_vol': 'Return Volatility',
+    'market_to_book': 'Market to Book Ratio',
+}
 
-# drop years before 2013
-tranche_level_ds_compa = tranche_level_ds_compa[tranche_level_ds_compa['year'] >= 2014]
+# Apply additional filtering for variables of interest
+tranche_level_ds_compa = tranche_level_ds_compa.dropna(subset=variable_labels.keys())
 
 # Save the complete dataset with all variables
 tranche_level_ds_compa.to_csv(os.path.join(processed_dir, 'tranche_level_ds_compa_all.csv'), index=False)
+
+tranche_level_ds_compa = tranche_level_ds_compa[
+    (tranche_level_ds_compa['year'] >= 2014) & 
+    ~tranche_level_ds_compa['year'].isin([2020, 2021, 2024])
+]
+
+tranche_level_ds_compa.to_csv(os.path.join(processed_dir, 'tranche_level_ds_compa_filtered.csv'), index=False)
 
 print("Dealscan data cleaning and merging completed")

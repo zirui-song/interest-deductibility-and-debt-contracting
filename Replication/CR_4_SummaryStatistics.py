@@ -10,7 +10,7 @@ overleaf_dir = "/Users/zrsong/MIT Dropbox/Zirui Song/Apps/Overleaf/Tax Incidence
 os.makedirs(os.path.join(overleaf_dir, 'Tables'), exist_ok=True)
 
 # Read in the processed data with all variables already generated and filtered
-tranche_level_ds_compa = pd.read_csv(os.path.join(processed_dir, 'tranche_level_ds_compa_all.csv'))
+tranche_level_ds_compa = pd.read_csv(os.path.join(processed_dir, 'tranche_level_ds_compa_filtered.csv'))
 
 ## Summary Statistics of Firms in the Final Sample
 
@@ -33,30 +33,6 @@ variable_labels = {
     'ret_vol': 'Return Volatility',
     'market_to_book': 'Market to Book Ratio',
 }
-
-# Apply additional filtering for variables of interest
-tranche_level_ds_compa = tranche_level_ds_compa.dropna(subset=variable_labels.keys())
-
-variable_labels_groups = {
-    'excess_interest_scaled': 'Excess Interest Expense (Scaled)',
-    'deal_amount_converted': 'Loan Amount ($Million)',
-    'leveraged': 'Leveraged',
-    'margin_bps': 'Interest Spread (Basis Points)',
-    'maturity': 'Maturity (Years)',
-    'number_of_lead_arrangers': 'Number of Lead Arrangers',
-    'secured_dummy': 'Secured',
-    'sponsor_dummy': 'Sponsored',
-    'tranche_o_a_dummy': 'Origination',
-    'tranche_type_dummy': 'Term Loan',
-    'total_asset': 'Assets ($Billion)',
-    'cash_by_at': 'Cash / Assets',
-    'debt_by_at': 'Debt / Assets',
-    'dividend_payer': 'Dividend Payer',
-    'ppent_by_at': 'PP&E / Assets',
-    'ret_vol': 'Return Volatility',
-    'market_to_book': 'Market to Book Ratio',
-}
-
 
 # Calculate summary statistics for the variables in variable_labels
 summary_stats_all = tranche_level_ds_compa[variable_labels.keys()].describe().transpose()
@@ -82,11 +58,11 @@ with open(os.path.join(overleaf_dir, 'Tables/summary_stats_all.tex'), 'w') as f:
     f.write(latex_table)
 
 
-# Create a correlation matrix for the variables in variable_labels_groups
-correlation_matrix = tranche_level_ds_compa[variable_labels_groups.keys()].corr()
+# Create a correlation matrix for the variables in variable_labels
+correlation_matrix = tranche_level_ds_compa[variable_labels.keys()].corr()
 
 # Rename the index and columns using the shorter labels
-correlation_matrix = correlation_matrix.rename(index=variable_labels_groups, columns=variable_labels_groups)
+correlation_matrix = correlation_matrix.rename(index=variable_labels, columns=variable_labels)
 
 # Format all values to have 2 decimal places
 formatted_matrix = correlation_matrix.applymap(lambda x: f"{x:.2f}")

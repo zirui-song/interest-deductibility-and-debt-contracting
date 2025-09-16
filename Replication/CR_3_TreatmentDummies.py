@@ -7,57 +7,12 @@ processed_dir = os.path.join('..', '..', '3. Data', 'Processed')
 os.makedirs(processed_dir, exist_ok=True)
 
 # Read in the processed data with all variables already generated and filtered
-tranche_level_ds_compa = pd.read_csv(os.path.join(processed_dir, 'tranche_level_ds_compa_all.csv'))
+tranche_level_ds_compa = pd.read_csv(os.path.join(processed_dir, 'tranche_level_ds_compa_filtered.csv'))
 comp_crspa_merged = pd.read_csv(os.path.join(processed_dir, "comp_crspa_merged.csv"))
 
 ### Add different treatment-year dummies
 
 year_dummies = pd.get_dummies(tranche_level_ds_compa['year'], prefix='year', drop_first=False).astype(int)
-
-def output_analysis_dta(definition):
-    tranche_level_ds_compa_dta = tranche_level_ds_compa.copy()
-
-    tranche_level_ds_compa_dta['treated'] = (tranche_level_ds_compa_dta[f'excess_interest_30{definition}'] > 0).astype(int)
-
-    # Generated treated_loss = excess_interest_loss = 1
-    tranche_level_ds_compa_dta['treated_loss'] = (tranche_level_ds_compa_dta[f'excess_interest_loss{definition}'] > 0).astype(int)
-
-    # post = 1 if year > 2017 (2017 as hold-out period)
-    tranche_level_ds_compa_dta['post'] = (tranche_level_ds_compa_dta['year'] > 2017).astype(int)
-
-    # Generate the interaction term
-    tranche_level_ds_compa_dta['treated_post'] = tranche_level_ds_compa_dta['treated'] * tranche_level_ds_compa_dta['post']
-
-    # Generate the interaction term for treated loss
-    tranche_level_ds_compa_dta['treated_loss_post'] = tranche_level_ds_compa_dta['treated_loss'] * tranche_level_ds_compa_dta['post']
-
-    # Generate interaction terms for each year dummy and the treated_post variable, ensuring integer output
-    interactions = year_dummies.apply(lambda x: (x * tranche_level_ds_compa_dta['treated']).astype(int))
-
-    # Generate interaction terms for each year dummy and the treated_loss_post variable, ensuring integer output
-    interactions_loss = year_dummies.apply(lambda x: (x * tranche_level_ds_compa_dta['treated_loss']).astype(int))
-
-    # Rename the interaction columns to have 'treated_year' as names
-    interactions.columns = [f'treated_{col}' for col in year_dummies.columns]
-
-    # Rename the interaction columns to have 'treated_loss_year' as names
-    interactions_loss.columns = [f'treated_loss_{col}' for col in year_dummies.columns]
-
-    # Add the year dummies and interaction terms back to the original data frame
-    tranche_level_ds_compa_dta = pd.concat([tranche_level_ds_compa_dta, year_dummies, interactions, interactions_loss], axis=1)
-
-    # drop duplicated columns
-    tranche_level_ds_compa_dta = tranche_level_ds_compa_dta.loc[:, ~tranche_level_ds_compa_dta.columns.duplicated()]
-
-    # Convert ipodate to string to avoid ValueError
-    tranche_level_ds_compa_dta['ipodate'] = tranche_level_ds_compa_dta['ipodate'].astype(str)
-    
-    # save as .dta with version=117
-    tranche_level_ds_compa_dta.to_stata(os.path.join(processed_dir, f'tranche_level_ds_compa{definition}.dta'), version=117)
-
-output_analysis_dta('')
-output_analysis_dta('_prev_3yr')
-output_analysis_dta('_prev_5yr')
 
 tranche_level_ds_compa_dta = tranche_level_ds_compa.copy()
 
@@ -137,7 +92,7 @@ tranche_level_ds_compa_dta['ipodate'] = tranche_level_ds_compa_dta['ipodate'].as
 # save as .dta with version=117
 tranche_level_ds_compa_dta.to_stata(os.path.join(processed_dir, 'tranche_level_ds_compa.dta'), version=117)
 
-# Analysis on Persistence of Treatment Groups
+# Data for Analysis on Persistence of Treatment Groups
 
 # generate list of gvkey from tranche_level_ds_compa
 gvkey_list = tranche_level_ds_compa['gvkey'].unique()
@@ -194,5 +149,34 @@ ds_gvkey_treatment_assignment = ds_gvkey_treatment_assignment[ds_gvkey_treatment
 
 # save a copy of the data including only gvkey fyear treated variable
 ds_gvkey_treatment_assignment.to_stata(os.path.join(processed_dir, 'ds_gvkey_treatment_assignment.dta'), version=117)
+
+# Data for Analysis on Sample Composition Changes 
+
+# rename txdba, txdbca, txndb to DTA, DTA_current, NDTA
+comp_crspa_merged = comp_crspa_merged.rename(columns={'txdba': 'DTA', 'txdbca': 'DTA_current', 'txndb': 'NDTA'})
+
+# inner merge with gvkey_list
+# Use the 'gvkey' column values (Series) in isin to avoid empty selection
+dta_analysis = comp_crspa_merged[comp_crspa_merged['gvkey'].isin(gvkey_list['gvkey'])]
+
+# keep year >= 2014 and <= 2023
+dta_analysis = dta_analysis[dta_analysis['fyear'] <= 2023]
+dta_analysis = dta_analysis[dta_analysis['fyear'] >= 2013]
+
+# check if there are duplicated gvkey and fyear
+dta_analysis[dta_analysis.duplicated(subset=['gvkey', 'fyear'], keep=False)]
+
+# sort by gvkey and fyear
+dta_analysis = dta_analysis.sort_values(by=['gvkey', 'fyear'])
+# scale by total assets
+dta_analysis['DTA_byat'] = dta_analysis['DTA'] / dta_analysis['at']
+# generate delta_DTA
+dta_analysis['delta_DTA'] = dta_analysis.groupby('gvkey')['DTA'].diff()
+# scale by total assets
+dta_analysis['delta_DTA_byat'] = dta_analysis['delta_DTA'] / dta_analysis['at']
+# check for correlation between DTA and excess_interest_30 and excess_interest_loss
+dta_analysis[['DTA', 'delta_DTA', 'DTA_byat', 'delta_DTA_byat', 'excess_interest_30', 'excess_interest_loss']].corr()
+# save to dta
+dta_analysis.to_stata(os.path.join(processed_dir, 'dta_analysis.dta'), version=117)
 
 print("Treatment dummies and persistence analysis completed")
