@@ -56,6 +56,32 @@ nodepvars nomti nonum collabels(none) label b(3) se(3) parentheses ///
 star(* 0.10 ** 0.05 *** 0.01) ar2 plain lines fragment noconstant drop(_cons `controls_post' `controls' `deal_controls')
 est clear
 
+******************	Table 4: Main Results (B + BB Only)  ******************
+
+preserve
+	keep if inrange(sp_rating_num, 7, 15) == 1
+
+	reghdfe margin_bps excess_interest_scaled excess_interest_scaled_post `deal_controls', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
+	estimates store m1
+
+	reghdfe margin_bps excess_interest_scaled excess_interest_scaled_post `controls' `deal_controls', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
+	estimates store m2
+
+	reghdfe margin_bps excess_interest_scaled excess_interest_scaled_post `controls' `deal_controls' `controls_post', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
+	estimates store m3
+
+	* save the results (esttab) using tabdir
+	esttab m1 m2 m3 using "$tabdir/margin_ie_excess_clo.tex", replace ///
+	nodepvars nomti nonum collabels(none) label b(3) se(3) parentheses ///
+	star(* 0.10 ** 0.05 *** 0.01) ar2 plain lines fragment noconstant drop(_cons `controls_post')
+
+	* save one without control variables 
+	esttab m1 m2 m3 using "$tabdir/margin_ie_excess_clo_noctrl.tex", replace ///
+	nodepvars nomti nonum collabels(none) label b(3) se(3) parentheses ///
+	star(* 0.10 ** 0.05 *** 0.01) ar2 plain lines fragment noconstant drop(_cons `controls_post' `controls' `deal_controls')
+	est clear
+restore
+
 ******************	Figure 4: Main Results Binscatter  ******************
 binscatter margin_bps excess_interest_scaled, controls(`controls' `deal_controls') by(post) ///  
     xtitle("Excess Interest Expense (Scaled)") ///
@@ -144,6 +170,11 @@ estimates store m3
 reghdfe pviol excess_interest_scaled excess_interest_scaled_post `controls' `deal_controls' `controls_post', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
 estimates store m4
 
+local deal_controls3 "leveraged maturity log_deal_amount_converted tranche_type_dummy tranche_o_a_dummy sponsor_dummy"
+
+reghdfe secured_dummy excess_interest_scaled excess_interest_scaled_post `controls' `deal_controls3' `controls_post', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
+estimates store m8
+
 *** DID regressions (Loan Size and Maturity) ***
 
 local deal_controls_2 "leveraged secured_dummy tranche_type_dummy tranche_o_a_dummy sponsor_dummy"
@@ -158,7 +189,7 @@ reghdfe maturity excess_interest_scaled excess_interest_scaled_post `controls' `
 estimates store m7
 
 * save the results (esttab) using tabdir
-esttab m5 m6 m7 m1 m2 m3 m4 using "$tabdir/other_terms_ie_excess.tex", replace ///
+esttab m5 m6 m7 m8 m1 m2 m3 m4 using "$tabdir/other_terms_ie_excess.tex", replace ///
 nodepvars nomti nonum collabels(none) label b(3) se(3) parentheses ///
 star(* 0.10 ** 0.05 *** 0.01) ar2 plain lines fragment noconstant keep(excess_interest_scaled excess_interest_scaled_post)
 est clear

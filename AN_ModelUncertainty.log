@@ -1,0 +1,217 @@
+
+  ___  ____  ____  ____  ____ ®
+ /__    /   ____/   /   ____/      StataNow 19.5
+___/   /   /___/   /   /___/       SE—Standard Edition
+
+ Statistics and Data Science       Copyright 1985-2025 StataCorp LLC
+                                   StataCorp
+                                   4905 Lakeway Drive
+                                   College Station, Texas 77845 USA
+                                   800-782-8272        https://www.stata.com
+                                   979-696-4600        service@stata.com
+
+Stata license: 60-user network, expiring 14 Aug 2026
+Serial number: 401909327398
+  Licensed to: Zirui Song
+               MIT Sloan
+
+Notes:
+      1. Stata is running in batch mode.
+      2. Unicode is supported; see help unicode_advice.
+      3. Maximum number of variables is set to 5,000 but can be increased;
+          see help set_maxvar.
+
+. do AN_ModelUncertainty.do 
+
+. /***********
+>         Globals for Paths
+>         ***********/
+. 
+. *** Change repodir and overleafdir paths for different users
+. global repodir "/Users/zrsong/MIT Dropbox/Zirui Song/Research Projects/MPS_In
+> terest Deductibility and Debt Contracting"
+
+. global overleafdir "/Users/zrsong/MIT Dropbox/Zirui Song/Apps/Overleaf/Tax In
+> cidence and Loan Contract Terms"
+
+. 
+. global datadir "$repodir/3. Data"
+
+. global rawdir "$datadir/Raw"
+
+. global cleandir "$datadir/Processed"
+
+. 
+. global tabdir "$overleafdir/Tables"
+
+. global figdir "$overleafdir/Figures"
+
+. 
+. global codedir "$repodir/4. Code/Replication"
+
+. 
+. /***********
+>         Main Results
+>         ***********/
+. 
+. use "$cleandir/tranche_level_ds_compa_wlabel.dta", clear
+
+. 
+. *** Model Uncertainty Analysis ***
+. local controls "log_at market_to_book ppent_by_at debt_by_at cash_by_at divid
+> end_payer ret_vol"
+
+. local deal_controls "leveraged maturity log_deal_amount_converted secured_dum
+> my tranche_type_dummy tranche_o_a_dummy sponsor_dummy"
+
+. local controls_post "log_at_post market_to_book_post ppent_by_at_post debt_by
+> _at_post cash_by_at_post dividend_payer_post ret_vol_post" 
+
+. 
+. /***********
+>  Model uncertainty: BIC-weighted averaging across m1–m3
+>  (FE and clustering held fixed)
+> ***********/
+. 
+. * --- Leave-one-out model averaging relative to the full spec (m3) ---
+. 
+. * Full control set:
+. local full "`deal_controls' `controls' `controls_post'"
+
+. 
+. tempname H2
+
+. tempfile MU2
+
+. postfile `H2' str40 model double b_main se_main b_post se_post bic N k using 
+> "`MU2'", replace
+(file /var/folders/n2/pgdf58ms1yd3ch8xjn9fmpmm0000gq/T//St30768.000001 not
+    found)
+
+. 
+. * 0) Full model (no variable dropped)
+. quietly reghdfe margin_bps excess_interest_scaled excess_interest_scaled_post
+>  `full', ///
+>     absorb(year ff_48 sp_rating_num) vce(cluster gvkey) resid
+
+. tempvar u u2
+
+. quietly predict double `u', resid
+
+. quietly gen double `u2' = `u'^2 if e(sample)
+
+. quietly summarize `u2', meanonly
+
+. scalar rss = r(sum)
+
+. scalar N   = e(N)
+
+. scalar k   = e(df_m)
+
+. scalar bic = N*ln(rss/N) + k*ln(N)
+
+. post `H2' ("full") (_b[excess_interest_scaled]) (_se[excess_interest_scaled])
+>  ///
+>                  (_b[excess_interest_scaled_post]) (_se[excess_interest_scale
+> d_post]) ///
+>                  (bic) (N) (k)
+
+. 
+. * 1) Drop one covariate at a time
+. foreach v of local full {
+  2.     local drop "`v'"
+  3.     local THIS : list full - drop
+  4. 
+.     quietly reghdfe margin_bps excess_interest_scaled excess_interest_scaled_
+> post `THIS', ///
+>         absorb(year ff_48 sp_rating_num) vce(cluster gvkey) resid
+  5. 
+.     tempvar r r2
+  6.     quietly predict double `r', resid
+  7.     quietly gen double `r2' = `r'^2 if e(sample)
+  8.     quietly summarize `r2', meanonly
+  9.     scalar rss = r(sum)
+ 10.     scalar N   = e(N)
+ 11.     scalar k   = e(df_m)
+ 12.     scalar bic = N*ln(rss/N) + k*ln(N)
+ 13. 
+.     post `H2' ("drop: `v'") (_b[excess_interest_scaled]) (_se[excess_interest
+> _scaled]) ///
+>                      (_b[excess_interest_scaled_post]) (_se[excess_interest_s
+> caled_post]) ///
+>                      (bic) (N) (k)
+ 14. }
+
+. postclose `H2'
+
+. 
+. use "`MU2'", clear
+
+. egen minbic = min(bic)
+
+. gen dBIC = bic - minbic
+
+. gen w    = exp(-0.5*dBIC)
+
+. egen W   = total(w)
+
+. replace w = w/W
+(20 real changes made)
+
+. 
+. foreach which in main post {
+  2.     gen v_`which'      = se_`which'^2
+  3.     egen bbar_`which'  = total(w * b_`which')
+  4.     gen  dev2_`which'  = (b_`which' - bbar_`which')^2
+  5.     egen vbar_`which'  = total(w * (v_`which' + dev2_`which'))
+  6.     gen  sebar_`which' = sqrt(vbar_`which')
+  7. }
+
+. 
+. display as text "LOO BIC-weighted averages:"
+LOO BIC-weighted averages:
+
+. display "excess_interest_scaled (b, se): " %9.4f bbar_main[1] "  " %9.4f seba
+> r_main[1]
+excess_interest_scaled (b, se):   82.4810    15.3990
+
+. display "excess_interest_scaled_post (b, se): " %9.4f bbar_post[1] "  " %9.4f
+>  sebar_post[1]
+excess_interest_scaled_post (b, se):  -68.9495    20.2956
+
+. 
+. /*
+>     Confidence bands plot (post only), sorted by ΔBIC for readability
+> */
+. preserve
+
+.     sort model
+
+.     egen mid = group(model), label
+
+.     gen lb_post = b_post - 1.96*se_post
+
+.     gen ub_post = b_post + 1.96*se_post
+
+.     quietly summarize mid, meanonly
+
+.     local ymax = r(max)
+
+. 
+.     twoway ///
+>         (rcap ub_post lb_post mid, horizontal lc(red) lwidth(medthick)), ///
+>         ytitle("") xtitle("beta: excess_interest_scaled_post") legend(off) //
+> /
+>         xline(0, lc(gs12) lpattern(dash) lwidth(thin)) ///
+>         ylabel(1(1)`ymax', angle(0) valuelabel labsize(small))
+
+. 
+.     graph export "$figdir/spec_curve_confidence_bands.pdf", replace
+file /Users/zrsong/MIT Dropbox/Zirui Song/Apps/Overleaf/Tax Incidence and
+    Loan Contract Terms/Figures/spec_curve_confidence_bands.pdf saved as PDF
+    format
+
+. restore
+
+. 
+end of do-file

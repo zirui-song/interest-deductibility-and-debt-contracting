@@ -154,8 +154,8 @@ Replication/
 ├── AN_3_SampleCompositionAnalysis.do # Step 8: Sample composition
 ├── AN_4_MainResults.do             # Step 9: Main results
 ├── AN_5_MechanismTests.do          # Step 10: Mechanism tests
-├── AN_6_RobustnessChecks.do        # Step 11: Robustness checks
-├── AN_7_AdditionalAnalysis.do      # Step 12: Additional analysis
+├── AN_6_FalsifcationTests.do        # Step 11: Robustness checks
+├── AN_7_AppendixTables.do      # Step 12: Additional analysis
 └── README.md                       # This file
 ```
 
@@ -178,8 +178,8 @@ stata -b do AN_2_TreatmentValidation.do
 stata -b do AN_3_SampleCompositionAnalysis.do
 stata -b do AN_4_MainResults.do
 stata -b do AN_5_MechanismTests.do
-stata -b do AN_6_RobustnessChecks.do
-stata -b do AN_7_AdditionalAnalysis.do
+stata -b do AN_6_FalsifcationTests.do
+stata -b do AN_7_AppendixTables.do
 ```
 
 ### Option 2: Use the Master Script

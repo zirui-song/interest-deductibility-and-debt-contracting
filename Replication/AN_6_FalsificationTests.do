@@ -71,7 +71,7 @@ reghdfe margin_bps excess_interest_scaled excess_interest_scaled_post `controls'
 estimates store m1
 
 * save the results (esttab) using tabdir
-esttab m1 using "$overleafdir/margin_did_both_rule_falsification_cts.tex", replace ///
+esttab m1 using "$tabdir/margin_did_both_rule_falsification_cts.tex", replace ///
 nodepvars nomti nonum collabels(none) label b(3) se(3) parentheses ///
 star(* 0.10 ** 0.05 *** 0.01) ar2 plain lines fragment noconstant drop(_cons `controls_post')
 
@@ -89,6 +89,6 @@ reghdfe margin_bps `treat_quartiles' `controls' `controls_post' `deal_controls',
 estimates store m1
 
 * save the results (esttab) using tabdir
-esttab m1 using "$overleafdir/margin_did_both_rule_falsification_all.tex", replace ///
+esttab m1 using "$tabdir/margin_did_both_rule_falsification_all.tex", replace ///
 nodepvars nomti nonum collabels(none) label b(3) se(3) parentheses ///
 star(* 0.10 ** 0.05 *** 0.01) ar2 plain lines fragment noconstant drop(_cons `controls_post')

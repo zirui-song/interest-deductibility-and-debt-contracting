@@ -20,9 +20,11 @@ db = wrds.Connection(wrds_username='zrsong')
 start_date = '2009-01-01'
 end_date = '2024-06-30'
 
-# Ensure output directory exists
+# Ensure output directories exist
 processed_dir = os.path.join('..', '..', '3. Data', 'Processed')
+raw_dir = os.path.join('..', '..', '3. Data', 'Raw')
 os.makedirs(processed_dir, exist_ok=True)
+os.makedirs(raw_dir, exist_ok=True)
 
 # Compustat / CRSP
 fund_table = 'funda'
@@ -33,22 +35,49 @@ varlist = ['conm', 'tic', 'cusip','fyear', 'fyr', 'at','capx', 'ceq', 'cogs', 'c
            'act', 'che', 'dltis', 'dltr', 'dvc', 'idit', 'intan', 'lct', 'dclo', 'oancf', 'pi', 'pifo', 'ppent', 'prcc_f', 'tlcf', 'txfo',
            'txdba', 'txdbca', 'txndb']
 
-query = """SELECT gvkey, datadate, {}
-           FROM comp.{}
-           WHERE datafmt = 'STD'
-           AND popsrc = 'D'
-           AND indfmt = 'INDL'
-           AND consol = 'C'
-           AND fyear>=2005;""".format(", ".join(varlist), fund_table)
+# Check if Compustat data already exists
+compustat_file = os.path.join(raw_dir, 'compustat_funda_raw.csv')
+if os.path.exists(compustat_file):
+    print("Loading Compustat data from existing file...")
+    compa = pd.read_csv(compustat_file, parse_dates=['datadate'])
+else:
+    print("Pulling Compustat data from WRDS...")
+    query = """SELECT gvkey, datadate, {}
+               FROM comp.{}
+               WHERE datafmt = 'STD'
+               AND popsrc = 'D'
+               AND indfmt = 'INDL'
+               AND consol = 'C'
+               AND fyear>=2005;""".format(", ".join(varlist), fund_table)
+    
+    compa = db.raw_sql(query, date_cols=['datadate'])
+    
+    # Save raw data
+    print("Saving Compustat raw data...")
+    compa.to_csv(compustat_file, index=False)
 
-compa = db.raw_sql(query, date_cols=['datadate'])
-
-del(fund_table, varlist, query)
+del(fund_table, varlist)
+if 'query' in locals():
+    del(query)
 
 # Import SIC codes from comp.company
 sic_table = 'company'
-query = "SELECT gvkey, sic, ipodate FROM comp.company"
-sic_codes = db.raw_sql(query)
+sic_file = os.path.join(raw_dir, 'compustat_company_sic_raw.csv')
+if os.path.exists(sic_file):
+    print("Loading SIC codes from existing file...")
+    sic_codes = pd.read_csv(sic_file)
+else:
+    print("Pulling SIC codes from WRDS...")
+    query = "SELECT gvkey, sic, ipodate FROM comp.company"
+    sic_codes = db.raw_sql(query)
+    
+    # Save raw data
+    print("Saving SIC codes raw data...")
+    sic_codes.to_csv(sic_file, index=False)
+
+del(sic_table)
+if 'query' in locals():
+    del(query)
 
 # Merge SIC codes back to compa dataframe
 compa = compa.merge(sic_codes, how='left', on='gvkey')
@@ -274,27 +303,48 @@ compa['interest_expense_by_ebitda_next_1yr'] = compa.groupby('gvkey')['interest_
 # Define the variables to be imported
 crsp_vars = ['cusip', 'permco', 'permno', 'date', 'ret', 'vol', 'shrout', 'prc']
 
-# Define the query to get the annual returns of North American firms
-crsp_query = f"""
-    SELECT {', '.join(crsp_vars)}
-    FROM crsp.msf
-    WHERE date >= '{start_date}' AND date <= '{end_date}'
-"""
-
-# Execute the query and fetch the data
-crspm = db.raw_sql(crsp_query, date_cols=['date'])
+# Check if CRSP data already exists
+crsp_file = os.path.join(raw_dir, 'crsp_msf_raw.csv')
+if os.path.exists(crsp_file):
+    print("Loading CRSP data from existing file...")
+    crspm = pd.read_csv(crsp_file, parse_dates=['date'])
+else:
+    print("Pulling CRSP data from WRDS...")
+    # Define the query to get the annual returns of North American firms
+    crsp_query = f"""
+        SELECT {', '.join(crsp_vars)}
+        FROM crsp.msf
+        WHERE date >= '{start_date}' AND date <= '{end_date}'
+    """
+    
+    # Execute the query and fetch the data
+    crspm = db.raw_sql(crsp_query, date_cols=['date'])
+    
+    # Save raw data
+    print("Saving CRSP raw data...")
+    crspm.to_csv(crsp_file, index=False)
 
 # Display the first few rows of the dataframe
 print(crspm.head())
 
 # header information from the CRSP file
-crsp_hdr_query = """
-    SELECT *
-    FROM crsp.dsfhdr
-"""
-
-# Execute the query and fetch the data
-crsp_hdr = db.raw_sql(crsp_hdr_query, date_cols=['date'])
+crsp_hdr_file = os.path.join(raw_dir, 'crsp_dsfhdr_raw.csv')
+if os.path.exists(crsp_hdr_file):
+    print("Loading CRSP header data from existing file...")
+    crsp_hdr = pd.read_csv(crsp_hdr_file)
+else:
+    print("Pulling CRSP header data from WRDS...")
+    crsp_hdr_query = """
+        SELECT *
+        FROM crsp.dsfhdr
+    """
+    
+    # Execute the query and fetch the data
+    crsp_hdr = db.raw_sql(crsp_hdr_query)
+    
+    # Save raw data
+    print("Saving CRSP header raw data...")
+    crsp_hdr.to_csv(crsp_hdr_file, index=False)
 
 # Display the first few rows of the dataframe
 print(crsp_hdr.head())
@@ -325,13 +375,23 @@ crspa = crspm.groupby(['permno', 'year']).agg({
 }).reset_index()
 
 # Compustat/CRSP Link Table
-ccm_query = """
-    SELECT gvkey, lpermno, linktype, linkprim, linkdt, linkenddt
-    FROM crsp.ccmxpf_linktable
-"""
-
-# Execute the query and fetch the data
-ccm = db.raw_sql(ccm_query, date_cols=['linkdt', 'linkenddt'])
+ccm_file = os.path.join(raw_dir, 'crsp_ccmxpf_linktable_raw.csv')
+if os.path.exists(ccm_file):
+    print("Loading CCM link table data from existing file...")
+    ccm = pd.read_csv(ccm_file, parse_dates=['linkdt', 'linkenddt'])
+else:
+    print("Pulling CCM link table data from WRDS...")
+    ccm_query = """
+        SELECT gvkey, lpermno, linktype, linkprim, linkdt, linkenddt
+        FROM crsp.ccmxpf_linktable
+    """
+    
+    # Execute the query and fetch the data
+    ccm = db.raw_sql(ccm_query, date_cols=['linkdt', 'linkenddt'])
+    
+    # Save raw data
+    print("Saving CCM link table raw data...")
+    ccm.to_csv(ccm_file, index=False)
 
 # Display the first few rows of the dataframe
 print(ccm.head())

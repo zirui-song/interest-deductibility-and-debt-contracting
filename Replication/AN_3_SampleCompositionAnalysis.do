@@ -104,7 +104,7 @@ tempfile main
 save `main'
 
 ************** Total bank percentage **************
-import delimited "$cleandir/capstrct_2013to2022.csv", clear
+import delimited "$rawdir/capstrct_2013to2022.csv", clear
 keep gvkey fyear totbankdbtpct
 merge 1:1 gvkey fyear using `main', nogen
 
@@ -144,35 +144,26 @@ save "$cleandir/sample_composition_analysis.dta", replace
 use "$cleandir/tranche_level_ds_compa_wlabel.dta", clear
 
 drop if sp_rating_num == 0
-reghdfe sp_rating_num excess_interest_scaled excess_interest_scaled_post `controls' `deal_controls', absorb(year ff_48) vce(cluster gvkey)
-estimates store m1
+
 reghdfe sp_rating_num excess_interest_scaled excess_interest_scaled_post `controls' `controls_post' `deal_controls', absorb(year ff_48) vce(cluster gvkey)
-estimates store m2
+estimates store m1
 
 *** other LHS variables
 use "$cleandir/sample_composition_analysis.dta", clear
 
-reghdfe totbankdbtpct excess_interest_scaled excess_interest_scaled_post `controls' `deal_controls', absorb(fyear ff_48) vce(cluster gvkey)
-estimates store m3
 reghdfe totbankdbtpct excess_interest_scaled excess_interest_scaled_post `controls' `controls_post' `deal_controls', absorb(fyear ff_48) vce(cluster gvkey)
-estimates store m4	
+estimates store m2	
 
-reghdfe next_year_roa excess_interest_scaled excess_interest_scaled_post `controls' `deal_controls', absorb(fyear ff_48) vce(cluster gvkey)
-estimates store m5
 reghdfe next_year_roa excess_interest_scaled excess_interest_scaled_post `controls' `controls_post' `deal_controls', absorb(fyear ff_48) vce(cluster gvkey)
-estimates store m6
+estimates store m3
 
-reghdfe next_year_cash_flows_by_at excess_interest_scaled excess_interest_scaled_post `controls' `deal_controls', absorb(fyear ff_48) vce(cluster gvkey)
-estimates store m7
 reghdfe next_year_cash_flows_by_at excess_interest_scaled excess_interest_scaled_post `controls' `controls_post' `deal_controls', absorb(fyear ff_48) vce(cluster gvkey)
-estimates store m8
+estimates store m4
 
-reghdfe next_year_ebitda excess_interest_scaled excess_interest_scaled_post `controls' `deal_controls', absorb(fyear ff_48) vce(cluster gvkey)
-estimates store m9
 reghdfe next_year_ebitda excess_interest_scaled excess_interest_scaled_post `controls' `controls_post' `deal_controls', absorb(fyear ff_48) vce(cluster gvkey)
-estimates store m10
+estimates store m5
 
-esttab m1 m2 m3 m4 m5 m6 m7 m8 m9 m10 using "$tabdir/next_year_risk_tests.tex", replace ///
+esttab m1 m2 m3 m4 m5 using "$tabdir/next_year_risk_tests.tex", replace ///
 nodepvars nomti nonum collabels(none) label b(3) se(3) parentheses ///
 star(* 0.10 ** 0.05 *** 0.01) ar2 plain lines fragment noconstant keep(excess_interest_scaled excess_interest_scaled_post `treat_vars' `controls' `deal_controls')
 est clear
