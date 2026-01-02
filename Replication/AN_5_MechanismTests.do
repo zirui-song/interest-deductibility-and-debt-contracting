@@ -68,9 +68,9 @@ save "$cleandir/tranche_level_ds_compa_wlabel_withcomp.dta", replace
 
 use "$cleandir/tranche_level_ds_compa_wlabel_withcomp.dta", clear
 
-local controls "log_at market_to_book ppent_by_at debt_by_at cash_by_at dividend_payer ret_vol"
+local controls "log_at market_to_book ppent_by_at debt_by_at cash_by_at dividend_payer ret_vol cash_etr"
 local deal_controls "leveraged maturity log_deal_amount_converted secured_dummy tranche_type_dummy tranche_o_a_dummy sponsor_dummy"
-local controls_post "log_at_post market_to_book_post ppent_by_at_post debt_by_at_post cash_by_at_post dividend_payer_post ret_vol_post"	
+local controls_post "log_at_post market_to_book_post ppent_by_at_post debt_by_at_post cash_by_at_post dividend_payer_post ret_vol_post cash_etr_post"	
 
 local treat_vars "treated treated_post treated_loss treated_loss_post"
 
@@ -99,9 +99,9 @@ est clear
 
 *** Table 8: HP Financial Constraint (RFS 2015) and Linn Weagley 2024 Extension 
 
-local controls "log_at market_to_book ppent_by_at debt_by_at cash_by_at dividend_payer ret_vol"
+local controls "log_at market_to_book ppent_by_at debt_by_at cash_by_at dividend_payer ret_vol cash_etr"
 local deal_controls "leveraged maturity log_deal_amount_converted secured_dummy tranche_type_dummy tranche_o_a_dummy sponsor_dummy"
-local controls_post "log_at_post market_to_book_post ppent_by_at_post debt_by_at_post cash_by_at_post dividend_payer_post ret_vol_post"	
+local controls_post "log_at_post market_to_book_post ppent_by_at_post debt_by_at_post cash_by_at_post dividend_payer_post ret_vol_post cash_etr_post"	
 
 use "$cleandir/tranche_level_ds_compa_wlabel.dta", clear	
 fvset base 1 ff_48
@@ -121,7 +121,7 @@ estimates store m1
 reg margin_bps excess_interest_scaled excess_interest_scaled_post `controls' `deal_controls' `controls_post' i.year i.ff_48 ib2.sp_rating_num if high_debtcon == 1
 estimates store m2
 
-suest m1 m2, vce(cluster ff_48)
+suest m1 m2, vce(cluster gvkey)
 test [m1_mean]excess_interest_scaled_post = [m2_mean]excess_interest_scaled_post
 	
 * save the results (esttab) using tabdir

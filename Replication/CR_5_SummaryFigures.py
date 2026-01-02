@@ -5,15 +5,23 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from tabulate import tabulate
 
+# Get the script's directory to ensure correct path resolution
+script_dir = os.path.dirname(os.path.abspath(__file__))
+# Navigate to project root (two levels up from Replication folder)
+project_root = os.path.dirname(os.path.dirname(script_dir))
+
 # Ensure output directory exists
-processed_dir = os.path.join('..', '..', '3. Data', 'Processed')
+processed_dir = os.path.join(project_root, '3. Data', 'Processed')
 os.makedirs(processed_dir, exist_ok=True)
 overleaf_dir = "/Users/zrsong/MIT Dropbox/Zirui Song/Apps/Overleaf/Tax Incidence and Loan Contract Terms"
 os.makedirs(os.path.join(overleaf_dir, 'Tables'), exist_ok=True)
 os.makedirs(os.path.join(overleaf_dir, 'Figures'), exist_ok=True)
 
 # Read in the processed data with all variables already generated and filtered
-tranche_level_ds_compa = pd.read_csv(os.path.join(processed_dir, 'tranche_level_ds_compa_filtered.csv'))
+tranche_level_ds_compa_path = os.path.join(processed_dir, 'tranche_level_ds_compa_filtered.csv')
+if not os.path.exists(tranche_level_ds_compa_path):
+    raise FileNotFoundError(f"tranche_level_ds_compa_filtered.csv not found at {tranche_level_ds_compa_path}. Please run CR_2_CleanDealscanMerge.py first.")
+tranche_level_ds_compa = pd.read_csv(tranche_level_ds_compa_path)
 
 variable_labels_groups = {
     'excess_interest_scaled': 'Excess Interest Expense (Scaled)',
@@ -33,6 +41,7 @@ variable_labels_groups = {
     'ppent_by_at': 'PP&E / Assets',
     'ret_vol': 'Return Volatility',
     'market_to_book': 'Market to Book Ratio',
+    'cash_etr': 'Cash ETR',
 }
 
 ## Figures

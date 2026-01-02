@@ -3,14 +3,22 @@ import numpy as np
 import os
 from tabulate import tabulate
 
+# Get the script's directory to ensure correct path resolution
+script_dir = os.path.dirname(os.path.abspath(__file__))
+# Navigate to project root (two levels up from Replication folder)
+project_root = os.path.dirname(os.path.dirname(script_dir))
+
 # Ensure output directory exists
-processed_dir = os.path.join('..', '..', '3. Data', 'Processed')
+processed_dir = os.path.join(project_root, '3. Data', 'Processed')
 os.makedirs(processed_dir, exist_ok=True)
 overleaf_dir = "/Users/zrsong/MIT Dropbox/Zirui Song/Apps/Overleaf/Tax Incidence and Loan Contract Terms"
 os.makedirs(os.path.join(overleaf_dir, 'Tables'), exist_ok=True)
 
 # Read in the processed data with all variables already generated and filtered
-tranche_level_ds_compa = pd.read_csv(os.path.join(processed_dir, 'tranche_level_ds_compa_filtered.csv'))
+tranche_level_ds_compa_path = os.path.join(processed_dir, 'tranche_level_ds_compa_filtered.csv')
+if not os.path.exists(tranche_level_ds_compa_path):
+    raise FileNotFoundError(f"tranche_level_ds_compa_filtered.csv not found at {tranche_level_ds_compa_path}. Please run CR_2_CleanDealscanMerge.py first.")
+tranche_level_ds_compa = pd.read_csv(tranche_level_ds_compa_path)
 
 ## Summary Statistics of Firms in the Final Sample
 
@@ -32,7 +40,15 @@ variable_labels = {
     'ppent_by_at': 'PP&E / Assets',
     'ret_vol': 'Return Volatility',
     'market_to_book': 'Market to Book Ratio',
+    'cash_etr': 'Cash ETR',
 }
+
+# Drop observations if any variables in variable_labels are missing
+initial_count = len(tranche_level_ds_compa)
+tranche_level_ds_compa = tranche_level_ds_compa.dropna(subset=variable_labels.keys())
+dropped_count = initial_count - len(tranche_level_ds_compa)
+if dropped_count > 0:
+    print(f"Dropped {dropped_count} observations ({dropped_count/initial_count*100:.2f}%) due to missing values in variable_labels")
 
 # Calculate summary statistics for the variables in variable_labels
 summary_stats_all = tranche_level_ds_compa[variable_labels.keys()].describe().transpose()

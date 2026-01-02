@@ -2,16 +2,24 @@ import pandas as pd
 import numpy as np
 import os
 
+# Get the script's directory to ensure correct path resolution
+script_dir = os.path.dirname(os.path.abspath(__file__))
+# Navigate to project root (two levels up from Replication folder)
+project_root = os.path.dirname(os.path.dirname(script_dir))
+
 # Ensure output directory exists
-processed_dir = os.path.join('..', '..', '3. Data', 'Processed')
+processed_dir = os.path.join(project_root, '3. Data', 'Processed')
 os.makedirs(processed_dir, exist_ok=True)
-raw_dir = os.path.join('..', '..', '3. Data', 'Raw')
+raw_dir = os.path.join(project_root, '3. Data', 'Raw')
 
 # Read in the processed data
 comp_crspa_merged = pd.read_csv(os.path.join(processed_dir, "comp_crspa_merged.csv"))
 
 # Ratings Data (2010 to 2024 Downloaded from WRDS)
-ciq_ratings = pd.read_csv(os.path.join(raw_dir, "ciq_ratings.csv"))
+ciq_ratings_path = os.path.join(raw_dir, "ciq_ratings.csv")
+if not os.path.exists(ciq_ratings_path):
+    raise FileNotFoundError(f"ciq_ratings.csv not found at {ciq_ratings_path}. Please ensure the file exists.")
+ciq_ratings = pd.read_csv(ciq_ratings_path)
 # keep gvkey rating_date ratingsymbol
 ciq_ratings = ciq_ratings[['gvkey', 'ratingdate', 'currentratingsymbol']]
 # sort by gvkey rating_date
@@ -53,7 +61,10 @@ balanced_ratings['currentratingsymbol'] = balanced_ratings.groupby('gvkey')['cur
 #dealscan_data.to_csv('../Data/Raw/dealscan_data.csv', index=False)
 
 # import dealscan data 
-dealscan_data = pd.read_csv(os.path.join(raw_dir, "dealscan_data.csv"))
+dealscan_data_path = os.path.join(raw_dir, "dealscan_data.csv")
+if not os.path.exists(dealscan_data_path):
+    raise FileNotFoundError(f"dealscan_data.csv not found at {dealscan_data_path}. Please ensure the file exists.")
+dealscan_data = pd.read_csv(dealscan_data_path)
 
 # Convert deal_active_date to datetime if it's not already
 dealscan_data['deal_active_date'] = pd.to_datetime(dealscan_data['deal_active_date'])
@@ -156,6 +167,9 @@ dealscan_merged = pd.concat([dealscan_merged_till2020, dealscan_merged_2020onwar
 dealscan_merged['fyear'] = dealscan_merged['year'] - 1 # use the previous fiscal year financials 
 
 dealscan_comp_crspa_merged = dealscan_merged.merge(comp_crspa_merged, on=['gvkey', 'fyear'], how='inner')
+
+# Filter data by year >= 2014 right after merging
+dealscan_comp_crspa_merged = dealscan_comp_crspa_merged[dealscan_comp_crspa_merged['year'] >= 2014]
 
 # Finalize DS-Compa Merged Data
 
@@ -289,6 +303,9 @@ tranche_level_ds_compa = dealscan_comp_crspa_merged.groupby(['lpc_tranche_id']).
     'ipodate': 'first',
     'pifo': 'first',
     'txfo': 'first',
+    'cash_etr': 'first',
+    'roa': 'first',
+    'cashflow_byat': 'first',
 }).reset_index()
 
 
@@ -303,8 +320,22 @@ tranche_level_ds_compa['tranche_type'].unique()
 tranche_level_ds_compa['tranche_type_dummy'] = np.where(tranche_level_ds_compa['tranche_type'].str.contains('Term Loan', case=False), 1,
                                                         np.where(tranche_level_ds_compa['tranche_type'].str.contains('Revolver', case=False), 0, np.nan))
 
+# Track counts after merging dealscan with compustat and crsp
+n_tranches_after_merge = len(tranche_level_ds_compa)
+n_borrowers_after_merge = tranche_level_ds_compa['gvkey'].nunique()
+print(f"\n=== After merging dealscan with compustat and crsp ===")
+print(f"Tranche-level loans: {n_tranches_after_merge:,}")
+print(f"Unique borrowers (gvkey): {n_borrowers_after_merge:,}")
+
 # drop if tranche_type_dummy is missing (Neither term loan Nor revolver)
 tranche_level_ds_compa = tranche_level_ds_compa.dropna(subset=['tranche_type_dummy'])
+
+# Track counts after dropping tranches other than term loan or revolver
+n_tranches_after_tranche_type = len(tranche_level_ds_compa)
+n_borrowers_after_tranche_type = tranche_level_ds_compa['gvkey'].nunique()
+print(f"\n=== After dropping tranches other than term loan or revolver ===")
+print(f"Tranche-level loans: {n_tranches_after_tranche_type:,}")
+print(f"Unique borrowers (gvkey): {n_borrowers_after_tranche_type:,}")
 
 # tranche_o_a = 1 if tranche_o_a has Origination, 0 otherwise
 tranche_level_ds_compa['tranche_o_a_dummy'] = np.where(tranche_level_ds_compa['tranche_o_a'].str.contains('Origination', case=False), 1, 0)
@@ -588,6 +619,14 @@ def map_sic_to_industry(sic_code):
 
 # extract sic from sic_code (first 4 string characters) and filter out invalid values
 tranche_level_ds_compa = tranche_level_ds_compa[tranche_level_ds_compa['sic_code'].notna()]
+
+# Track counts after dropping missing sic_code
+n_tranches_after_sic = len(tranche_level_ds_compa)
+n_borrowers_after_sic = tranche_level_ds_compa['gvkey'].nunique()
+print(f"\n=== After dropping missing sic_code ===")
+print(f"Tranche-level loans: {n_tranches_after_sic:,}")
+print(f"Unique borrowers (gvkey): {n_borrowers_after_sic:,}")
+
 tranche_level_ds_compa['sic'] = tranche_level_ds_compa['sic_code'].str[:4].apply(lambda x: int(x) if x.isdigit() else None).dropna().astype(int)
 
 # Map SIC codes to Fama-French 49 industries
@@ -595,6 +634,13 @@ tranche_level_ds_compa['ff_48'] = tranche_level_ds_compa['sic'].apply(map_sic_to
 
 # Drop finance (45, 46, 47, 48) and utilities (31) industries
 tranche_level_ds_compa = tranche_level_ds_compa[~tranche_level_ds_compa['ff_48'].isin([31, 45, 46, 47, 48])]
+
+# Track counts after dropping finance and utilities
+n_tranches_after_finance_utilities = len(tranche_level_ds_compa)
+n_borrowers_after_finance_utilities = tranche_level_ds_compa['gvkey'].nunique()
+print(f"\n=== After dropping finance and utilities sectors ===")
+print(f"Tranche-level loans: {n_tranches_after_finance_utilities:,}")
+print(f"Unique borrowers (gvkey): {n_borrowers_after_finance_utilities:,}")
 
 # Count the number of firms in each industry
 industry_counts = tranche_level_ds_compa['ff_48'].value_counts().sort_index()
@@ -678,7 +724,16 @@ variable_labels = {
     'ppent_by_at': 'PP&E / Assets',
     'ret_vol': 'Return Volatility',
     'market_to_book': 'Market to Book Ratio',
+    'cash_etr': 'Cash ETR',
+    'roa': 'Return on Assets',
 }
+
+# Track counts before dropping fundamentals
+n_tranches_before_fundamentals = len(tranche_level_ds_compa)
+n_borrowers_before_fundamentals = tranche_level_ds_compa['gvkey'].nunique()
+print(f"\n=== Before dropping fundamentals (missing values) ===")
+print(f"Tranche-level loans: {n_tranches_before_fundamentals:,}")
+print(f"Unique borrowers (gvkey): {n_borrowers_before_fundamentals:,}")
 
 # Apply additional filtering for variables of interest
 tranche_level_ds_compa = tranche_level_ds_compa.dropna(subset=variable_labels.keys())
@@ -687,10 +742,30 @@ tranche_level_ds_compa = tranche_level_ds_compa.dropna(subset=variable_labels.ke
 tranche_level_ds_compa.to_csv(os.path.join(processed_dir, 'tranche_level_ds_compa_all.csv'), index=False)
 
 tranche_level_ds_compa = tranche_level_ds_compa[
-    (tranche_level_ds_compa['year'] >= 2014) & 
     ~tranche_level_ds_compa['year'].isin([2020, 2021, 2024])
 ]
 
+# Track counts after dropping 2020 and 2021
+n_tranches_after_years = len(tranche_level_ds_compa)
+n_borrowers_after_years = tranche_level_ds_compa['gvkey'].nunique()
+print(f"\n=== After dropping years 2020 and 2021 ===")
+print(f"Tranche-level loans: {n_tranches_after_years:,}")
+print(f"Unique borrowers (gvkey): {n_borrowers_after_years:,}")
+
 tranche_level_ds_compa.to_csv(os.path.join(processed_dir, 'tranche_level_ds_compa_filtered.csv'), index=False)
+
+# Print summary table
+print(f"\n{'='*60}")
+print("SUMMARY: Sample Size at Different Filtering Stages")
+print(f"{'='*60}")
+print(f"{'Stage':<50} {'Tranches':>12} {'Borrowers':>12}")
+print(f"{'-'*74}")
+print(f"{'After merging dealscan with compustat/crsp':<50} {n_tranches_after_merge:>12,} {n_borrowers_after_merge:>12,}")
+print(f"{'After dropping tranches (not term/revolver)':<50} {n_tranches_after_tranche_type:>12,} {n_borrowers_after_tranche_type:>12,}")
+print(f"{'After dropping missing sic_code':<50} {n_tranches_after_sic:>12,} {n_borrowers_after_sic:>12,}")
+print(f"{'After dropping finance/utilities':<50} {n_tranches_after_finance_utilities:>12,} {n_borrowers_after_finance_utilities:>12,}")
+print(f"{'Before dropping fundamentals':<50} {n_tranches_before_fundamentals:>12,} {n_borrowers_before_fundamentals:>12,}")
+print(f"{'After dropping 2020 and 2021':<50} {n_tranches_after_years:>12,} {n_borrowers_after_years:>12,}")
+print(f"{'='*74}\n")
 
 print("Dealscan data cleaning and merging completed")

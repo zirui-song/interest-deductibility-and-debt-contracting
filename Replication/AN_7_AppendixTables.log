@@ -1,0 +1,1431 @@
+
+  ___  ____  ____  ____  ____ ®
+ /__    /   ____/   /   ____/      StataNow 19.5
+___/   /   /___/   /   /___/       SE—Standard Edition
+
+ Statistics and Data Science       Copyright 1985-2025 StataCorp LLC
+                                   StataCorp
+                                   4905 Lakeway Drive
+                                   College Station, Texas 77845 USA
+                                   800-782-8272        https://www.stata.com
+                                   979-696-4600        service@stata.com
+
+Stata license: 60-user network, expiring 14 Aug 2026
+Serial number: 401909327398
+  Licensed to: Zirui Song
+               MIT Sloan
+
+Notes:
+      1. Stata is running in batch mode.
+      2. Unicode is supported; see help unicode_advice.
+      3. Maximum number of variables is set to 5,000 but can be increased;
+          see help set_maxvar.
+
+. do AN_7_AppendixTables.do 
+
+. /***********
+>         Globals for Paths
+>         ***********/
+. 
+. *** Change repodir and overleafdir paths for different users
+. global repodir "/Users/zrsong/MIT Dropbox/Zirui Song/Research Projects/MPS_In
+> terest Deductibility and Debt Contracting"
+
+. global overleafdir "/Users/zrsong/MIT Dropbox/Zirui Song/Apps/Overleaf/Tax In
+> cidence and Loan Contract Terms"
+
+. 
+. global datadir "$repodir/3. Data"
+
+. global rawdir "$datadir/Raw"
+
+. global cleandir "$datadir/Processed"
+
+. 
+. global tabdir "$overleafdir/Tables"
+
+. global figdir "$overleafdir/Figures"
+
+. 
+. global codedir "$repodir/4. Code/Replication"
+
+. 
+.         
+. /***********
+>         Appendix Tables
+>         ***********/    
+.         
+. use "$cleandir/tranche_level_ds_compa_wlabel.dta", clear        
+
+.         
+. local controls "log_at market_to_book ppent_by_at debt_by_at cash_by_at divid
+> end_payer ret_vol cash_etr"
+
+. local deal_controls "leveraged maturity log_deal_amount_converted secured_dum
+> my tranche_type_dummy tranche_o_a_dummy sponsor_dummy"
+
+. local controls_post "log_at_post market_to_book_post ppent_by_at_post debt_by
+> _at_post cash_by_at_post dividend_payer_post ret_vol_post cash_etr_post"   
+
+. 
+. *** Table C2: Quartile Exposures
+. 
+. local treat_quartiles "ie_excess_q1 ie_excess_q1_post ie_excess_q2 ie_excess_
+> q2_post ie_excess_q3 ie_excess_q3_post ie_excess_q4 ie_excess_q4_post"
+
+. 
+. reghdfe margin_bps `treat_quartiles' `deal_controls', absorb(year ff_48 sp_ra
+> ting_num) vce(cluster gvkey)
+(MWFE estimator converged in 7 iterations)
+
+HDFE Linear regression                            Number of obs   =      3,476
+Absorbing 3 HDFE groups                           F(  15,   1206) =      75.26
+Statistics robust to heteroskedasticity           Prob > F        =     0.0000
+                                                  R-squared       =     0.5449
+                                                  Adj R-squared   =     0.5338
+                                                  Within R-sq.    =     0.3971
+Number of clusters (gvkey)   =      1,207         Root MSE        =   119.8432
+
+                              (Std. err. adjusted for 1,207 clusters in gvkey)
+------------------------------------------------------------------------------
+             |               Robust
+  margin_bps | Coefficient  std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+ie_excess_q1 |  -4.626757   16.54392    -0.28   0.780    -37.08482     27.8313
+ie_ex~1_post |    15.6585   25.23395     0.62   0.535    -33.84882    65.16583
+ie_excess_q2 |   12.34348   19.72749     0.63   0.532    -26.36053     51.0475
+ie_ex~2_post |   22.19408   26.45752     0.84   0.402     -29.7138    74.10197
+ie_excess_q3 |   82.39046    29.8896     2.76   0.006     23.74907    141.0318
+ie_ex~3_post |  -102.7441   37.11455    -2.77   0.006    -175.5604   -29.92787
+ie_excess_q4 |   82.59342   15.89737     5.20   0.000     51.40384     113.783
+ie_ex~4_post |  -37.66783   21.11363    -1.78   0.075    -79.09135    3.755691
+   leveraged |   89.79641   7.852215    11.44   0.000     74.39089    105.2019
+    maturity |   8.818473   2.599638     3.39   0.001     3.718156    13.91879
+log_deal_a~d |  -19.10857   2.636464    -7.25   0.000    -24.28113     -13.936
+secured_du~y |   65.11727    7.18902     9.06   0.000      51.0129    79.22165
+tranche_ty~y |   79.40187    4.79547    16.56   0.000     69.99348    88.81026
+tranche_o_~y |   20.42197   5.685485     3.59   0.000     9.267434    31.57651
+sponsor_du~y |   89.81011   9.788777     9.17   0.000     70.60519     109.015
+       _cons |   167.8098   22.36927     7.50   0.000     123.9228    211.6968
+------------------------------------------------------------------------------
+
+Absorbed degrees of freedom:
+-------------------------------------------------------+
+   Absorbed FE | Categories  - Redundant  = Num. Coefs |
+---------------+---------------------------------------|
+          year |         8           0           8     |
+         ff_48 |        44           1          43     |
+ sp_rating_num |        19           1          18    ?|
+-------------------------------------------------------+
+? = number of redundant parameters may be higher
+
+. estimates store m1
+
+. reghdfe margin_bps `treat_quartiles' `controls' `deal_controls', absorb(year 
+> ff_48 sp_rating_num) vce(cluster gvkey)
+(MWFE estimator converged in 7 iterations)
+
+HDFE Linear regression                            Number of obs   =      3,476
+Absorbing 3 HDFE groups                           F(  23,   1206) =      59.17
+Statistics robust to heteroskedasticity           Prob > F        =     0.0000
+                                                  R-squared       =     0.5563
+                                                  Adj R-squared   =     0.5443
+                                                  Within R-sq.    =     0.4121
+Number of clusters (gvkey)   =      1,207         Root MSE        =   118.4786
+
+                              (Std. err. adjusted for 1,207 clusters in gvkey)
+------------------------------------------------------------------------------
+             |               Robust
+  margin_bps | Coefficient  std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+ie_excess_q1 |  -18.98865   17.57595    -1.08   0.280    -53.47149     15.4942
+ie_ex~1_post |   23.82236     25.727     0.93   0.355    -26.65229    74.29702
+ie_excess_q2 |  -2.495851   20.68463    -0.12   0.904     -43.0777      38.086
+ie_ex~2_post |   16.20505   26.73634     0.61   0.545    -36.24986    68.65997
+ie_excess_q3 |   76.67578   29.15246     2.63   0.009     19.48061     133.871
+ie_ex~3_post |  -113.7267   34.45993    -3.30   0.001    -181.3348   -46.11861
+ie_excess_q4 |   69.85515   16.31019     4.28   0.000     37.85566    101.8546
+ie_ex~4_post |  -40.34036   20.35523    -1.98   0.048    -80.27596   -.4047563
+      log_at |  -5.659683   3.061162    -1.85   0.065    -11.66548    .3461115
+market_to_~k |  -7.264216   3.568017    -2.04   0.042    -14.26443   -.2640067
+ ppent_by_at |    3.94793   16.68598     0.24   0.813    -28.78884     36.6847
+  debt_by_at |   65.11373   18.29193     3.56   0.000     29.22619    101.0013
+  cash_by_at |   42.75035   28.66623     1.49   0.136    -13.49087    98.99158
+dividend_p~r |   7.739531   6.378728     1.21   0.225    -4.775105    20.25417
+     ret_vol |   291.8886   82.06279     3.56   0.000     130.8869    452.8903
+    cash_etr |   9.098147   7.065314     1.29   0.198    -4.763525    22.95982
+   leveraged |   83.47097      8.467     9.86   0.000     66.85929    100.0827
+    maturity |   9.483432   2.570466     3.69   0.000      4.44035    14.52651
+log_deal_a~d |  -16.69389    3.09067    -5.40   0.000    -22.75757    -10.6302
+secured_du~y |   60.46613   7.142444     8.47   0.000     46.45313    74.47912
+tranche_ty~y |   78.63739    4.66835    16.84   0.000      69.4784    87.79638
+tranche_o_~y |   21.20903   5.759691     3.68   0.000     9.908905    32.50916
+sponsor_du~y |   94.45909    9.63481     9.80   0.000     75.55623    113.3619
+       _cons |   153.2686   31.26104     4.90   0.000     91.93655    214.6007
+------------------------------------------------------------------------------
+
+Absorbed degrees of freedom:
+-------------------------------------------------------+
+   Absorbed FE | Categories  - Redundant  = Num. Coefs |
+---------------+---------------------------------------|
+          year |         8           0           8     |
+         ff_48 |        44           1          43     |
+ sp_rating_num |        19           1          18    ?|
+-------------------------------------------------------+
+? = number of redundant parameters may be higher
+
+. estimates store m2
+
+. reghdfe margin_bps `treat_quartiles' `controls' `deal_controls' `controls_pos
+> t', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
+(MWFE estimator converged in 7 iterations)
+
+HDFE Linear regression                            Number of obs   =      3,476
+Absorbing 3 HDFE groups                           F(  31,   1206) =      44.65
+Statistics robust to heteroskedasticity           Prob > F        =     0.0000
+                                                  R-squared       =     0.5571
+                                                  Adj R-squared   =     0.5441
+                                                  Within R-sq.    =     0.4132
+Number of clusters (gvkey)   =      1,207         Root MSE        =   118.5091
+
+                              (Std. err. adjusted for 1,207 clusters in gvkey)
+------------------------------------------------------------------------------
+             |               Robust
+  margin_bps | Coefficient  std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+ie_excess_q1 |  -13.59668   18.43257    -0.74   0.461    -49.76014    22.56679
+ie_ex~1_post |   8.077356   26.99025     0.30   0.765    -44.87571    61.03042
+ie_excess_q2 |   5.588289   21.74658     0.26   0.797    -37.07704    48.25362
+ie_ex~2_post |  -1.382004   28.53257    -0.05   0.961    -57.36099    54.59699
+ie_excess_q3 |   85.64349   30.52626     2.81   0.005     25.75301     145.534
+ie_ex~3_post |  -136.8435   38.08888    -3.59   0.000    -211.5713   -62.11565
+ie_excess_q4 |   76.88253   17.14168     4.49   0.000      43.2517    110.5134
+ie_ex~4_post |   -58.6533    22.8965    -2.56   0.011    -103.5747   -13.73189
+      log_at |  -4.672981   3.717851    -1.26   0.209    -11.96716    2.621193
+market_to_~k |  -4.795372    6.28947    -0.76   0.446    -17.13489    7.544146
+ ppent_by_at |  -.5299302   20.94009    -0.03   0.980    -41.61298    40.55312
+  debt_by_at |   54.28194   24.30482     2.23   0.026     6.597511    101.9664
+  cash_by_at |   24.71616   37.44734     0.66   0.509      -48.753    98.18533
+dividend_p~r |   10.53474   8.668151     1.22   0.224    -6.471591    27.54107
+     ret_vol |   277.9312   105.9344     2.62   0.009     70.09495    485.7675
+    cash_etr |    14.8409   10.12297     1.47   0.143    -5.019684    34.70148
+   leveraged |   82.68366   8.308224     9.95   0.000     66.38348    98.98384
+    maturity |      9.397   2.553926     3.68   0.000     4.386368    14.40763
+log_deal_a~d |  -16.64496   3.099167    -5.37   0.000    -22.72532    -10.5646
+secured_du~y |   60.81498    7.02001     8.66   0.000     47.04219    74.58777
+tranche_ty~y |   78.66823   4.680236    16.81   0.000     69.48592    87.85054
+tranche_o_~y |   21.77361   5.642946     3.86   0.000     10.70253    32.84469
+sponsor_du~y |   93.80313    9.57175     9.80   0.000     75.02399    112.5823
+ log_at_post |   -2.26661   3.380404    -0.67   0.503    -8.898736    4.365516
+market_to_~t |  -5.288511   7.157666    -0.74   0.460    -19.33137     8.75435
+ppent_by_~st |   6.008835   22.94675     0.26   0.793    -39.01114    51.02881
+debt_by_at~t |   27.51429   30.13752     0.91   0.361    -31.61351    86.64209
+cash_by_at~t |   35.32516    52.1833     0.68   0.499    -67.05498    137.7053
+dividend_p~t |  -7.277852   11.26153    -0.65   0.518    -29.37221    14.81651
+ret_vol_post |    41.9451   151.5006     0.28   0.782    -255.2889    339.1791
+cash_etr_p~t |  -21.04973   17.71448    -1.19   0.235    -55.80436     13.7049
+       _cons |   154.3571   30.88302     5.00   0.000     93.76667    214.9475
+------------------------------------------------------------------------------
+
+Absorbed degrees of freedom:
+-------------------------------------------------------+
+   Absorbed FE | Categories  - Redundant  = Num. Coefs |
+---------------+---------------------------------------|
+          year |         8           0           8     |
+         ff_48 |        44           1          43     |
+ sp_rating_num |        19           1          18    ?|
+-------------------------------------------------------+
+? = number of redundant parameters may be higher
+
+. estimates store m3
+
+. reghdfe log_margin_bps `treat_quartiles' `deal_controls', absorb(year ff_48 s
+> p_rating_num) vce(cluster gvkey)
+(MWFE estimator converged in 7 iterations)
+
+HDFE Linear regression                            Number of obs   =      3,476
+Absorbing 3 HDFE groups                           F(  15,   1206) =     127.18
+Statistics robust to heteroskedasticity           Prob > F        =     0.0000
+                                                  R-squared       =     0.6801
+                                                  Adj R-squared   =     0.6723
+                                                  Within R-sq.    =     0.5302
+Number of clusters (gvkey)   =      1,207         Root MSE        =     0.3436
+
+                              (Std. err. adjusted for 1,207 clusters in gvkey)
+------------------------------------------------------------------------------
+             |               Robust
+log_margin~s | Coefficient  std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+ie_excess_q1 |  -.0346017   .0475687    -0.73   0.467    -.1279283    .0587249
+ie_ex~1_post |   .0806025   .0737748     1.09   0.275    -.0641387    .2253438
+ie_excess_q2 |   .0629182    .055383     1.14   0.256    -.0457396    .1715759
+ie_ex~2_post |   .1027638   .0785363     1.31   0.191    -.0513192    .2568468
+ie_excess_q3 |   .2750071    .075214     3.66   0.000     .1274423    .4225719
+ie_ex~3_post |  -.2937936   .1019882    -2.88   0.004    -.4938876   -.0936995
+ie_excess_q4 |   .1938656   .0414122     4.68   0.000     .1126176    .2751136
+ie_ex~4_post |  -.0580899   .0556301    -1.04   0.297    -.1672324    .0510526
+   leveraged |   .5052963   .0251933    20.06   0.000     .4558688    .5547239
+    maturity |   .0391936   .0069963     5.60   0.000     .0254674    .0529198
+log_deal_a~d |  -.0662481   .0082591    -8.02   0.000     -.082452   -.0500443
+secured_du~y |   .1852376   .0214687     8.63   0.000     .1431174    .2273578
+tranche_ty~y |   .2404275   .0144236    16.67   0.000     .2121294    .2687256
+tranche_o_~y |   .0542364   .0174504     3.11   0.002     .0199999     .088473
+sponsor_du~y |    .281392   .0272906    10.31   0.000     .2278497    .3349343
+       _cons |   4.947919   .0666426    74.25   0.000     4.817171    5.078668
+------------------------------------------------------------------------------
+
+Absorbed degrees of freedom:
+-------------------------------------------------------+
+   Absorbed FE | Categories  - Redundant  = Num. Coefs |
+---------------+---------------------------------------|
+          year |         8           0           8     |
+         ff_48 |        44           1          43     |
+ sp_rating_num |        19           1          18    ?|
+-------------------------------------------------------+
+? = number of redundant parameters may be higher
+
+. estimates store m4
+
+. reghdfe log_margin_bps `treat_quartiles' `controls' `deal_controls', absorb(y
+> ear ff_48 sp_rating_num) vce(cluster gvkey)
+(MWFE estimator converged in 7 iterations)
+
+HDFE Linear regression                            Number of obs   =      3,476
+Absorbing 3 HDFE groups                           F(  23,   1206) =     107.17
+Statistics robust to heteroskedasticity           Prob > F        =     0.0000
+                                                  R-squared       =     0.6931
+                                                  Adj R-squared   =     0.6849
+                                                  Within R-sq.    =     0.5493
+Number of clusters (gvkey)   =      1,207         Root MSE        =     0.3370
+
+                              (Std. err. adjusted for 1,207 clusters in gvkey)
+------------------------------------------------------------------------------
+             |               Robust
+log_margin~s | Coefficient  std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+ie_excess_q1 |  -.0792303   .0519201    -1.53   0.127     -.181094    .0226334
+ie_ex~1_post |   .0991298   .0759576     1.31   0.192     -.049894    .2481535
+ie_excess_q2 |   .0099967   .0568963     0.18   0.861      -.10163    .1216234
+ie_ex~2_post |   .0851253   .0783258     1.09   0.277    -.0685447    .2387953
+ie_excess_q3 |    .258395   .0725235     3.56   0.000     .1161087    .4006813
+ie_ex~3_post |  -.3330864   .0924241    -3.60   0.000    -.5144162   -.1517565
+ie_excess_q4 |   .1513681   .0416251     3.64   0.000     .0697024    .2330338
+ie_ex~4_post |  -.0683051    .051996    -1.31   0.189    -.1703178    .0337075
+      log_at |  -.0334442   .0086272    -3.88   0.000    -.0503702   -.0165181
+market_to_~k |  -.0428062   .0117654    -3.64   0.000    -.0658891   -.0197234
+ ppent_by_at |   .0316385   .0496786     0.64   0.524    -.0658276    .1291045
+  debt_by_at |   .2124505   .0492037     4.32   0.000     .1159161    .3089849
+  cash_by_at |    .158004   .0848672     1.86   0.063    -.0084997    .3245077
+dividend_p~r |   .0218133   .0192378     1.13   0.257      -.01593    .0595566
+     ret_vol |   .7756851   .2277568     3.41   0.001     .3288416    1.222529
+    cash_etr |   .0207244   .0200464     1.03   0.301    -.0186052    .0600541
+   leveraged |   .4766181   .0269744    17.67   0.000     .4236961      .52954
+    maturity |   .0403638   .0068023     5.93   0.000     .0270182    .0537094
+log_deal_a~d |  -.0505331   .0093075    -5.43   0.000    -.0687939   -.0322724
+secured_du~y |   .1681342   .0213794     7.86   0.000     .1261892    .2100792
+tranche_ty~y |   .2377789   .0139017    17.10   0.000     .2105047    .2650531
+tranche_o_~y |   .0589932   .0176392     3.34   0.001     .0243863       .0936
+sponsor_du~y |   .3001367   .0271695    11.05   0.000     .2468319    .3534415
+       _cons |   5.024374   .0896809    56.03   0.000     4.848426    5.200321
+------------------------------------------------------------------------------
+
+Absorbed degrees of freedom:
+-------------------------------------------------------+
+   Absorbed FE | Categories  - Redundant  = Num. Coefs |
+---------------+---------------------------------------|
+          year |         8           0           8     |
+         ff_48 |        44           1          43     |
+ sp_rating_num |        19           1          18    ?|
+-------------------------------------------------------+
+? = number of redundant parameters may be higher
+
+. estimates store m5
+
+. reghdfe log_margin_bps `treat_quartiles' `controls' `deal_controls' `controls
+> _post', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
+(MWFE estimator converged in 7 iterations)
+
+HDFE Linear regression                            Number of obs   =      3,476
+Absorbing 3 HDFE groups                           F(  31,   1206) =      80.98
+Statistics robust to heteroskedasticity           Prob > F        =     0.0000
+                                                  R-squared       =     0.6943
+                                                  Adj R-squared   =     0.6853
+                                                  Within R-sq.    =     0.5509
+Number of clusters (gvkey)   =      1,207         Root MSE        =     0.3368
+
+                              (Std. err. adjusted for 1,207 clusters in gvkey)
+------------------------------------------------------------------------------
+             |               Robust
+log_margin~s | Coefficient  std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+ie_excess_q1 |  -.0599987   .0539476    -1.11   0.266    -.1658403    .0458429
+ie_ex~1_post |   .0485396   .0798908     0.61   0.544    -.1082008    .2052799
+ie_excess_q2 |   .0372478   .0599425     0.62   0.534    -.0803554    .1548509
+ie_ex~2_post |   .0239612   .0825387     0.29   0.772    -.1379743    .1858966
+ie_excess_q3 |   .2848141     .07638     3.73   0.000     .1349616    .4346666
+ie_ex~3_post |  -.4023291   .1030841    -3.90   0.000    -.6045731   -.2000851
+ie_excess_q4 |   .1762388   .0443866     3.97   0.000     .0891552    .2633224
+ie_ex~4_post |  -.1299558   .0601628    -2.16   0.031    -.2479912   -.0119205
+      log_at |  -.0264404   .0104992    -2.52   0.012    -.0470391   -.0058417
+market_to_~k |  -.0306726   .0205854    -1.49   0.136    -.0710599    .0097146
+ ppent_by_at |   .0218733   .0597935     0.37   0.715    -.0954374    .1391841
+  debt_by_at |    .172752   .0654776     2.64   0.008     .0442893    .3012147
+  cash_by_at |   .1150042   .1078362     1.07   0.286    -.0965632    .3265716
+dividend_p~r |   .0190845   .0252476     0.76   0.450    -.0304496    .0686186
+     ret_vol |   .6615443   .2888153     2.29   0.022      .094908    1.228181
+    cash_etr |   .0309632   .0280947     1.10   0.271    -.0241567    .0860831
+   leveraged |   .4730552   .0263549    17.95   0.000     .4213486    .5247618
+    maturity |   .0399548   .0067502     5.92   0.000     .0267114    .0531982
+log_deal_a~d |  -.0506732   .0093018    -5.45   0.000    -.0689226   -.0324237
+secured_du~y |   .1699401    .021046     8.07   0.000     .1286493    .2112309
+tranche_ty~y |   .2375687   .0139183    17.07   0.000      .210262    .2648755
+tranche_o_~y |   .0623385   .0171894     3.63   0.000      .028614    .0960631
+sponsor_du~y |   .2979695   .0268619    11.09   0.000     .2452682    .3506707
+ log_at_post |  -.0157152   .0103081    -1.52   0.128    -.0359391    .0045087
+market_to_~t |  -.0242107   .0232075    -1.04   0.297    -.0697424    .0213209
+ppent_by_~st |   .0116503   .0667915     0.17   0.862    -.1193901    .1426907
+debt_by_at~t |   .0984686   .0836877     1.18   0.240    -.0657211    .2626583
+cash_by_at~t |   .0725908   .1554574     0.47   0.641    -.2324063    .3775878
+dividend_p~t |   .0042852   .0334248     0.13   0.898    -.0612921    .0698624
+ret_vol_post |   .3649477   .4172829     0.87   0.382    -.4537334    1.183629
+cash_etr_p~t |  -.0393348      .0526    -0.75   0.455    -.1425324    .0638628
+       _cons |    5.02404   .0889629    56.47   0.000       4.8495    5.198579
+------------------------------------------------------------------------------
+
+Absorbed degrees of freedom:
+-------------------------------------------------------+
+   Absorbed FE | Categories  - Redundant  = Num. Coefs |
+---------------+---------------------------------------|
+          year |         8           0           8     |
+         ff_48 |        44           1          43     |
+ sp_rating_num |        19           1          18    ?|
+-------------------------------------------------------+
+? = number of redundant parameters may be higher
+
+. estimates store m6
+
+. 
+. * save the results (esttab) using tabdir
+. esttab m1 m2 m3 m4 m5 m6 using "$tabdir/margin_ie_excess_quartiles.tex", repl
+> ace ///
+> nodepvars nomti nonum collabels(none) label b(3) se(3) parentheses ///
+> star(* 0.10 ** 0.05 *** 0.01) ar2 plain lines fragment noconstant keep(`treat
+> _quartiles')
+(output written to /Users/zrsong/MIT Dropbox/Zirui Song/Apps/Overleaf/Tax Incid
+> ence and Loan Contract Terms/Tables/margin_ie_excess_quartiles.tex)
+
+. est clear
+
+. 
+. *** Table C3: Lender FEs (no variation on the lender side)
+. 
+. preserve 
+
+.         keep if primary_role == "Admin agent"
+(190 observations deleted)
+
+.         * continuous measure
+.         reghdfe margin_bps excess_interest_scaled excess_interest_scaled_post
+>  `deal_controls', absorb(year ff_48 sp_rating_num lender_parent_id) vce(clust
+> er gvkey)
+(dropped 26 singleton observations)
+(MWFE estimator converged in 9 iterations)
+
+HDFE Linear regression                            Number of obs   =      3,259
+Absorbing 4 HDFE groups                           F(   9,   1165) =      89.25
+Statistics robust to heteroskedasticity           Prob > F        =     0.0000
+                                                  R-squared       =     0.6447
+                                                  Adj R-squared   =     0.6282
+                                                  Within R-sq.    =     0.2870
+Number of clusters (gvkey)   =      1,166         Root MSE        =   101.9192
+
+                              (Std. err. adjusted for 1,166 clusters in gvkey)
+------------------------------------------------------------------------------
+             |               Robust
+  margin_bps | Coefficient  std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+excess_int~d |   63.43355   13.41274     4.73   0.000     37.11773    89.74938
+excess_int~t |  -34.88726   17.23083    -2.02   0.043    -68.69418   -1.080343
+   leveraged |   86.72628   6.328441    13.70   0.000     74.30986     99.1427
+    maturity |   10.00989    2.29045     4.37   0.000     5.516026    14.50376
+log_deal_a~d |   -10.5111   2.490649    -4.22   0.000    -15.39776   -5.624443
+secured_du~y |   35.13159   6.250978     5.62   0.000     22.86716    47.39603
+tranche_ty~y |   58.45933   3.935676    14.85   0.000     50.73753    66.18114
+tranche_o_~y |   17.44216   5.170795     3.37   0.001     7.297053    27.58728
+sponsor_du~y |   57.21705   8.721176     6.56   0.000     40.10608    74.32801
+       _cons |   137.2044   20.62342     6.65   0.000     96.74116    177.6676
+------------------------------------------------------------------------------
+
+Absorbed degrees of freedom:
+----------------------------------------------------------+
+      Absorbed FE | Categories  - Redundant  = Num. Coefs |
+------------------+---------------------------------------|
+             year |         8           0           8     |
+            ff_48 |        44           1          43     |
+    sp_rating_num |        19           1          18    ?|
+ lender_parent_id |        69           1          68    ?|
+----------------------------------------------------------+
+? = number of redundant parameters may be higher
+
+.         estimates store m1
+
+. 
+.         reghdfe margin_bps excess_interest_scaled excess_interest_scaled_post
+>  `controls' `deal_controls', absorb(year ff_48 sp_rating_num lender_parent_id
+> ) vce(cluster gvkey)
+(dropped 26 singleton observations)
+(MWFE estimator converged in 9 iterations)
+
+HDFE Linear regression                            Number of obs   =      3,259
+Absorbing 4 HDFE groups                           F(  17,   1165) =      53.57
+Statistics robust to heteroskedasticity           Prob > F        =     0.0000
+                                                  R-squared       =     0.6531
+                                                  Adj R-squared   =     0.6360
+                                                  Within R-sq.    =     0.3038
+Number of clusters (gvkey)   =      1,166         Root MSE        =   100.8444
+
+                              (Std. err. adjusted for 1,166 clusters in gvkey)
+------------------------------------------------------------------------------
+             |               Robust
+  margin_bps | Coefficient  std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+excess_int~d |   59.37032    13.6939     4.34   0.000     32.50285    86.23779
+excess_int~t |   -38.1677   16.41098    -2.33   0.020    -70.36608   -5.969305
+      log_at |  -7.622469   2.602026    -2.93   0.003    -12.72765   -2.517288
+market_to_~k |  -7.598939   2.129808    -3.57   0.000    -11.77763   -3.420249
+ ppent_by_at |   -8.10262   13.93833    -0.58   0.561    -35.44966    19.24442
+  debt_by_at |   42.69926   15.70741     2.72   0.007     11.88128    73.51724
+  cash_by_at |   21.42961   22.88643     0.94   0.349    -23.47362    66.33283
+dividend_p~r |   8.141421   5.424356     1.50   0.134    -2.501178    18.78402
+     ret_vol |   215.7772   67.75797     3.18   0.001     82.83589    348.7185
+    cash_etr |   13.66211   4.956193     2.76   0.006     3.938043    23.38617
+   leveraged |   79.51948   6.623054    12.01   0.000     66.52504    92.51393
+    maturity |    9.90188    2.29376     4.32   0.000     5.401518    14.40224
+log_deal_a~d |  -6.823326   2.802303    -2.43   0.015    -12.32145   -1.325202
+secured_du~y |   31.44124   6.054887     5.19   0.000     19.56154    43.32094
+tranche_ty~y |   57.77085   3.823065    15.11   0.000     50.26999    65.27171
+tranche_o_~y |   18.69037    5.18676     3.60   0.000     8.513939    28.86681
+sponsor_du~y |   58.74214   8.382395     7.01   0.000     42.29586    75.18842
+       _cons |    151.736   28.13052     5.39   0.000     96.54388    206.9282
+------------------------------------------------------------------------------
+
+Absorbed degrees of freedom:
+----------------------------------------------------------+
+      Absorbed FE | Categories  - Redundant  = Num. Coefs |
+------------------+---------------------------------------|
+             year |         8           0           8     |
+            ff_48 |        44           1          43     |
+    sp_rating_num |        19           1          18    ?|
+ lender_parent_id |        69           1          68    ?|
+----------------------------------------------------------+
+? = number of redundant parameters may be higher
+
+.         estimates store m2
+
+. 
+.         reghdfe margin_bps excess_interest_scaled excess_interest_scaled_post
+>  `controls' `deal_controls' `controls_post', absorb(year ff_48 sp_rating_num 
+> lender_parent_id) vce(cluster gvkey)
+(dropped 26 singleton observations)
+(MWFE estimator converged in 9 iterations)
+
+HDFE Linear regression                            Number of obs   =      3,259
+Absorbing 4 HDFE groups                           F(  25,   1165) =      37.91
+Statistics robust to heteroskedasticity           Prob > F        =     0.0000
+                                                  R-squared       =     0.6535
+                                                  Adj R-squared   =     0.6355
+                                                  Within R-sq.    =     0.3048
+Number of clusters (gvkey)   =      1,166         Root MSE        =   100.9039
+
+                              (Std. err. adjusted for 1,166 clusters in gvkey)
+------------------------------------------------------------------------------
+             |               Robust
+  margin_bps | Coefficient  std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+excess_int~d |   60.95709    14.5229     4.20   0.000     32.46312    89.45106
+excess_int~t |  -43.82457   18.72418    -2.34   0.019    -80.56145   -7.087683
+      log_at |  -7.665264   3.182337    -2.41   0.016    -13.90902   -1.421512
+market_to_~k |  -5.853446   3.542294    -1.65   0.099    -12.80343    1.096543
+ ppent_by_at |  -.1928162   17.75031    -0.01   0.991    -35.01896    34.63333
+  debt_by_at |   34.21837   21.65702     1.58   0.114    -8.272755     76.7095
+  cash_by_at |   11.30415    28.0575     0.40   0.687    -43.74474    66.35304
+dividend_p~r |   9.492944   6.964073     1.36   0.173    -4.170584    23.15647
+     ret_vol |    179.119   85.71909     2.09   0.037     10.93794       347.3
+    cash_etr |    10.7979   7.473522     1.44   0.149    -3.865164    25.46097
+   leveraged |   79.27833   6.599597    12.01   0.000     66.32991    92.22676
+    maturity |   9.877175   2.283745     4.32   0.000     5.396461    14.35789
+log_deal_a~d |  -6.947616   2.794858    -2.49   0.013    -12.43113   -1.464098
+secured_du~y |   31.39664   6.004915     5.23   0.000     19.61498     43.1783
+tranche_ty~y |   57.86195   3.843927    15.05   0.000     50.32015    65.40374
+tranche_o_~y |   18.82042   5.194573     3.62   0.000     8.628652    29.01218
+sponsor_du~y |   59.00812   8.293721     7.11   0.000     42.73582    75.28042
+ log_at_post |   .1139231   3.110941     0.04   0.971    -5.989751    6.217597
+market_to_~t |  -3.592871   4.364925    -0.82   0.411    -12.15686    4.971123
+ppent_by_~st |  -16.08116   20.86502    -0.77   0.441    -57.01837    24.85606
+debt_by_at~t |   21.72989   24.87552     0.87   0.383    -27.07594    70.53572
+cash_by_at~t |   21.32974   42.05891     0.51   0.612    -61.18993    103.8494
+dividend_p~t |  -3.565464   9.429481    -0.38   0.705    -22.06613     14.9352
+ret_vol_post |    87.1039   129.9848     0.67   0.503    -167.9265    342.1343
+cash_etr_p~t |   7.183793   14.46908     0.50   0.620    -21.20457    35.57216
+       _cons |   151.8068   27.59621     5.50   0.000     97.66297    205.9506
+------------------------------------------------------------------------------
+
+Absorbed degrees of freedom:
+----------------------------------------------------------+
+      Absorbed FE | Categories  - Redundant  = Num. Coefs |
+------------------+---------------------------------------|
+             year |         8           0           8     |
+            ff_48 |        44           1          43     |
+    sp_rating_num |        19           1          18    ?|
+ lender_parent_id |        69           1          68    ?|
+----------------------------------------------------------+
+? = number of redundant parameters may be higher
+
+.         estimates store m3
+
+. 
+.         * quartile exposure
+.         reghdfe margin_bps `treat_quartiles' `deal_controls', absorb(year ff_
+> 48 sp_rating_num lender_parent_id) vce(cluster gvkey)
+(dropped 26 singleton observations)
+(MWFE estimator converged in 9 iterations)
+
+HDFE Linear regression                            Number of obs   =      3,259
+Absorbing 4 HDFE groups                           F(  15,   1165) =      58.92
+Statistics robust to heteroskedasticity           Prob > F        =     0.0000
+                                                  R-squared       =     0.6469
+                                                  Adj R-squared   =     0.6298
+                                                  Within R-sq.    =     0.2915
+Number of clusters (gvkey)   =      1,166         Root MSE        =   101.6992
+
+                              (Std. err. adjusted for 1,166 clusters in gvkey)
+------------------------------------------------------------------------------
+             |               Robust
+  margin_bps | Coefficient  std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+ie_excess_q1 |   -20.4026   16.01985    -1.27   0.203    -51.83357    11.02838
+ie_ex~1_post |   1.418028   23.26494     0.06   0.951    -44.22783    47.06389
+ie_excess_q2 |   13.21059   18.25181     0.72   0.469     -22.5995    49.02069
+ie_ex~2_post |   11.48711   27.57693     0.42   0.677     -42.6189    65.59313
+ie_excess_q3 |   57.61091   30.40565     1.89   0.058    -2.045057    117.2669
+ie_ex~3_post |  -80.96018   36.76491    -2.20   0.028     -153.093    -8.82733
+ie_excess_q4 |   60.49963   14.29505     4.23   0.000     32.45272    88.54654
+ie_ex~4_post |  -27.07275   18.48449    -1.46   0.143    -63.33937    9.193874
+   leveraged |   87.26432   6.279507    13.90   0.000     74.94391    99.58472
+    maturity |   10.13126   2.296224     4.41   0.000     5.626067    14.63646
+log_deal_a~d |  -10.54326     2.4858    -4.24   0.000    -15.42041   -5.666118
+secured_du~y |   35.98038    6.23618     5.77   0.000     23.74498    48.21578
+tranche_ty~y |   58.13917   3.951367    14.71   0.000     50.38657    65.89176
+tranche_o_~y |   17.39666   5.093869     3.42   0.001     7.402479    27.39084
+sponsor_du~y |   57.81858   8.754324     6.60   0.000     40.64257    74.99458
+       _cons |   138.5047   20.52499     6.75   0.000     98.23466    178.7748
+------------------------------------------------------------------------------
+
+Absorbed degrees of freedom:
+----------------------------------------------------------+
+      Absorbed FE | Categories  - Redundant  = Num. Coefs |
+------------------+---------------------------------------|
+             year |         8           0           8     |
+            ff_48 |        44           1          43     |
+    sp_rating_num |        19           1          18    ?|
+ lender_parent_id |        69           1          68    ?|
+----------------------------------------------------------+
+? = number of redundant parameters may be higher
+
+.         estimates store m4
+
+. 
+.         reghdfe margin_bps `treat_quartiles' `controls' `deal_controls', abso
+> rb(year ff_48 sp_rating_num lender_parent_id) vce(cluster gvkey)
+(dropped 26 singleton observations)
+(MWFE estimator converged in 9 iterations)
+
+HDFE Linear regression                            Number of obs   =      3,259
+Absorbing 4 HDFE groups                           F(  23,   1165) =      42.78
+Statistics robust to heteroskedasticity           Prob > F        =     0.0000
+                                                  R-squared       =     0.6561
+                                                  Adj R-squared   =     0.6385
+                                                  Within R-sq.    =     0.3099
+Number of clusters (gvkey)   =      1,166         Root MSE        =   100.4971
+
+                              (Std. err. adjusted for 1,166 clusters in gvkey)
+------------------------------------------------------------------------------
+             |               Robust
+  margin_bps | Coefficient  std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+ie_excess_q1 |  -32.03149   16.31782    -1.96   0.050    -64.04709   -.0158865
+ie_ex~1_post |   10.11522   23.59419     0.43   0.668    -36.17664    56.40708
+ie_excess_q2 |   3.735457    18.1319     0.21   0.837    -31.83938     39.3103
+ie_ex~2_post |   4.988867   26.74899     0.19   0.852    -47.49272    57.47046
+ie_excess_q3 |   57.46138   28.81488     1.99   0.046     .9265198    113.9962
+ie_ex~3_post |   -93.5608   33.90833    -2.76   0.006     -160.089   -27.03259
+ie_excess_q4 |    52.6272   14.30561     3.68   0.000     24.55957    80.69484
+ie_ex~4_post |  -28.59483   17.49125    -1.63   0.102    -62.91271    5.723036
+      log_at |  -7.143503   2.647043    -2.70   0.007    -12.33701   -1.949998
+market_to_~k |  -8.126482    2.16264    -3.76   0.000    -12.36959   -3.883376
+ ppent_by_at |  -9.521623   13.75125    -0.69   0.489    -36.50161    17.45836
+  debt_by_at |   56.34339   15.59866     3.61   0.000     25.73877    86.94801
+  cash_by_at |   20.74656   22.88416     0.91   0.365    -24.15222    65.64534
+dividend_p~r |   7.077278   5.398544     1.31   0.190    -3.514679    17.66923
+     ret_vol |   221.0116   67.09889     3.29   0.001     89.36342    352.6598
+    cash_etr |   10.16103   5.385271     1.89   0.059    -.4048844    20.72694
+   leveraged |   79.69821    6.56959    12.13   0.000     66.80865    92.58776
+    maturity |   10.16749   2.294422     4.43   0.000     5.665832    14.66916
+log_deal_a~d |  -7.576495   2.758673    -2.75   0.006    -12.98902   -2.163971
+secured_du~y |   31.85925   6.026596     5.29   0.000     20.03505    43.68344
+tranche_ty~y |   57.22559   3.828498    14.95   0.000     49.71407    64.73711
+tranche_o_~y |   18.66114   5.074866     3.68   0.000     8.704245    28.61804
+sponsor_du~y |   59.39526   8.322492     7.14   0.000     43.06651    75.72401
+       _cons |   152.4492   28.13492     5.42   0.000     97.24838    207.6499
+------------------------------------------------------------------------------
+
+Absorbed degrees of freedom:
+----------------------------------------------------------+
+      Absorbed FE | Categories  - Redundant  = Num. Coefs |
+------------------+---------------------------------------|
+             year |         8           0           8     |
+            ff_48 |        44           1          43     |
+    sp_rating_num |        19           1          18    ?|
+ lender_parent_id |        69           1          68    ?|
+----------------------------------------------------------+
+? = number of redundant parameters may be higher
+
+.         estimates store m5
+
+. 
+.         reghdfe margin_bps `treat_quartiles' `controls' `deal_controls' `cont
+> rols_post', absorb(year ff_48 sp_rating_num lender_parent_id) vce(cluster gvk
+> ey)
+(dropped 26 singleton observations)
+(MWFE estimator converged in 9 iterations)
+
+HDFE Linear regression                            Number of obs   =      3,259
+Absorbing 4 HDFE groups                           F(  31,   1165) =      32.74
+Statistics robust to heteroskedasticity           Prob > F        =     0.0000
+                                                  R-squared       =     0.6565
+                                                  Adj R-squared   =     0.6379
+                                                  Within R-sq.    =     0.3106
+Number of clusters (gvkey)   =      1,166         Root MSE        =   100.5763
+
+                              (Std. err. adjusted for 1,166 clusters in gvkey)
+------------------------------------------------------------------------------
+             |               Robust
+  margin_bps | Coefficient  std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+ie_excess_q1 |  -29.18348   17.03493    -1.71   0.087    -62.60605    4.239093
+ie_ex~1_post |   2.606663   24.87433     0.10   0.917    -46.19683    51.41016
+ie_excess_q2 |   7.794621    18.8539     0.41   0.679    -29.19678    44.78602
+ie_ex~2_post |  -3.523997   28.36688    -0.12   0.901    -59.17989    52.13189
+ie_excess_q3 |   61.08571   29.71634     2.06   0.040     2.782171    119.3892
+ie_ex~3_post |  -103.5161   36.60481    -2.83   0.005    -175.3348   -31.69732
+ie_excess_q4 |   54.94329   14.98163     3.67   0.000     25.54929    84.33729
+ie_ex~4_post |  -36.02956   19.04927    -1.89   0.059    -73.40427    1.345162
+      log_at |  -7.475363   3.244656    -2.30   0.021    -13.84139   -1.109341
+market_to_~k |   -6.49471   3.580012    -1.81   0.070     -13.5187    .5292814
+ ppent_by_at |  -1.279195    17.5788    -0.07   0.942    -35.76884    33.21045
+  debt_by_at |   50.22897   21.93905     2.29   0.022     7.184506    93.27343
+  cash_by_at |   14.31965   27.91268     0.51   0.608    -40.44509    69.08438
+dividend_p~r |   7.973652   6.985432     1.14   0.254    -5.731781    21.67909
+     ret_vol |   180.3515    84.2772     2.14   0.033     14.99941    345.7036
+    cash_etr |   10.41875    7.93198     1.31   0.189    -5.143809    25.98132
+   leveraged |   79.51975   6.531604    12.17   0.000     66.70473    92.33477
+    maturity |   10.17568   2.286277     4.45   0.000     5.689999    14.66136
+log_deal_a~d |  -7.726099   2.753891    -2.81   0.005    -13.12924   -2.322959
+secured_du~y |   31.63007   5.976013     5.29   0.000     19.90512    43.35502
+tranche_ty~y |   57.33776   3.851248    14.89   0.000      49.7816    64.89392
+tranche_o_~y |   18.59902   5.087741     3.66   0.000     8.616859    28.58118
+sponsor_du~y |   59.56946   8.276877     7.20   0.000     43.33021    75.80872
+ log_at_post |   .7736589   3.130457     0.25   0.805    -5.368305    6.915623
+market_to_~t |  -3.295481   4.386043    -0.75   0.453    -11.90091    5.309946
+ppent_by_~st |   -17.3649   20.44244    -0.85   0.396    -57.47301    22.74322
+debt_by_at~t |    15.4754   25.83061     0.60   0.549    -35.20432    66.15512
+cash_by_at~t |   13.26653    42.3524     0.31   0.754    -69.82897    96.36204
+dividend_p~t |  -2.073924    9.41331    -0.22   0.826    -20.54286    16.39501
+ret_vol_post |   98.76599   129.6565     0.76   0.446    -155.6203    353.1523
+cash_etr_p~t |  -2.690904   14.46968    -0.19   0.853    -31.08045    25.69865
+       _cons |   152.5986   27.61567     5.53   0.000     98.41661    206.7806
+------------------------------------------------------------------------------
+
+Absorbed degrees of freedom:
+----------------------------------------------------------+
+      Absorbed FE | Categories  - Redundant  = Num. Coefs |
+------------------+---------------------------------------|
+             year |         8           0           8     |
+            ff_48 |        44           1          43     |
+    sp_rating_num |        19           1          18    ?|
+ lender_parent_id |        69           1          68    ?|
+----------------------------------------------------------+
+? = number of redundant parameters may be higher
+
+.         estimates store m6
+
+. 
+.         * save the results (esttab) using tabdir
+.         esttab m1 m2 m3 m4 m5 m6 using "$tabdir/margin_ie_excess_lenderfe.tex
+> ", replace ///
+>         nodepvars nomti nonum collabels(none) label b(3) se(3) parentheses //
+> /
+>         star(* 0.10 ** 0.05 *** 0.01) ar2 plain lines fragment noconstant dro
+> p(_cons `controls_post' `deal_controls' `controls')
+(output written to /Users/zrsong/MIT Dropbox/Zirui Song/Apps/Overleaf/Tax Incid
+> ence and Loan Contract Terms/Tables/margin_ie_excess_lenderfe.tex)
+
+. restore
+
+. 
+. *** Table C4: Entropy Balance
+. 
+. ebalance treated_all `controls'
+
+
+Data Setup
+Treatment variable:   treated_all
+Covariate adjustment: log_at market_to_book ppent_by_at debt_by_at cash_by_at d
+> ividend_payer ret_vol cash_etr 
+
+Optimizing...
+Iteration 1: Max Difference = 20964.8308
+Iteration 2: Max Difference = 7710.49903
+Iteration 3: Max Difference = 2834.50798
+Iteration 4: Max Difference = 1040.74498
+Iteration 5: Max Difference = 380.893887
+Iteration 6: Max Difference = 138.248342
+Iteration 7: Max Difference = 49.2449678
+Iteration 8: Max Difference = 17.142761
+Iteration 9: Max Difference = 6.00263031
+Iteration 10: Max Difference = 1.83938435
+Iteration 11: Max Difference = .413617542
+Iteration 12: Max Difference = .033108553
+Iteration 13: Max Difference = .000339765
+maximum difference smaller than the tolerance level; convergence achieved
+
+
+Treated units: 936     total of weights: 936
+Control units: 2540    total of weights: 936
+
+
+Before: without weighting
+
+             |              Treat              |        Control       
+             |      mean   variance   skewness |      mean   variance 
+-------------+---------------------------------+----------------------
+      log_at |     7.698      2.588      .1969 |     8.257      2.647 
+market_to_~k |     1.327      1.104      3.423 |     1.785      1.409 
+ ppent_by_at |     .2964     .07486      .8351 |     .2397     .04549 
+  debt_by_at |     .4443     .06125      .2864 |     .3013     .03291 
+  cash_by_at |     .1078     .01506      2.072 |     .1136     .01349 
+dividend_p~r |     .2799      .2018      .9804 |     .6102      .2379 
+     ret_vol |     .1345    .004394      .8545 |    .08474    .001483 
+    cash_etr |    -.1002      .2751     -1.237 |     .2642     .08664 
+
+             |  Control  
+             |  skewness 
+-------------+----------
+      log_at |     .1318 
+market_to_~k |     2.298 
+ ppent_by_at |     1.349 
+  debt_by_at |     .5524 
+  cash_by_at |     1.742 
+dividend_p~r |    -.4521 
+     ret_vol |     1.633 
+    cash_etr |     2.102 
+
+
+After:  _webal as the weighting variable
+
+             |              Treat              |        Control       
+             |      mean   variance   skewness |      mean   variance 
+-------------+---------------------------------+----------------------
+      log_at |     7.698      2.588      .1969 |     7.698      1.846 
+market_to_~k |     1.327      1.104      3.423 |     1.327      .4699 
+ ppent_by_at |     .2964     .07486      .8351 |     .2964     .06981 
+  debt_by_at |     .4443     .06125      .2864 |     .4443     .04635 
+  cash_by_at |     .1078     .01506      2.072 |     .1078     .01128 
+dividend_p~r |     .2799      .2018      .9804 |     .2799      .2016 
+     ret_vol |     .1345    .004394      .8545 |     .1345    .003387 
+    cash_etr |    -.1002      .2751     -1.237 |    -.1002      .5603 
+
+             |  Control  
+             |  skewness 
+-------------+----------
+      log_at |     .2308 
+market_to_~k |     3.044 
+ ppent_by_at |     .8485 
+  debt_by_at |     .3616 
+  cash_by_at |     1.925 
+dividend_p~r |     .9804 
+     ret_vol |     .5835 
+    cash_etr |    -1.783 
+
+. 
+. reghdfe margin_bps excess_interest_scaled excess_interest_scaled_post `contro
+> ls' `deal_controls' [pweight=_webal], absorb(year ff_48 sp_rating_num) vce(cl
+> uster gvkey)
+(MWFE estimator converged in 8 iterations)
+
+HDFE Linear regression                            Number of obs   =      3,476
+Absorbing 3 HDFE groups                           F(  17,   1206) =      35.54
+Statistics robust to heteroskedasticity           Prob > F        =     0.0000
+                                                  R-squared       =     0.4739
+                                                  Adj R-squared   =     0.4608
+                                                  Within R-sq.    =     0.3231
+Number of clusters (gvkey)   =      1,207         Root MSE        =   139.9409
+
+                              (Std. err. adjusted for 1,207 clusters in gvkey)
+------------------------------------------------------------------------------
+             |               Robust
+  margin_bps | Coefficient  std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+excess_int~d |   67.94811   16.58667     4.10   0.000     35.40617      100.49
+excess_int~t |  -50.49751   20.36112    -2.48   0.013    -90.44466   -10.55035
+      log_at |  -11.36369   4.993286    -2.28   0.023    -21.16018   -1.567196
+market_to_~k |  -18.87135   6.879028    -2.74   0.006    -32.36754   -5.375154
+ ppent_by_at |   2.073628   21.15385     0.10   0.922    -39.42881    43.57606
+  debt_by_at |   77.68419   23.33473     3.33   0.001     31.90302    123.4654
+  cash_by_at |   99.20974   50.12928     1.98   0.048     .8594539      197.56
+dividend_p~r |  -12.83245   10.29824    -1.25   0.213     -33.0369    7.372007
+     ret_vol |   240.4641   93.91421     2.56   0.011     56.21072    424.7175
+    cash_etr |   5.196748   7.232106     0.72   0.473     -8.99216    19.38565
+   leveraged |   53.36085    14.8717     3.59   0.000     24.18357    82.53814
+    maturity |  -4.256063   6.407892    -0.66   0.507    -16.82792    8.315792
+log_deal_a~d |   -12.9583   5.284513    -2.45   0.014    -23.32616   -2.590439
+secured_du~y |   66.33424   11.84063     5.60   0.000     43.10372    89.56476
+tranche_ty~y |   133.9528   11.83664    11.32   0.000     110.7301    157.1755
+tranche_o_~y |   39.75371   11.93211     3.33   0.001     16.34371     63.1637
+sponsor_du~y |   91.01139   13.56794     6.71   0.000       64.392    117.6308
+       _cons |   239.5089    56.7318     4.22   0.000     128.2049    350.8129
+------------------------------------------------------------------------------
+
+Absorbed degrees of freedom:
+-------------------------------------------------------+
+   Absorbed FE | Categories  - Redundant  = Num. Coefs |
+---------------+---------------------------------------|
+          year |         8           0           8     |
+         ff_48 |        44           1          43     |
+ sp_rating_num |        19           1          18    ?|
+-------------------------------------------------------+
+? = number of redundant parameters may be higher
+
+. estimates store m1
+
+. reghdfe margin_bps excess_interest_scaled excess_interest_scaled_post `contro
+> ls' `deal_controls' `controls_post' [pweight=_webal], absorb(year ff_48 sp_ra
+> ting_num) vce(cluster gvkey)
+(MWFE estimator converged in 8 iterations)
+
+HDFE Linear regression                            Number of obs   =      3,476
+Absorbing 3 HDFE groups                           F(  25,   1206) =      25.65
+Statistics robust to heteroskedasticity           Prob > F        =     0.0000
+                                                  R-squared       =     0.4771
+                                                  Adj R-squared   =     0.4627
+                                                  Within R-sq.    =     0.3272
+Number of clusters (gvkey)   =      1,207         Root MSE        =   139.6903
+
+                              (Std. err. adjusted for 1,207 clusters in gvkey)
+------------------------------------------------------------------------------
+             |               Robust
+  margin_bps | Coefficient  std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+excess_int~d |   70.71585   16.93146     4.18   0.000     37.49745    103.9342
+excess_int~t |  -56.65307   21.62031    -2.62   0.009    -99.07066   -14.23548
+      log_at |  -16.72086   6.466623    -2.59   0.010    -29.40794   -4.033783
+market_to_~k |  -20.62663   9.449909    -2.18   0.029    -39.16672   -2.086542
+ ppent_by_at |  -1.631155   29.62945    -0.06   0.956    -59.76215    56.49985
+  debt_by_at |    73.6498   28.62306     2.57   0.010     17.49328    129.8063
+  cash_by_at |   26.52108   64.29541     0.41   0.680     -99.6222    152.6644
+dividend_p~r |  -4.818377   14.49584    -0.33   0.740    -33.25824    23.62149
+     ret_vol |   164.3564   120.9065     1.36   0.174    -72.85401    401.5667
+    cash_etr |   8.800363   11.80292     0.75   0.456    -14.35617     31.9569
+   leveraged |   54.00425   15.19485     3.55   0.000     24.19298    83.81552
+    maturity |  -4.513976   6.387063    -0.71   0.480    -17.04497    8.017013
+log_deal_a~d |  -13.05185   5.260161    -2.48   0.013    -23.37193   -2.731766
+secured_du~y |   65.01708   11.60303     5.60   0.000     42.25271    87.78144
+tranche_ty~y |   135.1512   11.85597    11.40   0.000     111.8906    158.4118
+tranche_o_~y |   38.28984   11.92132     3.21   0.001       14.901    61.67867
+sponsor_du~y |   91.64559   13.61629     6.73   0.000     64.93135    118.3598
+ log_at_post |    11.2848   6.334984     1.78   0.075    -1.144011    23.71362
+market_to_~t |   1.366916   13.49519     0.10   0.919    -25.10974    27.84357
+ppent_by_~st |   5.031362   35.69119     0.14   0.888    -64.99236    75.05508
+debt_by_at~t |   7.548288    43.4112     0.17   0.862    -77.62158    92.71816
+cash_by_at~t |   154.2208   94.55599     1.63   0.103    -31.29171    339.7333
+dividend_p~t |  -15.68126   18.58731    -0.84   0.399    -52.14832    20.78579
+ret_vol_post |   144.8711   169.2647     0.86   0.392    -187.2149    476.9571
+cash_etr_p~t |  -8.980549   22.27011    -0.40   0.687    -52.67302    34.71192
+       _cons |   241.2719   56.14261     4.30   0.000     131.1239    351.4199
+------------------------------------------------------------------------------
+
+Absorbed degrees of freedom:
+-------------------------------------------------------+
+   Absorbed FE | Categories  - Redundant  = Num. Coefs |
+---------------+---------------------------------------|
+          year |         8           0           8     |
+         ff_48 |        44           1          43     |
+ sp_rating_num |        19           1          18    ?|
+-------------------------------------------------------+
+? = number of redundant parameters may be higher
+
+. estimates store m2
+
+. 
+. reghdfe margin_bps `treat_quartiles' `controls' `deal_controls' [pweight=_web
+> al], absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
+(MWFE estimator converged in 8 iterations)
+
+HDFE Linear regression                            Number of obs   =      3,476
+Absorbing 3 HDFE groups                           F(  23,   1206) =      27.43
+Statistics robust to heteroskedasticity           Prob > F        =     0.0000
+                                                  R-squared       =     0.4775
+                                                  Adj R-squared   =     0.4635
+                                                  Within R-sq.    =     0.3277
+Number of clusters (gvkey)   =      1,207         Root MSE        =   139.5880
+
+                              (Std. err. adjusted for 1,207 clusters in gvkey)
+------------------------------------------------------------------------------
+             |               Robust
+  margin_bps | Coefficient  std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+ie_excess_q1 |  -15.14035   19.26857    -0.79   0.432      -52.944    22.66331
+ie_ex~1_post |   18.69767   26.80536     0.70   0.486    -33.89265    71.28799
+ie_excess_q2 |  -7.252211   22.93303    -0.32   0.752    -52.24527    37.74085
+ie_ex~2_post |   9.130488   29.52568     0.31   0.757    -48.79691    67.05789
+ie_excess_q3 |   70.78999    29.9189     2.37   0.018      12.0911    129.4889
+ie_ex~3_post |  -112.0303   33.06262    -3.39   0.001     -176.897   -47.16368
+ie_excess_q4 |   62.16285   17.16887     3.62   0.000     28.47868    95.84703
+ie_ex~4_post |  -35.23952     21.098    -1.67   0.095    -76.63237    6.153337
+      log_at |  -11.01664   5.111742    -2.16   0.031    -21.04553   -.9877424
+market_to_~k |   -19.2988   6.972122    -2.77   0.006    -32.97764   -5.619966
+ ppent_by_at |   3.845067   21.02115     0.18   0.855    -37.39702    45.08715
+  debt_by_at |   89.44076   24.29199     3.68   0.000      41.7815       137.1
+  cash_by_at |   92.40021   50.06135     1.85   0.065    -5.816812    190.6172
+dividend_p~r |  -14.17419   10.28163    -1.38   0.168    -34.34606    5.997674
+     ret_vol |   226.2927    93.6673     2.42   0.016     42.52374    410.0617
+    cash_etr |   3.606933    7.56584     0.48   0.634    -11.23674     18.4506
+   leveraged |   54.01065   14.90861     3.62   0.000     24.76097    83.26034
+    maturity |  -3.931503   6.499206    -0.60   0.545    -16.68251    8.819504
+log_deal_a~d |  -13.27306   5.285773    -2.51   0.012     -23.6434   -2.902732
+secured_du~y |   67.42662   11.96793     5.63   0.000     43.94634    90.90689
+tranche_ty~y |   133.1409   11.89158    11.20   0.000     109.8104    156.4714
+tranche_o_~y |   39.00726   11.72939     3.33   0.001     15.99498    62.01953
+sponsor_du~y |     89.141   13.72324     6.50   0.000     62.21692    116.0651
+       _cons |   239.5175   57.26669     4.18   0.000     127.1641    351.8709
+------------------------------------------------------------------------------
+
+Absorbed degrees of freedom:
+-------------------------------------------------------+
+   Absorbed FE | Categories  - Redundant  = Num. Coefs |
+---------------+---------------------------------------|
+          year |         8           0           8     |
+         ff_48 |        44           1          43     |
+ sp_rating_num |        19           1          18    ?|
+-------------------------------------------------------+
+? = number of redundant parameters may be higher
+
+. estimates store m3
+
+. reghdfe margin_bps `treat_quartiles' `controls' `deal_controls' `controls_pos
+> t' [pweight=_webal], absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
+(MWFE estimator converged in 8 iterations)
+
+HDFE Linear regression                            Number of obs   =      3,476
+Absorbing 3 HDFE groups                           F(  31,   1206) =      21.60
+Statistics robust to heteroskedasticity           Prob > F        =     0.0000
+                                                  R-squared       =     0.4807
+                                                  Adj R-squared   =     0.4655
+                                                  Within R-sq.    =     0.3318
+Number of clusters (gvkey)   =      1,207         Root MSE        =   139.3283
+
+                              (Std. err. adjusted for 1,207 clusters in gvkey)
+------------------------------------------------------------------------------
+             |               Robust
+  margin_bps | Coefficient  std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+ie_excess_q1 |  -15.39979   19.77404    -0.78   0.436    -54.19513    23.39556
+ie_ex~1_post |    20.5227   28.97825     0.71   0.479    -36.33068    77.37609
+ie_excess_q2 |  -5.094872   24.06945    -0.21   0.832    -52.31751    42.12777
+ie_ex~2_post |   5.252876   31.40955     0.17   0.867    -56.37056    66.87631
+ie_excess_q3 |    78.3178   31.48753     2.49   0.013     16.54138    140.0942
+ie_ex~3_post |    -121.55    35.9188    -3.38   0.001    -192.0203   -51.07975
+ie_excess_q4 |    64.9164   17.43577     3.72   0.000     30.70859    99.12421
+ie_ex~4_post |   -41.5277   22.24832    -1.87   0.062     -85.1774    2.122007
+      log_at |  -16.78844   6.589992    -2.55   0.011    -29.71757    -3.85932
+market_to_~k |  -21.88936   9.578327    -2.29   0.022    -40.68139   -3.097319
+ ppent_by_at |   2.539913   28.98372     0.09   0.930    -54.32421    59.40404
+  debt_by_at |   86.16783   30.97429     2.78   0.005     25.39835    146.9373
+  cash_by_at |   24.06255   63.81896     0.38   0.706     -101.146    149.2711
+dividend_p~r |  -8.228872   14.87207    -0.55   0.580    -37.40688    20.94914
+     ret_vol |   142.4342   119.1674     1.20   0.232    -91.36433    376.2328
+    cash_etr |   9.276506   12.96833     0.72   0.475     -16.1665    34.71951
+   leveraged |    54.9059    15.2535     3.60   0.000     24.97956    84.83225
+    maturity |  -4.205035   6.486895    -0.65   0.517    -16.93189    8.521818
+log_deal_a~d |  -13.25771   5.275112    -2.51   0.012    -23.60712   -2.908291
+secured_du~y |   65.83002   11.75961     5.60   0.000     42.75846    88.90158
+tranche_ty~y |   134.3429   11.89979    11.29   0.000     110.9963    157.6895
+tranche_o_~y |   37.48996   11.70424     3.20   0.001     14.52702    60.45289
+sponsor_du~y |   89.79558   13.69395     6.56   0.000     62.92896    116.6622
+ log_at_post |   11.98311    6.30167     1.90   0.057    -.3803466    24.34656
+market_to_~t |   3.098323   13.70852     0.23   0.821    -23.79687    29.99351
+ppent_by_~st |   1.715004   34.98284     0.05   0.961    -66.91898    70.34899
+debt_by_at~t |   4.164246   46.16623     0.09   0.928     -86.4108     94.7393
+cash_by_at~t |   144.6114   95.05337     1.52   0.128      -41.877    331.0997
+dividend_p~t |  -11.07842   18.76074    -0.59   0.555    -47.88574     25.7289
+ret_vol_post |    170.357   169.7483     1.00   0.316    -162.6778    503.3919
+cash_etr_p~t |  -13.42277   22.73978    -0.59   0.555    -58.03669    31.19115
+       _cons |   240.4791   56.78855     4.23   0.000     129.0637    351.8944
+------------------------------------------------------------------------------
+
+Absorbed degrees of freedom:
+-------------------------------------------------------+
+   Absorbed FE | Categories  - Redundant  = Num. Coefs |
+---------------+---------------------------------------|
+          year |         8           0           8     |
+         ff_48 |        44           1          43     |
+ sp_rating_num |        19           1          18    ?|
+-------------------------------------------------------+
+? = number of redundant parameters may be higher
+
+. estimates store m4
+
+. 
+. * save the results (esttab) using tabdir
+. esttab m1 m2 m3 m4 using "$tabdir/margin_did_both_rule_robustness_ebal.tex", 
+> replace ///
+> nodepvars nomti nonum collabels(none) label b(3) se(3) parentheses ///
+> star(* 0.10 ** 0.05 *** 0.01) ar2 plain lines fragment noconstant keep(excess
+> _interest_scaled excess_interest_scaled_post `treat_quartiles')
+(output written to /Users/zrsong/MIT Dropbox/Zirui Song/Apps/Overleaf/Tax Incid
+> ence and Loan Contract Terms/Tables/margin_did_both_rule_robustness_ebal.tex)
+
+. est clear
+
+. 
+. *** Table C6: MNC / Foreign Pretax Income
+. ************ ROBUSTNESS (MNC / Pifo txfo)
+. 
+. preserve 
+
+.         keep if mnc == 0
+(2,620 observations deleted)
+
+.         reghdfe margin_bps excess_interest_scaled excess_interest_scaled_post
+>  `deal_controls', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
+(dropped 5 singleton observations)
+(MWFE estimator converged in 8 iterations)
+
+HDFE Linear regression                            Number of obs   =        851
+Absorbing 3 HDFE groups                           F(   9,    355) =      48.22
+Statistics robust to heteroskedasticity           Prob > F        =     0.0000
+                                                  R-squared       =     0.5335
+                                                  Adj R-squared   =     0.4987
+                                                  Within R-sq.    =     0.3711
+Number of clusters (gvkey)   =        356         Root MSE        =   129.7742
+
+                                (Std. err. adjusted for 356 clusters in gvkey)
+------------------------------------------------------------------------------
+             |               Robust
+  margin_bps | Coefficient  std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+excess_int~d |   109.8753   26.95768     4.08   0.000     56.85847    162.8921
+excess_int~t |  -65.35111   31.61292    -2.07   0.039    -127.5233    -3.17897
+   leveraged |   56.16753   17.20251     3.27   0.001     22.33588    89.99917
+    maturity |   .9993428   5.268012     0.19   0.850    -9.361093    11.35978
+log_deal_a~d |  -24.80751   4.948904    -5.01   0.000    -34.54036   -15.07465
+secured_du~y |   95.12872   12.05806     7.89   0.000     71.41452    118.8429
+tranche_ty~y |   115.0224   11.37938    10.11   0.000     92.64292    137.4019
+tranche_o_~y |   24.40019   9.743548     2.50   0.013     5.237857    43.56252
+sponsor_du~y |   50.89486    14.6119     3.48   0.001     22.15809    79.63164
+       _cons |   249.6076   44.43933     5.62   0.000     162.2101     337.005
+------------------------------------------------------------------------------
+
+Absorbed degrees of freedom:
+-------------------------------------------------------+
+   Absorbed FE | Categories  - Redundant  = Num. Coefs |
+---------------+---------------------------------------|
+          year |         8           0           8     |
+         ff_48 |        31           1          30     |
+ sp_rating_num |        14           1          13    ?|
+-------------------------------------------------------+
+? = number of redundant parameters may be higher
+
+.         estimates store m1
+
+.         reghdfe margin_bps excess_interest_scaled excess_interest_scaled_post
+>  `controls' `deal_controls', absorb(year ff_48 sp_rating_num) vce(cluster gvk
+> ey)
+(dropped 5 singleton observations)
+(MWFE estimator converged in 8 iterations)
+
+HDFE Linear regression                            Number of obs   =        851
+Absorbing 3 HDFE groups                           F(  17,    355) =      26.67
+Statistics robust to heteroskedasticity           Prob > F        =     0.0000
+                                                  R-squared       =     0.5423
+                                                  Adj R-squared   =     0.5031
+                                                  Within R-sq.    =     0.3830
+Number of clusters (gvkey)   =        356         Root MSE        =   129.1993
+
+                                (Std. err. adjusted for 356 clusters in gvkey)
+------------------------------------------------------------------------------
+             |               Robust
+  margin_bps | Coefficient  std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+excess_int~d |   92.63347   27.37817     3.38   0.001     38.78968    146.4773
+excess_int~t |  -71.64508   32.23939    -2.22   0.027    -135.0493   -8.240871
+      log_at |  -4.298786   5.597726    -0.77   0.443    -15.30766    6.710087
+market_to_~k |  -7.060706   7.433346    -0.95   0.343    -21.67964    7.558224
+ ppent_by_at |   17.50003   22.71452     0.77   0.442    -27.17192    62.17197
+  debt_by_at |   70.29919   27.86963     2.52   0.012     15.48886    125.1095
+  cash_by_at |   39.45958   57.87058     0.68   0.496    -74.35269    153.2718
+dividend_p~r |   2.315318   11.55648     0.20   0.841    -20.41245    25.04309
+     ret_vol |   157.2536   119.8741     1.31   0.190    -78.49907    393.0063
+    cash_etr |   2.471473    17.6173     0.14   0.889    -32.17593    37.11887
+   leveraged |    48.9765    17.5435     2.79   0.006     14.47424    83.47877
+    maturity |   2.491964   5.212434     0.48   0.633    -7.759169     12.7431
+log_deal_a~d |  -24.56875   5.581594    -4.40   0.000     -35.5459    -13.5916
+secured_du~y |   90.79553   11.96621     7.59   0.000     67.26196    114.3291
+tranche_ty~y |   111.9869   10.88326    10.29   0.000     90.58312    133.3907
+tranche_o_~y |   24.70593   9.916422     2.49   0.013     5.203608    44.20825
+sponsor_du~y |   52.59096   15.16565     3.47   0.001     22.76515    82.41676
+       _cons |   241.6291   56.53217     4.27   0.000      130.449    352.8092
+------------------------------------------------------------------------------
+
+Absorbed degrees of freedom:
+-------------------------------------------------------+
+   Absorbed FE | Categories  - Redundant  = Num. Coefs |
+---------------+---------------------------------------|
+          year |         8           0           8     |
+         ff_48 |        31           1          30     |
+ sp_rating_num |        14           1          13    ?|
+-------------------------------------------------------+
+? = number of redundant parameters may be higher
+
+.         estimates store m2
+
+.         reghdfe margin_bps excess_interest_scaled excess_interest_scaled_post
+>  `controls' `deal_controls' `controls_post', absorb(year ff_48 sp_rating_num)
+>  vce(cluster gvkey)
+(dropped 5 singleton observations)
+(MWFE estimator converged in 8 iterations)
+
+HDFE Linear regression                            Number of obs   =        851
+Absorbing 3 HDFE groups                           F(  25,    355) =      21.04
+Statistics robust to heteroskedasticity           Prob > F        =     0.0000
+                                                  R-squared       =     0.5477
+                                                  Adj R-squared   =     0.5039
+                                                  Within R-sq.    =     0.3902
+Number of clusters (gvkey)   =        356         Root MSE        =   129.1006
+
+                                (Std. err. adjusted for 356 clusters in gvkey)
+------------------------------------------------------------------------------
+             |               Robust
+  margin_bps | Coefficient  std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+excess_int~d |   91.38875   27.85552     3.28   0.001     36.60616    146.1713
+excess_int~t |  -68.03512   38.14862    -1.78   0.075    -143.0608    6.990587
+      log_at |  -4.910991   6.794815    -0.72   0.470    -18.27414     8.45216
+market_to_~k |     4.5401   10.79247     0.42   0.674    -16.68511    25.76531
+ ppent_by_at |   17.00987   31.67611     0.54   0.592    -45.28656     79.3063
+  debt_by_at |   109.8927    38.1081     2.88   0.004     34.94667    184.8387
+  cash_by_at |   45.67468   85.23986     0.54   0.592    -121.9639    213.3133
+dividend_p~r |   10.90182   15.48025     0.70   0.482     -19.5427    41.34635
+     ret_vol |   174.9664   162.1212     1.08   0.281    -143.8723    493.8051
+    cash_etr |   -4.41612   23.70752    -0.19   0.852    -51.04096    42.20872
+   leveraged |   45.82493   17.75929     2.58   0.010     10.89829    80.75156
+    maturity |   3.115448   5.075307     0.61   0.540    -6.866001     13.0969
+log_deal_a~d |  -25.57982   5.712539    -4.48   0.000    -36.81449   -14.34515
+secured_du~y |   89.63015   11.70075     7.66   0.000     66.61865    112.6417
+tranche_ty~y |     111.52   11.21313     9.95   0.000     89.46749    133.5725
+tranche_o_~y |   24.00045   9.927628     2.42   0.016     4.476096    43.52481
+sponsor_du~y |   54.42063   15.84056     3.44   0.001      23.2675    85.57377
+ log_at_post |   3.610297   6.515397     0.55   0.580    -9.203331    16.42393
+market_to_~t |  -26.46871   13.27801    -1.99   0.047    -52.58215   -.3552624
+ppent_by_~st |  -7.237652   38.83597    -0.19   0.852    -83.61515    69.13984
+debt_by_at~t |  -68.69827   56.67337    -1.21   0.226     -180.156    42.75949
+cash_by_at~t |  -10.99197   115.5135    -0.10   0.924    -238.1688    216.1849
+dividend_p~t |  -31.16522   22.32211    -1.40   0.164    -75.06542    12.73498
+ret_vol_post |  -161.8229   232.7518    -0.70   0.487    -619.5687    295.9228
+cash_etr_p~t |   14.22145   39.31537     0.36   0.718    -63.09886    91.54176
+       _cons |   245.7256   56.20225     4.37   0.000     135.1943    356.2568
+------------------------------------------------------------------------------
+
+Absorbed degrees of freedom:
+-------------------------------------------------------+
+   Absorbed FE | Categories  - Redundant  = Num. Coefs |
+---------------+---------------------------------------|
+          year |         8           0           8     |
+         ff_48 |        31           1          30     |
+ sp_rating_num |        14           1          13    ?|
+-------------------------------------------------------+
+? = number of redundant parameters may be higher
+
+.         estimates store m3
+
+. restore
+
+. 
+.         lab var pifo "Pretax Foreign Income"
+
+.         reghdfe margin_bps excess_interest_scaled excess_interest_scaled_post
+>  pifo `deal_controls', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
+(MWFE estimator converged in 7 iterations)
+
+HDFE Linear regression                            Number of obs   =      3,476
+Absorbing 3 HDFE groups                           F(  10,   1206) =     111.64
+Statistics robust to heteroskedasticity           Prob > F        =     0.0000
+                                                  R-squared       =     0.5433
+                                                  Adj R-squared   =     0.5328
+                                                  Within R-sq.    =     0.3949
+Number of clusters (gvkey)   =      1,207         Root MSE        =   119.9703
+
+                              (Std. err. adjusted for 1,207 clusters in gvkey)
+------------------------------------------------------------------------------
+             |               Robust
+  margin_bps | Coefficient  std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+excess_int~d |   84.66183   15.07358     5.62   0.000     55.08849    114.2352
+excess_int~t |  -46.29408   19.79015    -2.34   0.019    -85.12102   -7.467137
+        pifo |  -.0009928   .0013117    -0.76   0.449    -.0035662    .0015807
+   leveraged |   89.28533   7.856943    11.36   0.000     73.87053    104.7001
+    maturity |    8.65106   2.583645     3.35   0.001     3.582122       13.72
+log_deal_a~d |  -18.86417   2.665975    -7.08   0.000    -24.09463   -13.63371
+secured_du~y |   63.83821   7.176844     8.90   0.000     49.75773     77.9187
+tranche_ty~y |   79.59974   4.801977    16.58   0.000     70.17859     89.0209
+tranche_o_~y |   20.74574   5.743342     3.61   0.000     9.477689    32.01379
+sponsor_du~y |    90.6518   9.695542     9.35   0.000      71.6298    109.6738
+       _cons |   166.4998   22.55087     7.38   0.000     122.2565    210.7431
+------------------------------------------------------------------------------
+
+Absorbed degrees of freedom:
+-------------------------------------------------------+
+   Absorbed FE | Categories  - Redundant  = Num. Coefs |
+---------------+---------------------------------------|
+          year |         8           0           8     |
+         ff_48 |        44           1          43     |
+ sp_rating_num |        19           1          18    ?|
+-------------------------------------------------------+
+? = number of redundant parameters may be higher
+
+.         estimates store m4
+
+.         reghdfe margin_bps excess_interest_scaled excess_interest_scaled_post
+>  pifo `controls' `deal_controls', absorb(year ff_48 sp_rating_num) vce(cluste
+> r gvkey)
+(MWFE estimator converged in 7 iterations)
+
+HDFE Linear regression                            Number of obs   =      3,476
+Absorbing 3 HDFE groups                           F(  18,   1206) =      74.23
+Statistics robust to heteroskedasticity           Prob > F        =     0.0000
+                                                  R-squared       =     0.5538
+                                                  Adj R-squared   =     0.5425
+                                                  Within R-sq.    =     0.4088
+Number of clusters (gvkey)   =      1,207         Root MSE        =   118.7230
+
+                              (Std. err. adjusted for 1,207 clusters in gvkey)
+------------------------------------------------------------------------------
+             |               Robust
+  margin_bps | Coefficient  std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+excess_int~d |   74.54813    15.8111     4.71   0.000     43.52781    105.5685
+excess_int~t |  -49.81993   19.16453    -2.60   0.009    -87.41944   -12.22041
+        pifo |  -.0007682    .001531    -0.50   0.616     -.003772    .0022356
+      log_at |  -5.591708   3.112256    -1.80   0.073    -11.69775    .5143298
+market_to_~k |  -6.977807   3.506258    -1.99   0.047    -13.85685   -.0987642
+ ppent_by_at |   4.823477   16.77204     0.29   0.774    -28.08213    37.72909
+  debt_by_at |   52.93819   18.32743     2.89   0.004     16.98101    88.89538
+  cash_by_at |   45.53379   28.77322     1.58   0.114    -10.91734    101.9849
+dividend_p~r |   9.482161    6.38228     1.49   0.138    -3.039444    22.00377
+     ret_vol |    292.903   82.51118     3.55   0.000     131.0216    454.7844
+    cash_etr |   11.66166   6.518527     1.79   0.074    -1.127249    24.45058
+   leveraged |   83.30699   8.453464     9.85   0.000     66.72186    99.89212
+    maturity |    9.21196   2.559055     3.60   0.000     4.191266    14.23265
+log_deal_a~d |  -16.14846   3.090353    -5.23   0.000    -22.21153    -10.0854
+secured_du~y |   59.58798   7.124611     8.36   0.000     45.60997    73.56599
+tranche_ty~y |   79.03232   4.678247    16.89   0.000     69.85392    88.21073
+tranche_o_~y |   21.39993   5.830665     3.67   0.000     9.960558    32.83931
+sponsor_du~y |   95.00431   9.597225     9.90   0.000     76.17519    113.8334
+       _cons |   149.6925   31.72909     4.72   0.000     87.44215    211.9428
+------------------------------------------------------------------------------
+
+Absorbed degrees of freedom:
+-------------------------------------------------------+
+   Absorbed FE | Categories  - Redundant  = Num. Coefs |
+---------------+---------------------------------------|
+          year |         8           0           8     |
+         ff_48 |        44           1          43     |
+ sp_rating_num |        19           1          18    ?|
+-------------------------------------------------------+
+? = number of redundant parameters may be higher
+
+.         estimates store m5
+
+.         reghdfe margin_bps excess_interest_scaled excess_interest_scaled_post
+>  pifo `controls' `deal_controls' `controls_post', absorb(year ff_48 sp_rating
+> _num) vce(cluster gvkey)
+(MWFE estimator converged in 7 iterations)
+
+HDFE Linear regression                            Number of obs   =      3,476
+Absorbing 3 HDFE groups                           F(  26,   1206) =      52.45
+Statistics robust to heteroskedasticity           Prob > F        =     0.0000
+                                                  R-squared       =     0.5549
+                                                  Adj R-squared   =     0.5425
+                                                  Within R-sq.    =     0.4102
+Number of clusters (gvkey)   =      1,207         Root MSE        =   118.7217
+
+                              (Std. err. adjusted for 1,207 clusters in gvkey)
+------------------------------------------------------------------------------
+             |               Robust
+  margin_bps | Coefficient  std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+excess_int~d |   82.22545    16.8304     4.89   0.000     49.20533    115.2456
+excess_int~t |  -69.12353   22.69227    -3.05   0.002    -113.6442   -24.60281
+        pifo |  -.0004366   .0014938    -0.29   0.770    -.0033674    .0024942
+      log_at |  -4.374336   3.703683    -1.18   0.238    -11.64071    2.892043
+market_to_~k |  -4.160728   6.142459    -0.68   0.498    -16.21182    7.890364
+ ppent_by_at |   .6699073   20.82267     0.03   0.974    -40.18277    41.52258
+  debt_by_at |   39.62938   23.70875     1.67   0.095     -6.88559    86.14436
+  cash_by_at |   23.79292   37.71035     0.63   0.528    -50.19226    97.77809
+dividend_p~r |   12.68854   8.580732     1.48   0.139    -4.146279    29.52336
+     ret_vol |   280.6733   106.6339     2.63   0.009     71.46468    489.8818
+    cash_etr |   15.80488   9.396337     1.68   0.093      -2.6301    34.23987
+   leveraged |   82.46692   8.306276     9.93   0.000     66.17056    98.76327
+    maturity |   9.143132    2.53263     3.61   0.000     4.174282    14.11198
+log_deal_a~d |  -16.02761   3.100138    -5.17   0.000    -22.10988   -9.945352
+secured_du~y |   60.06797   6.983208     8.60   0.000     46.36738    73.76855
+tranche_ty~y |   79.06827   4.689879    16.86   0.000     69.86704    88.26949
+tranche_o_~y |   22.15165   5.717668     3.87   0.000     10.93396    33.36933
+sponsor_du~y |   94.32136   9.487108     9.94   0.000     75.70829    112.9344
+ log_at_post |  -2.971869   3.379266    -0.88   0.379    -9.601762    3.658024
+market_to_~t |  -6.081435   7.038103    -0.86   0.388    -19.88972    7.726851
+ppent_by_~st |   4.959573   23.45114     0.21   0.833    -41.04999    50.96913
+debt_by_at~t |   34.12986   28.92319     1.18   0.238    -22.61549    90.87521
+cash_by_at~t |    42.3409    52.1027     0.81   0.417     -59.8811    144.5629
+dividend_p~t |  -8.948464   11.19441    -0.80   0.424    -30.91114    13.01422
+ret_vol_post |    36.2382    152.457     0.24   0.812    -262.8722    335.3486
+cash_etr_p~t |  -15.12405   17.87884    -0.85   0.398    -50.20113    19.95302
+       _cons |    150.833   31.21869     4.83   0.000     89.58403     212.082
+------------------------------------------------------------------------------
+
+Absorbed degrees of freedom:
+-------------------------------------------------------+
+   Absorbed FE | Categories  - Redundant  = Num. Coefs |
+---------------+---------------------------------------|
+          year |         8           0           8     |
+         ff_48 |        44           1          43     |
+ sp_rating_num |        19           1          18    ?|
+-------------------------------------------------------+
+? = number of redundant parameters may be higher
+
+.         estimates store m6
+
+.         
+. * save the results (esttab) using tabdir
+. esttab m1 m2 m3 m4 m5 m6 using "$tabdir/margin_ie_excess_pifo_robust.tex", re
+> place ///
+> nodepvars nomti nonum collabels(none) label b(3) se(3) parentheses ///
+> star(* 0.10 ** 0.05 *** 0.01) ar2 plain lines fragment noconstant keep(excess
+> _interest_scaled excess_interest_scaled_post)
+(output written to /Users/zrsong/MIT Dropbox/Zirui Song/Apps/Overleaf/Tax Incid
+> ence and Loan Contract Terms/Tables/margin_ie_excess_pifo_robust.tex)
+
+. est clear
+
+. 
+end of do-file

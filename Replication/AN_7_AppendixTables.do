@@ -22,9 +22,9 @@ global codedir "$repodir/4. Code/Replication"
 	
 use "$cleandir/tranche_level_ds_compa_wlabel.dta", clear	
 	
-local controls "log_at market_to_book ppent_by_at debt_by_at cash_by_at dividend_payer ret_vol"
+local controls "log_at market_to_book ppent_by_at debt_by_at cash_by_at dividend_payer ret_vol cash_etr"
 local deal_controls "leveraged maturity log_deal_amount_converted secured_dummy tranche_type_dummy tranche_o_a_dummy sponsor_dummy"
-local controls_post "log_at_post market_to_book_post ppent_by_at_post debt_by_at_post cash_by_at_post dividend_payer_post ret_vol_post"	
+local controls_post "log_at_post market_to_book_post ppent_by_at_post debt_by_at_post cash_by_at_post dividend_payer_post ret_vol_post cash_etr_post"	
 
 *** Table C2: Quartile Exposures
 

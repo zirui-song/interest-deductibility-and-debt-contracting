@@ -5,13 +5,13 @@ import os
 import datetime
 import time
 
-# Get the current working directory
-script_dir = os.getcwd()
+# Get the script's directory to ensure correct path resolution
+script_dir = os.path.dirname(os.path.abspath(__file__))
+# Navigate to project root (two levels up from Replication folder)
+project_root = os.path.dirname(os.path.dirname(script_dir))
 
-# Set the working directory to the current script's directory (which in this case is already the working directory)
-os.chdir(script_dir)
-
-print(f"Working directory is set to: {script_dir}")
+print(f"Script directory: {script_dir}")
+print(f"Project root: {project_root}")
 
 # Connect to WRDS
 db = wrds.Connection(wrds_username='zrsong')
@@ -21,8 +21,8 @@ start_date = '2009-01-01'
 end_date = '2024-06-30'
 
 # Ensure output directories exist
-processed_dir = os.path.join('..', '..', '3. Data', 'Processed')
-raw_dir = os.path.join('..', '..', '3. Data', 'Raw')
+processed_dir = os.path.join(project_root, '3. Data', 'Processed')
+raw_dir = os.path.join(project_root, '3. Data', 'Raw')
 os.makedirs(processed_dir, exist_ok=True)
 os.makedirs(raw_dir, exist_ok=True)
 
@@ -31,7 +31,7 @@ fund_table = 'funda'
 
 varlist = ['conm', 'tic', 'cusip','fyear', 'fyr', 'at','capx', 'ceq', 'cogs', 'csho', 'dlc', 'dlcch','dltt', 'dp', 'ib', 'itcb', 
            'lt', 'mib', 'naicsh', 'ni', 'prstkcc', 'pstk', 'pstkl', 'pstkrv', 're', 'revt', 'sale', 'ebitda', 'dpc', 'oiadp', 'oibdp',
-           'seq', 'sich', 'txdb', 'txdi', 'txditc', 'wcapch', 'xint', 'xlr', 'xrd', 'xsga', 'ppegt', 'xrd', 'ebit', 'aqc',
+           'seq', 'sich', 'txdb', 'txdi', 'txditc', 'txpd', 'wcapch', 'xint', 'xlr', 'xrd', 'xsga', 'ppegt', 'xrd', 'ebit', 'aqc',
            'act', 'che', 'dltis', 'dltr', 'dvc', 'idit', 'intan', 'lct', 'dclo', 'oancf', 'pi', 'pifo', 'ppent', 'prcc_f', 'tlcf', 'txfo',
            'txdba', 'txdbca', 'txndb']
 
@@ -299,6 +299,33 @@ compa['interest_expense_by_ebitda'].describe()
 
 # generate next year's interest coverage ratio
 compa['interest_expense_by_ebitda_next_1yr'] = compa.groupby('gvkey')['interest_expense_by_ebitda'].shift(-1)
+
+# Cash ETR (cash effective tax rate) = cash taxes paid / pretax income
+# Set to missing if either txpd or pi is missing
+_mask_na = compa[['txpd', 'pi']].isna().any(axis=1)
+compa['cash_etr'] = np.where(
+    ~_mask_na & (compa['pi'] != 0),
+    compa['txpd'] / compa['pi'],
+    np.nan
+)
+
+# Profitability (ROA) = net income / total assets
+# Set to missing if either ni or at is missing
+_mask_na = compa[['ni', 'at']].isna().any(axis=1)
+compa['roa'] = np.where(
+    ~_mask_na,
+    compa['ni'] / compa['at'],
+    np.nan
+)
+
+# Cash flow by assets = operating cash flows / total assets
+# Set to missing if either oancf or at is missing
+_mask_na = compa[['oancf', 'at']].isna().any(axis=1)
+compa['cashflow_byat'] = np.where(
+    ~_mask_na,
+    compa['oancf'] / compa['at'],
+    np.nan
+)
 
 # Define the variables to be imported
 crsp_vars = ['cusip', 'permco', 'permno', 'date', 'ret', 'vol', 'shrout', 'prc']

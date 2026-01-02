@@ -46,7 +46,7 @@ program define clean_variables
 	gen log_at = log(at)
 	gen log_deal_amount_converted = log(deal_amount_converted)
 
-	local controls "log_at market_to_book ppent_by_at debt_by_at cash_by_at dividend_payer ret_vol"
+	local controls "log_at market_to_book ppent_by_at debt_by_at cash_by_at dividend_payer ret_vol cash_etr"
 	local deal_controls "leveraged maturity log_deal_amount_converted secured_dummy tranche_type_dummy tranche_o_a_dummy sponsor_dummy"
 
 	* generate interaction between controls and post
@@ -59,11 +59,11 @@ program define clean_variables
 		gen `var'_post = `var' * post
 	}
 
-	local controls_post "log_at_post market_to_book_post ppent_by_at_post debt_by_at_post cash_by_at_post  dividend_payer_post ret_vol_post"
+	local controls_post "log_at_post market_to_book_post ppent_by_at_post debt_by_at_post cash_by_at_post  dividend_payer_post ret_vol_post cash_etr_post"
 	local deal_controls_post "leveraged_post maturity_post log_deal_amount_converted_post secured_dummy_post tranche_type_dummy_post tranche_o_a_dummy_post sponsor_dummy_post"
 
-	local controls_treated "log_at_treated market_to_book_treated ppent_by_at_treated debt_by_at_treated cash_by_at_treated dividend_payer_treated ret_vol_treated"
-	local controls_treated_loss "log_at_treated_loss market_to_book_treated_loss ppent_by_at_treated_loss debt_by_at_treated_loss cash_by_at_treated_loss dividend_payer_treated_loss ret_vol_treated_loss"
+	local controls_treated "log_at_treated market_to_book_treated ppent_by_at_treated debt_by_at_treated cash_by_at_treated dividend_payer_treated ret_vol_treated cash_etr_treated"
+	local controls_treated_loss "log_at_treated_loss market_to_book_treated_loss ppent_by_at_treated_loss debt_by_at_treated_loss cash_by_at_treated_loss dividend_payer_treated_loss ret_vol_treated_loss cash_etr_treated_loss"
 
 	* winsorize at 1% and 99%
 	foreach var in margin_bps log_margin_bps `controls' `deal_controls' `controls_post' `controls_treated' `controls_treated_loss' {
@@ -83,18 +83,25 @@ program define clean_variables
 	label variable cash_by_at "Cash / Assets"
 	label variable sales_growth "Sales Growth"
 	label variable dividend_payer "Dividend Payer"
-	label variable z_score "Z-Scor
+	label variable z_score "Z-Score"
 	label variable nol "Net Operating Loss"
 	label variable ret_buy_and_hold "Buy and Hold Return"
 	label variable ret_vol "Return Volatility"
+	label variable cash_etr "Cash ETR"
+	label variable roa "Return on Assets"
+	label variable cashflow_byat "Cash Flow / Assets"
 
 	label variable leveraged "Leveraged"
-	label variable maturity "Maturity"
-	label variable log_deal_amount_converted "Log Loan Amount"
+	label variable maturity "Maturity (Years)"
+	label variable deal_amount_converted "Loan Amount ($Million)"
+	label variable log_deal_amount_converted "Ln(Loan Amount)"
+	label variable margin_bps "Interest Spread (Basis Points)"
+	label variable number_of_lead_arrangers "Number of Lead Arrangers"
 	label variable secured_dummy "Secured"
-	label variable tranche_type_dummy "Tranche Type"
+	label variable tranche_type_dummy "Term Loan"
 	label variable tranche_o_a_dummy "Origination"
 	label variable sponsor_dummy "Sponsored"
+	label variable total_asset "Assets ($Billion)"
 
 	label variable treated "Excess Interest (30\% Rule)"
 	label variable post "Post"

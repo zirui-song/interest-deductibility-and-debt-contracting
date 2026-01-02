@@ -31,8 +31,6 @@ gen ppent_by_at = ppent/at
 gen debt_by_at = debt/at
 gen cash_by_at = che/at
 
-gen roa = ni/at
-
 gen post = 1 if fyear >= 2018
 replace post = 0 if post == .
 gen treated = excess_interest_30 
@@ -40,7 +38,7 @@ gen treated_loss = excess_interest_loss
 gen treated_post = treated * post 
 gen treated_loss_post = treated_loss * post
 
-local controls "log_at market_to_book ppent_by_at debt_by_at cash_by_at dividend_payer ret_vol"
+local controls "log_at market_to_book ppent_by_at debt_by_at cash_by_at dividend_payer ret_vol cash_etr"
 
 * generate interaction between controls and post
 foreach var in `controls' {
@@ -48,7 +46,7 @@ foreach var in `controls' {
 	gen `var'_treated = `var' * treated
 	gen `var'_treated_loss = `var' * treated_loss
 }
-local controls_post "log_at_post market_to_book_post ppent_by_at_post debt_by_at_post cash_by_at_post dividend_payer_post ret_vol_post"
+local controls_post "log_at_post market_to_book_post ppent_by_at_post debt_by_at_post cash_by_at_post dividend_payer_post ret_vol_post cash_etr_post"
 
 * winsorize at 1% and 99%
 foreach var in `controls' `controls_post' ebitda roa cash_flows_by_at {
@@ -66,10 +64,13 @@ label variable debt_by_at "Debt / Assets"
 label variable cash_by_at "Cash / Assets"
 label variable sales_growth "Sales Growth"
 label variable dividend_payer "Dividend Payer"
-label variable z_score "Z-Scor
+label variable z_score "Z-Score
 label variable nol "Net Operating Loss"
 label variable ret_buy_and_hold "Buy and Hold Return"
 label variable ret_vol "Return Volatility"
+label variable cash_etr "Cash ETR"
+label variable roa "Return on Assets"
+label variable cashflow_byat "Cash Flow / Assets"
 
 label variable treated "Excess Interest (30\% Rule)"
 label variable post "Post"
@@ -97,8 +98,8 @@ by gvkey: gen next_year_cash_flows_by_at = cash_flows_by_at[_n+1] if gvkey == gv
 
 winsor2 next_year_ebitda next_2year_ebitda ebitda_growth_rate, cuts(1 99) replace
 
-local controls "log_at market_to_book ppent_by_at debt_by_at cash_by_at dividend_payer ret_vol"
-local controls_post "log_at_post market_to_book_post ppent_by_at_post debt_by_at_post cash_by_at_post dividend_payer_post ret_vol_post"
+local controls "log_at market_to_book ppent_by_at debt_by_at cash_by_at dividend_payer ret_vol cash_etr"
+local controls_post "log_at_post market_to_book_post ppent_by_at_post debt_by_at_post cash_by_at_post dividend_payer_post ret_vol_post cash_etr_post"
 
 tempfile main
 save `main'
@@ -118,12 +119,16 @@ gen log_margin_bps = log(margin_bps)
 gen log_at = log(at)
 gen log_deal_amount_converted = log(deal_amount_converted)
 label variable leveraged "Leveraged"
-label variable maturity "Maturity"
-label variable log_deal_amount_converted "Log Loan Amount"
+label variable maturity "Maturity (Years)"
+label variable deal_amount_converted "Loan Amount ($Million)"
+label variable log_deal_amount_converted "Ln(Loan Amount)"
+label variable margin_bps "Interest Spread (Basis Points)"
+label variable number_of_lead_arrangers "Number of Lead Arrangers"
 label variable secured_dummy "Secured"
-label variable tranche_type_dummy "Tranche Type"
+label variable tranche_type_dummy "Term Loan"
 label variable tranche_o_a_dummy "Origination"
 label variable sponsor_dummy "Sponsored"
+label variable total_asset "Assets ($Billion)"
 local deal_controls "leveraged maturity log_deal_amount_converted secured_dummy tranche_type_dummy tranche_o_a_dummy sponsor_dummy"
 keep gvkey year fyear margin_bps `deal_controls'
 
@@ -165,7 +170,7 @@ estimates store m5
 
 esttab m1 m2 m3 m4 m5 using "$tabdir/next_year_risk_tests.tex", replace ///
 nodepvars nomti nonum collabels(none) label b(3) se(3) parentheses ///
-star(* 0.10 ** 0.05 *** 0.01) ar2 plain lines fragment noconstant keep(excess_interest_scaled excess_interest_scaled_post `treat_vars' `controls' `deal_controls')
+star(* 0.10 ** 0.05 *** 0.01) ar2 plain lines fragment noconstant keep(excess_interest_scaled excess_interest_scaled_post `controls' `deal_controls')
 est clear
 
 *** close log

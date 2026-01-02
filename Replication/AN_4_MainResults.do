@@ -22,9 +22,9 @@ global codedir "$repodir/4. Code/Replication"
 use "$cleandir/tranche_level_ds_compa_wlabel.dta", clear
 
 *** VIF Analysis ***
-local controls "log_at market_to_book ppent_by_at debt_by_at cash_by_at dividend_payer ret_vol"
+local controls "log_at market_to_book ppent_by_at debt_by_at cash_by_at dividend_payer ret_vol cash_etr"
 local deal_controls "leveraged maturity log_deal_amount_converted secured_dummy tranche_type_dummy tranche_o_a_dummy sponsor_dummy"
-local controls_post "log_at_post market_to_book_post ppent_by_at_post debt_by_at_post cash_by_at_post dividend_payer_post ret_vol_post"	
+local controls_post "log_at_post market_to_book_post ppent_by_at_post debt_by_at_post cash_by_at_post dividend_payer_post ret_vol_post cash_etr_post"	
 
 reg margin_bps excess_interest_scaled excess_interest_scaled_post `deal_controls' i.year i.ff_48 i.sp_rating_num
 estat vif
@@ -33,6 +33,22 @@ estat vif
 reg margin_bps excess_interest_scaled excess_interest_scaled_post `deal_controls' `controls' `controls_post' i.year i.ff_48 i.sp_rating_num
 estat vif
 *** *** *** 
+
+******************	Table 4: Main Results (Industry x Year FE) ******************
+reghdfe margin_bps excess_interest_scaled excess_interest_scaled_post `deal_controls', absorb(year#ff_48 sp_rating_num) vce(cluster gvkey)
+estimates store m1
+
+reghdfe margin_bps excess_interest_scaled excess_interest_scaled_post `controls' `deal_controls', absorb(year#ff_48 sp_rating_num) vce(cluster gvkey)
+estimates store m2
+
+reghdfe margin_bps excess_interest_scaled excess_interest_scaled_post `controls' `deal_controls' `controls_post', absorb(year#ff_48 sp_rating_num) vce(cluster gvkey)
+estimates store m3
+
+* save the results (esttab) using tabdir
+esttab m1 m2 m3 using "$tabdir/margin_ie_excess_industryyear.tex", replace ///
+nodepvars nomti nonum collabels(none) label b(3) se(3) parentheses ///
+star(* 0.10 ** 0.05 *** 0.01) ar2 plain lines fragment noconstant drop(_cons `controls_post')
+est clear
 
 ******************	Table 4: Main Results  ******************
 
@@ -155,6 +171,16 @@ mata st_matrix("srdvcovbt",sqrt(diagonal(st_matrix("e(V)"))))
 mat res = c , srdvcovbt
 
 esttab mat(res) using "$tabdir/margin_ie_excess_dynamic.csv", replace mlab(none)
+
+*** Excess Interest (2014 as hold-out) ***
+local dynamic_ie_2014holdout "excess_interest_scaled_year_2015 excess_interest_scaled_year_2016 excess_interest_scaled_year_2017 excess_interest_scaled_year_2018 excess_interest_scaled_year_2019 excess_interest_scaled_year_2022 excess_interest_scaled_year_2023"
+
+reghdfe margin_bps excess_interest_scaled `dynamic_ie_2014holdout' `controls' `deal_controls', absorb(year ff_48 sp_rating_num) vce(cluster ff_48)
+mat c = e(b)'
+mata st_matrix("srdvcovbt",sqrt(diagonal(st_matrix("e(V)"))))
+mat res = c , srdvcovbt
+
+esttab mat(res) using "$tabdir/margin_ie_excess_dynamic_2014holdout.csv", replace mlab(none)
 
 ******************	Table 6: Other Terms  ******************
 

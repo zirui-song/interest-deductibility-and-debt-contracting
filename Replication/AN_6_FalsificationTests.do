@@ -47,9 +47,9 @@ label var ie_excess_q2_post "Excess Interest Expense Q2 x Post2014"
 label var ie_excess_q3_post "Excess Interest Expense Q3 x Post2014"
 label var ie_excess_q4_post "Excess Interest Expense Q4 x Post2014"
 		
-local controls "log_at market_to_book ppent_by_at debt_by_at cash_by_at dividend_payer ret_vol"
+local controls "log_at market_to_book ppent_by_at debt_by_at cash_by_at dividend_payer ret_vol cash_etr"
 local deal_controls "leveraged maturity log_deal_amount_converted secured_dummy tranche_type_dummy tranche_o_a_dummy sponsor_dummy"
-local controls_post "log_at_post market_to_book_post ppent_by_at_post debt_by_at_post cash_by_at_post  dividend_payer_post ret_vol_post"
+local controls_post "log_at_post market_to_book_post ppent_by_at_post debt_by_at_post cash_by_at_post  dividend_payer_post ret_vol_post cash_etr_post"
 local deal_controls_post "leveraged_post maturity_post log_deal_amount_converted_post secured_dummy_post tranche_type_dummy_post tranche_o_a_dummy_post sponsor_dummy_post"
 	
 reghdfe margin_bps treated treated_post treated_loss treated_loss_post `deal_controls', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
