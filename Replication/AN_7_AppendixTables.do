@@ -63,18 +63,8 @@ preserve
 	reghdfe margin_bps excess_interest_scaled excess_interest_scaled_post `controls' `deal_controls' `controls_post', absorb(year ff_48 sp_rating_num lender_parent_id) vce(cluster gvkey)
 	estimates store m3
 
-	* quartile exposure
-	reghdfe margin_bps `treat_quartiles' `deal_controls', absorb(year ff_48 sp_rating_num lender_parent_id) vce(cluster gvkey)
-	estimates store m4
-
-	reghdfe margin_bps `treat_quartiles' `controls' `deal_controls', absorb(year ff_48 sp_rating_num lender_parent_id) vce(cluster gvkey)
-	estimates store m5
-
-	reghdfe margin_bps `treat_quartiles' `controls' `deal_controls' `controls_post', absorb(year ff_48 sp_rating_num lender_parent_id) vce(cluster gvkey)
-	estimates store m6
-
 	* save the results (esttab) using tabdir
-	esttab m1 m2 m3 m4 m5 m6 using "$tabdir/margin_ie_excess_lenderfe.tex", replace ///
+	esttab m1 m2 m3 using "$tabdir/margin_ie_excess_lenderfe.tex", replace ///
 	nodepvars nomti nonum collabels(none) label b(3) se(3) parentheses ///
 	star(* 0.10 ** 0.05 *** 0.01) ar2 plain lines fragment noconstant drop(_cons `controls_post' `deal_controls' `controls')
 restore
@@ -88,15 +78,10 @@ estimates store m1
 reghdfe margin_bps excess_interest_scaled excess_interest_scaled_post `controls' `deal_controls' `controls_post' [pweight=_webal], absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
 estimates store m2
 
-reghdfe margin_bps `treat_quartiles' `controls' `deal_controls' [pweight=_webal], absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
-estimates store m3
-reghdfe margin_bps `treat_quartiles' `controls' `deal_controls' `controls_post' [pweight=_webal], absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
-estimates store m4
-
 * save the results (esttab) using tabdir
-esttab m1 m2 m3 m4 using "$tabdir/margin_did_both_rule_robustness_ebal.tex", replace ///
+esttab m1 m2 using "$tabdir/margin_did_both_rule_robustness_ebal.tex", replace ///
 nodepvars nomti nonum collabels(none) label b(3) se(3) parentheses ///
-star(* 0.10 ** 0.05 *** 0.01) ar2 plain lines fragment noconstant keep(excess_interest_scaled excess_interest_scaled_post `treat_quartiles')
+star(* 0.10 ** 0.05 *** 0.01) ar2 plain lines fragment noconstant keep(excess_interest_scaled excess_interest_scaled_post)
 est clear
 
 *** Table C6: MNC / Foreign Pretax Income

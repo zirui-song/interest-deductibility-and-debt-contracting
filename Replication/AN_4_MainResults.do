@@ -99,10 +99,27 @@ preserve
 restore
 
 ******************	Figure 4: Main Results Binscatter  ******************
-binscatter margin_bps excess_interest_scaled, controls(`controls' `deal_controls') by(post) ///  
-    xtitle("Excess Interest Expense (Scaled)") ///
-    ytitle("Margin (bps)") 
-graph export "$figdir/binscatter_margin_ie_prepost.png", as(png) replace	
+* Export binned data
+binscatter margin_bps excess_interest_scaled, ///
+    controls(`controls' `deal_controls') ///
+    by(post) ///
+    line(lfit) ///
+    savedata(binned_data) replace
+
+preserve
+* Import the CSV
+import delimited binned_data.csv, clear
+
+twoway (scatter margin_bps_by1 excess_interest_scaled_by1, msymbol(O) mcolor(navy)) ///
+       (scatter margin_bps_by2 excess_interest_scaled_by2, msymbol(T) mcolor(maroon)) ///
+       (lfit margin_bps_by1 excess_interest_scaled_by1, lcolor(navy) lpattern(solid)) ///
+       (lfit margin_bps_by2 excess_interest_scaled_by2, lcolor(maroon) lpattern(dash)), ///
+       xtitle("Excess Interest Expense (Scaled)") ///
+       ytitle("Interest Spread (Basis Points)") ///
+       legend(order(1 "Pre-TCJA" 2 "Post-TCJA"))
+
+graph export "$figdir/binscatter_margin_ie_prepost.png", as(png) replace
+restore
 
 ******************	Table C1: Logged Main Results  ******************
 
