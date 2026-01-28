@@ -33,6 +33,10 @@ variable_labels = {
     'sponsor_dummy': 'Sponsored',
     'tranche_o_a_dummy': 'Origination',
     'tranche_type_dummy': 'Term Loan',
+    'perf_pricing_dummy': 'Performance Pricing Dummy',
+    'sweep_dummy': 'Sweep Dummy',
+    'num_fin_cov': 'Number of Financial Covenants',
+    'pviol': 'Covenant Tightness',
     'total_asset': 'Assets ($Billion)',
     'cash_by_at': 'Cash / Assets',
     'debt_by_at': 'Debt / Assets',
@@ -43,9 +47,10 @@ variable_labels = {
     'cash_etr': 'Cash ETR',
 }
 
-# Drop observations if any variables in variable_labels are missing
+# Drop observations if any variables in variable_labels are missing (except pviol)
 initial_count = len(tranche_level_ds_compa)
-tranche_level_ds_compa = tranche_level_ds_compa.dropna(subset=variable_labels.keys())
+dropna_vars = [v for v in variable_labels.keys() if v != 'pviol']
+tranche_level_ds_compa = tranche_level_ds_compa.dropna(subset=dropna_vars)
 dropped_count = initial_count - len(tranche_level_ds_compa)
 if dropped_count > 0:
     print(f"Dropped {dropped_count} observations ({dropped_count/initial_count*100:.2f}%) due to missing values in variable_labels")
