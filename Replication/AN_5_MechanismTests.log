@@ -90,7 +90,7 @@ Duplicates in terms of all variables
 . tempfile firm_competition_measure
 
 . save `firm_competition_measure'
-file /var/folders/n2/pgdf58ms1yd3ch8xjn9fmpmm0000gq/T//St59262.000001 saved
+file /var/folders/n2/pgdf58ms1yd3ch8xjn9fmpmm0000gq/T//St62117.000001 saved
     as .dta format
 
 . 
@@ -137,7 +137,7 @@ Duplicates in terms of all variables
 . tempfile industry_competition_measure
 
 . save `industry_competition_measure'
-file /var/folders/n2/pgdf58ms1yd3ch8xjn9fmpmm0000gq/T//St59262.000002 saved
+file /var/folders/n2/pgdf58ms1yd3ch8xjn9fmpmm0000gq/T//St62117.000002 saved
     as .dta format
 
 . 
@@ -1232,9 +1232,10 @@ Competition Interaction Test - coefficient on excess_post_X_highcomp:
 
 . 
 . * Label interaction variables
-. label var excess_X_highcomp "Excess Interest x High Competition"
+. label var excess_X_highcomp "Excess Interest (Scaled) x High Competition"
 
-. label var excess_post_X_highcomp "Excess Interest x Post x High Competition"
+. label var excess_post_X_highcomp "Excess Interest (Scaled) x Post x High Comp
+> etition"
 
 . label var post_X_highcomp "Post x High Competition"
 
@@ -1243,7 +1244,7 @@ Competition Interaction Test - coefficient on excess_post_X_highcomp:
 . esttab comp_interaction using "$tabdir/competition_interaction.tex", replace 
 > ///
 > nodepvars nomti nonum collabels(none) label b(3) se(3) parentheses ///
-> star(* 0.10 ** 0.05 *** 0.01) r2 plain lines fragment noconstant ///
+> star(* 0.10 ** 0.05 *** 0.01) ar2 plain lines fragment noconstant ///
 > order(excess_interest_scaled excess_interest_scaled_post excess_post_X_highco
 > mp excess_X_highcomp post_X_highcomp) ///
 > keep(excess_interest_scaled excess_interest_scaled_post excess_post_X_highcom
@@ -1282,30 +1283,30 @@ Competition Interaction Test - coefficient on excess_post_X_highcomp:
 . bysort ff_48: egen p67_lw_debtcon_full = pctile(lw_debtcon_full), p(67)
 
 . 
-. gen high_debtcon = 1 if lw_debtcon_full >= p67_lw_debtcon_full
-(1,980 missing values generated)
+. * Low constraint = bottom tercile (low LW values)
+. gen low_debtcon = 1 if lw_debtcon_full <= p33_lw_debtcon_full
+(1,990 missing values generated)
 
-. replace high_debtcon = 0 if lw_debtcon_full <= p33_lw_debtcon_full
-(956 real changes made)
+. replace low_debtcon = 0 if lw_debtcon_full >= p67_lw_debtcon_full
+(966 real changes made)
 
 . 
 . * Create interaction terms
-. cap drop post_X_highdebt
+. cap drop post_X_lowdebt
 
-. gen post_X_highdebt = post * high_debtcon
+. gen post_X_lowdebt = post * low_debtcon
 (1,024 missing values generated)
 
-. gen excess_X_highdebt = excess_interest_scaled * high_debtcon
+. gen excess_X_lowdebt = excess_interest_scaled * low_debtcon
 (1,024 missing values generated)
 
-. gen excess_post_X_highdebt = excess_interest_scaled_post * high_debtcon
+. gen excess_post_X_lowdebt = excess_interest_scaled_post * low_debtcon
 (1,024 missing values generated)
 
 . 
 . reghdfe margin_bps excess_interest_scaled excess_interest_scaled_post excess_
-> X_highdebt excess_post_X_highdebt high_debtcon post_X_highdebt `controls' `de
-> al_controls' `controls_post', absorb(year ff_48 sp_rating_num) vce(cluster gv
-> key)
+> X_lowdebt excess_post_X_lowdebt low_debtcon post_X_lowdebt `controls' `deal_c
+> ontrols' `controls_post', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
 (dropped 3 singleton observations)
 (MWFE estimator converged in 7 iterations)
 
@@ -1322,16 +1323,16 @@ Number of clusters (gvkey)   =        788         Root MSE        =   114.3232
              |               Robust
   margin_bps | Coefficient  std. err.      t    P>|t|     [95% conf. interval]
 -------------+----------------------------------------------------------------
-excess_int~d |   148.8784   32.99505     4.51   0.000     84.10973    213.6472
-excess_int~t |  -144.7695   41.77433    -3.47   0.001    -226.7718    -62.7672
-excess_X_h~t |  -78.12369   38.44781    -2.03   0.042    -153.5961     -2.6513
-excess_pos~t |   146.0465   53.46355     2.73   0.006     41.09845    250.9945
-high_debtcon |   .4834823   10.45742     0.05   0.963    -20.04426    21.01123
-post_X_hig~t |  -22.26609   15.87759    -1.40   0.161    -53.43354    8.901354
+excess_int~d |   70.75474   26.46441     2.67   0.008     18.80557    122.7039
+excess_int~t |   1.277007   40.34817     0.03   0.975    -77.92576    80.47977
+excess_X_l~t |   78.12369   38.44781     2.03   0.042     2.651301    153.5961
+excess_pos~t |  -146.0465   53.46355    -2.73   0.006    -250.9945   -41.09846
+ low_debtcon |  -.4834826   10.45742    -0.05   0.963    -21.01123    20.04426
+post_X_low~t |   22.26609   15.87759     1.40   0.161    -8.901354    53.43354
       log_at |  -6.367646   5.281618    -1.21   0.228    -16.73537     4.00008
 market_to_~k |  -2.116573    5.08181    -0.42   0.677    -12.09208    7.858934
  ppent_by_at |   22.40169   26.11804     0.86   0.391    -28.86757    73.67095
-  debt_by_at |   60.96006   30.24636     2.02   0.044     1.586971    120.3331
+  debt_by_at |   60.96006   30.24636     2.02   0.044     1.586972    120.3331
   cash_by_at |  -5.442898    50.3616    -0.11   0.914    -104.3019    93.41605
 dividend_p~r |   12.26559   11.01674     1.11   0.266    -9.360074    33.89125
      ret_vol |    298.751   138.0867     2.16   0.031     27.68911    569.8129
@@ -1351,7 +1352,7 @@ cash_by_at~t |   63.89564   64.53528     0.99   0.322    -62.78602    190.5773
 dividend_p~t |  -12.32891   13.53617    -0.91   0.363    -38.90017    14.24236
 ret_vol_post |  -110.9042   194.5703    -0.57   0.569    -492.8424     271.034
 cash_etr_p~t |  -34.31603   26.92452    -1.27   0.203    -87.16841    18.53635
-       _cons |   160.6128   37.26489     4.31   0.000     87.46249    233.7632
+       _cons |   151.7327   36.08352     4.21   0.000      80.9014     222.564
 ------------------------------------------------------------------------------
 
 Absorbed degrees of freedom:
@@ -1368,34 +1369,35 @@ Absorbed degrees of freedom:
 
 . 
 . display "Financial Constraint Interaction Test - coefficient on excess_post_X
-> _highdebt:"
-Financial Constraint Interaction Test - coefficient on excess_post_X_highdebt:
+> _lowdebt:"
+Financial Constraint Interaction Test - coefficient on excess_post_X_lowdebt:
 
-. test excess_post_X_highdebt = 0
+. test excess_post_X_lowdebt = 0
 
- ( 1)  excess_post_X_highdebt = 0
+ ( 1)  excess_post_X_lowdebt = 0
 
        F(  1,   787) =    7.46
             Prob > F =    0.0064
 
 . 
 . * Label interaction variables
-. label var excess_X_highdebt "Excess Interest x High Constraint"
+. label var excess_X_lowdebt "Excess Interest (Scaled) x Low Constraint"
 
-. label var excess_post_X_highdebt "Excess Interest x Post x High Constraint"
+. label var excess_post_X_lowdebt "Excess Interest (Scaled) x Post x Low Constr
+> aint"
 
-. label var post_X_highdebt "Post x High Constraint"
+. label var post_X_lowdebt "Post x Low Constraint"
 
 . 
 . * Save financial constraint interaction table
 . esttab fincon_interaction using "$tabdir/finconstraint_interaction.tex", repl
 > ace ///
 > nodepvars nomti nonum collabels(none) label b(3) se(3) parentheses ///
-> star(* 0.10 ** 0.05 *** 0.01) r2 plain lines fragment noconstant ///
-> order(excess_interest_scaled excess_interest_scaled_post excess_post_X_highde
-> bt excess_X_highdebt post_X_highdebt) ///
-> keep(excess_interest_scaled excess_interest_scaled_post excess_post_X_highdeb
-> t excess_X_highdebt post_X_highdebt)
+> star(* 0.10 ** 0.05 *** 0.01) ar2 plain lines fragment noconstant ///
+> order(excess_interest_scaled excess_interest_scaled_post excess_post_X_lowdeb
+> t excess_X_lowdebt post_X_lowdebt) ///
+> keep(excess_interest_scaled excess_interest_scaled_post excess_post_X_lowdebt
+>  excess_X_lowdebt post_X_lowdebt)
 (output written to /Users/zrsong/MIT Dropbox/Zirui Song/Apps/Overleaf/Tax Incid
 > ence and Loan Contract Terms/Tables/finconstraint_interaction.tex)
 

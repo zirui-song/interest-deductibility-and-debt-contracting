@@ -160,14 +160,14 @@ display "Competition Interaction Test - coefficient on excess_post_X_highcomp:"
 test excess_post_X_highcomp = 0
 
 * Label interaction variables
-label var excess_X_highcomp "Excess Interest x High Competition"
-label var excess_post_X_highcomp "Excess Interest x Post x High Competition"
+label var excess_X_highcomp "Excess Interest (Scaled) x High Competition"
+label var excess_post_X_highcomp "Excess Interest (Scaled) x Post x High Competition"
 label var post_X_highcomp "Post x High Competition"
 
 * Save competition interaction table
 esttab comp_interaction using "$tabdir/competition_interaction.tex", replace ///
 nodepvars nomti nonum collabels(none) label b(3) se(3) parentheses ///
-star(* 0.10 ** 0.05 *** 0.01) r2 plain lines fragment noconstant ///
+star(* 0.10 ** 0.05 *** 0.01) ar2 plain lines fragment noconstant ///
 order(excess_interest_scaled excess_interest_scaled_post excess_post_X_highcomp excess_X_highcomp post_X_highcomp) ///
 keep(excess_interest_scaled excess_interest_scaled_post excess_post_X_highcomp excess_X_highcomp post_X_highcomp)
 est clear
@@ -182,30 +182,31 @@ bysort ff_48: egen median_lw_debtcon_full = median(lw_debtcon_full)
 bysort ff_48: egen p33_lw_debtcon_full = pctile(lw_debtcon_full), p(33)
 bysort ff_48: egen p67_lw_debtcon_full = pctile(lw_debtcon_full), p(67)
 
-gen high_debtcon = 1 if lw_debtcon_full >= p67_lw_debtcon_full
-replace high_debtcon = 0 if lw_debtcon_full <= p33_lw_debtcon_full
+* Low constraint = bottom tercile (low LW values)
+gen low_debtcon = 1 if lw_debtcon_full <= p33_lw_debtcon_full
+replace low_debtcon = 0 if lw_debtcon_full >= p67_lw_debtcon_full
 
 * Create interaction terms
-cap drop post_X_highdebt
-gen post_X_highdebt = post * high_debtcon
-gen excess_X_highdebt = excess_interest_scaled * high_debtcon
-gen excess_post_X_highdebt = excess_interest_scaled_post * high_debtcon
+cap drop post_X_lowdebt
+gen post_X_lowdebt = post * low_debtcon
+gen excess_X_lowdebt = excess_interest_scaled * low_debtcon
+gen excess_post_X_lowdebt = excess_interest_scaled_post * low_debtcon
 
-reghdfe margin_bps excess_interest_scaled excess_interest_scaled_post excess_X_highdebt excess_post_X_highdebt high_debtcon post_X_highdebt `controls' `deal_controls' `controls_post', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
+reghdfe margin_bps excess_interest_scaled excess_interest_scaled_post excess_X_lowdebt excess_post_X_lowdebt low_debtcon post_X_lowdebt `controls' `deal_controls' `controls_post', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
 estimates store fincon_interaction
 
-display "Financial Constraint Interaction Test - coefficient on excess_post_X_highdebt:"
-test excess_post_X_highdebt = 0
+display "Financial Constraint Interaction Test - coefficient on excess_post_X_lowdebt:"
+test excess_post_X_lowdebt = 0
 
 * Label interaction variables
-label var excess_X_highdebt "Excess Interest x High Constraint"
-label var excess_post_X_highdebt "Excess Interest x Post x High Constraint"
-label var post_X_highdebt "Post x High Constraint"
+label var excess_X_lowdebt "Excess Interest (Scaled) x Low Constraint"
+label var excess_post_X_lowdebt "Excess Interest (Scaled) x Post x Low Constraint"
+label var post_X_lowdebt "Post x Low Constraint"
 
 * Save financial constraint interaction table
 esttab fincon_interaction using "$tabdir/finconstraint_interaction.tex", replace ///
 nodepvars nomti nonum collabels(none) label b(3) se(3) parentheses ///
-star(* 0.10 ** 0.05 *** 0.01) r2 plain lines fragment noconstant ///
-order(excess_interest_scaled excess_interest_scaled_post excess_post_X_highdebt excess_X_highdebt post_X_highdebt) ///
-keep(excess_interest_scaled excess_interest_scaled_post excess_post_X_highdebt excess_X_highdebt post_X_highdebt)
+star(* 0.10 ** 0.05 *** 0.01) ar2 plain lines fragment noconstant ///
+order(excess_interest_scaled excess_interest_scaled_post excess_post_X_lowdebt excess_X_lowdebt post_X_lowdebt) ///
+keep(excess_interest_scaled excess_interest_scaled_post excess_post_X_lowdebt excess_X_lowdebt post_X_lowdebt)
 est clear
