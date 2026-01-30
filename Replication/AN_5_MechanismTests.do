@@ -128,4 +128,84 @@ test [m1_mean]excess_interest_scaled_post = [m2_mean]excess_interest_scaled_post
 esttab m1 m2 using "$tabdir/hp_finconstr_cross.tex", replace ///
 nodepvars nomti nonum collabels(none) label b(3) se(3) parentheses ///
 star(* 0.10 ** 0.05 *** 0.01) ar2 plain lines fragment noconstant keep( excess_interest_scaled excess_interest_scaled_post)
-	
+
+/***********
+	Alternative Mechanism Tests
+	***********/
+
+*** Approach 1: Interaction Terms (Full Sample)
+display "=========================================="
+display "APPROACH 1: INTERACTION TERMS"
+display "=========================================="
+
+* Competition - Interaction approach
+use "$cleandir/tranche_level_ds_compa_wlabel_withcomp.dta", clear
+
+local controls "log_at market_to_book ppent_by_at debt_by_at cash_by_at dividend_payer ret_vol cash_etr"
+local deal_controls "leveraged maturity log_deal_amount_converted secured_dummy tranche_type_dummy tranche_o_a_dummy sponsor_dummy"
+local controls_post "log_at_post market_to_book_post ppent_by_at_post debt_by_at_post cash_by_at_post dividend_payer_post ret_vol_post cash_etr_post"
+
+fvset base 1 ff_48
+
+* Create interaction terms
+cap drop post_X_highcomp
+gen post_X_highcomp = post * high_competition_industry
+gen excess_X_highcomp = excess_interest_scaled * high_competition_industry
+gen excess_post_X_highcomp = excess_interest_scaled_post * high_competition_industry
+
+reghdfe margin_bps excess_interest_scaled excess_interest_scaled_post excess_X_highcomp excess_post_X_highcomp high_competition_industry post_X_highcomp `controls' `deal_controls' `controls_post', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
+estimates store comp_interaction
+
+display "Competition Interaction Test - coefficient on excess_post_X_highcomp:"
+test excess_post_X_highcomp = 0
+
+* Label interaction variables
+label var excess_X_highcomp "Excess Interest x High Competition"
+label var excess_post_X_highcomp "Excess Interest x Post x High Competition"
+label var post_X_highcomp "Post x High Competition"
+
+* Save competition interaction table
+esttab comp_interaction using "$tabdir/competition_interaction.tex", replace ///
+nodepvars nomti nonum collabels(none) label b(3) se(3) parentheses ///
+star(* 0.10 ** 0.05 *** 0.01) r2 plain lines fragment noconstant ///
+order(excess_interest_scaled excess_interest_scaled_post excess_post_X_highcomp excess_X_highcomp post_X_highcomp) ///
+keep(excess_interest_scaled excess_interest_scaled_post excess_post_X_highcomp excess_X_highcomp post_X_highcomp)
+est clear
+
+* Financial Constraint - Interaction approach
+use "$cleandir/tranche_level_ds_compa_wlabel.dta", clear
+fvset base 1 ff_48
+merge m:1 gvkey year using "$rawdir/LinnWeagley_Constraint_Data_2025_01.dta"
+keep if _merge == 3
+
+bysort ff_48: egen median_lw_debtcon_full = median(lw_debtcon_full)
+bysort ff_48: egen p33_lw_debtcon_full = pctile(lw_debtcon_full), p(33)
+bysort ff_48: egen p67_lw_debtcon_full = pctile(lw_debtcon_full), p(67)
+
+gen high_debtcon = 1 if lw_debtcon_full >= p67_lw_debtcon_full
+replace high_debtcon = 0 if lw_debtcon_full <= p33_lw_debtcon_full
+
+* Create interaction terms
+cap drop post_X_highdebt
+gen post_X_highdebt = post * high_debtcon
+gen excess_X_highdebt = excess_interest_scaled * high_debtcon
+gen excess_post_X_highdebt = excess_interest_scaled_post * high_debtcon
+
+reghdfe margin_bps excess_interest_scaled excess_interest_scaled_post excess_X_highdebt excess_post_X_highdebt high_debtcon post_X_highdebt `controls' `deal_controls' `controls_post', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
+estimates store fincon_interaction
+
+display "Financial Constraint Interaction Test - coefficient on excess_post_X_highdebt:"
+test excess_post_X_highdebt = 0
+
+* Label interaction variables
+label var excess_X_highdebt "Excess Interest x High Constraint"
+label var excess_post_X_highdebt "Excess Interest x Post x High Constraint"
+label var post_X_highdebt "Post x High Constraint"
+
+* Save financial constraint interaction table
+esttab fincon_interaction using "$tabdir/finconstraint_interaction.tex", replace ///
+nodepvars nomti nonum collabels(none) label b(3) se(3) parentheses ///
+star(* 0.10 ** 0.05 *** 0.01) r2 plain lines fragment noconstant ///
+order(excess_interest_scaled excess_interest_scaled_post excess_post_X_highdebt excess_X_highdebt post_X_highdebt) ///
+keep(excess_interest_scaled excess_interest_scaled_post excess_post_X_highdebt excess_X_highdebt post_X_highdebt)
+est clear
