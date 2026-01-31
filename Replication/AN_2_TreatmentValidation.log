@@ -319,7 +319,7 @@ Notes:
  29.         label variable cash_by_at "Cash / Assets"
  30.         label variable sales_growth "Sales Growth"
  31.         label variable dividend_payer "Dividend Payer"
- 32.         label variable z_score "Z-Score
+ 32.         label variable z_score "Z-Score"
  33.         label variable nol "Net Operating Loss"
  34.         label variable ret_buy_and_hold "Buy and Hold Return"
  35.         label variable ret_vol "Return Volatility"

@@ -90,7 +90,7 @@ Duplicates in terms of all variables
 . tempfile firm_competition_measure
 
 . save `firm_competition_measure'
-file /var/folders/n2/pgdf58ms1yd3ch8xjn9fmpmm0000gq/T//St62117.000001 saved
+file /var/folders/n2/pgdf58ms1yd3ch8xjn9fmpmm0000gq/T//St66364.000001 saved
     as .dta format
 
 . 
@@ -137,7 +137,7 @@ Duplicates in terms of all variables
 . tempfile industry_competition_measure
 
 . save `industry_competition_measure'
-file /var/folders/n2/pgdf58ms1yd3ch8xjn9fmpmm0000gq/T//St62117.000002 saved
+file /var/folders/n2/pgdf58ms1yd3ch8xjn9fmpmm0000gq/T//St66364.000002 saved
     as .dta format
 
 . 
