@@ -105,7 +105,7 @@ tempfile main
 save `main'
 
 ************** Total bank percentage **************
-import delimited "$rawdir/capstrct_2013to2022.csv", clear
+import delimited "$cleandir/capstrct_2013to2022.csv", clear
 keep gvkey fyear totbankdbtpct
 merge 1:1 gvkey fyear using `main', nogen
 

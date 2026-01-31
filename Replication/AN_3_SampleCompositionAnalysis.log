@@ -75,9 +75,765 @@ Notes:
 . gen cash_by_at = che/at
 
 . 
-. gen roa = ni/at
-variable roa already defined
-r(110);
+. gen post = 1 if fyear >= 2018
+(5,195 missing values generated)
 
+. replace post = 0 if post == .
+(5,195 real changes made)
+
+. gen treated = excess_interest_30 
+
+. gen treated_loss = excess_interest_loss
+
+. gen treated_post = treated * post 
+
+. gen treated_loss_post = treated_loss * post
+
+. 
+. local controls "log_at market_to_book ppent_by_at debt_by_at cash_by_at divid
+> end_payer ret_vol cash_etr"
+
+. 
+. * generate interaction between controls and post
+. foreach var in `controls' {
+  2.     gen `var'_post = `var' * post
+  3.         gen `var'_treated = `var' * treated
+  4.         gen `var'_treated_loss = `var' * treated_loss
+  5. }
+(33 missing values generated)
+(33 missing values generated)
+(33 missing values generated)
+(6 missing values generated)
+(6 missing values generated)
+(6 missing values generated)
+(13 missing values generated)
+(13 missing values generated)
+(13 missing values generated)
+(29 missing values generated)
+(29 missing values generated)
+(29 missing values generated)
+(30 missing values generated)
+(30 missing values generated)
+(30 missing values generated)
+(119 missing values generated)
+(119 missing values generated)
+(119 missing values generated)
+
+. local controls_post "log_at_post market_to_book_post ppent_by_at_post debt_by
+> _at_post cash_by_at_post dividend_payer_post ret_vol_post cash_etr_post"
+
+. 
+. * winsorize at 1% and 99%
+. foreach var in `controls' `controls_post' ebitda roa cash_flows_by_at {
+  2.     winsor2 `var', cuts(1 99) replace
+  3. }
+
+. 
+. sicff sic, ind(48)
+
+. 
+. * label controls and treated, post, and treated_post
+. label variable log_at "Ln(Total Assets)"
+
+. label variable cash_flows_by_at "Cash Flows / Assets"
+
+. label variable market_to_book "Market to Book Ratio"
+
+. label variable ppent_by_at "PP\&E / Assets"
+
+. label variable debt_by_at "Debt / Assets"
+
+. label variable cash_by_at "Cash / Assets"
+
+. label variable sales_growth "Sales Growth"
+
+. label variable dividend_payer "Dividend Payer"
+
+. label variable z_score "Z-Score
+
+. label variable nol "Net Operating Loss"
+
+. label variable ret_buy_and_hold "Buy and Hold Return"
+
+. label variable ret_vol "Return Volatility"
+
+. label variable cash_etr "Cash ETR"
+
+. label variable roa "Return on Assets"
+
+. label variable cashflow_byat "Cash Flow / Assets"
+
+. 
+. label variable treated "Excess Interest (30\% Rule)"
+
+. label variable post "Post"
+
+. label variable treated_post "Excess Interest (30\% Rule) x Post"
+
+. label variable treated_loss "Excess Interest (Loss)"
+
+. label variable treated_loss_post "Excess Interest (Loss) x Post"
+
+. 
+. save "$cleandir/full_panel_2013to2023.dta", replace
+file /Users/zrsong/MIT Dropbox/Zirui Song/Research Projects/MPS_Interest
+    Deductibility and Debt Contracting/3.
+    Data/Processed/full_panel_2013to2023.dta saved
+
+. 
+. ************** next-year EBITDA **************
+. * Make sure data is sorted by gvkey and fyear
+. 
+. use "$cleandir/full_panel_2013to2023.dta", clear
+
+. sort gvkey fyear
+
+. 
+. replace ebitda = ebitda / at
+(10,509 real changes made)
+
+. 
+. * Generate next-year EBITDA for each company
+. by gvkey: gen next_year_ebitda = ebitda[_n+1] if gvkey == gvkey[_n+1]
+(1,207 missing values generated)
+
+. gen ebitda_growth_rate = (next_year_ebitda - ebitda) / ebitda * 100 if !missi
+> ng(next_year_ebitda)
+(1,207 missing values generated)
+
+. by gvkey: gen next_2year_ebitda = ebitda[_n+2] if gvkey == gvkey[_n+2]
+(2,400 missing values generated)
+
+. 
+. by gvkey: gen next_year_roa = roa[_n+1] if gvkey == gvkey[_n+1]
+(1,207 missing values generated)
+
+. by gvkey: gen next_year_cash_flows_by_at = cash_flows_by_at[_n+1] if gvkey ==
+>  gvkey[_n+1]
+(1,211 missing values generated)
+
+. 
+. winsor2 next_year_ebitda next_2year_ebitda ebitda_growth_rate, cuts(1 99) rep
+> lace
+
+. 
+. local controls "log_at market_to_book ppent_by_at debt_by_at cash_by_at divid
+> end_payer ret_vol cash_etr"
+
+. local controls_post "log_at_post market_to_book_post ppent_by_at_post debt_by
+> _at_post cash_by_at_post dividend_payer_post ret_vol_post cash_etr_post"
+
+. 
+. tempfile main
+
+. save `main'
+file /var/folders/n2/pgdf58ms1yd3ch8xjn9fmpmm0000gq/T//St66258.000001 saved
+    as .dta format
+
+. 
+. ************** Total bank percentage **************
+. import delimited "$cleandir/capstrct_2013to2022.csv", clear
+(encoding automatically selected: ISO-8859-1)
+(131 vars, 11,516 obs)
+
+. keep gvkey fyear totbankdbtpct
+
+. merge 1:1 gvkey fyear using `main', nogen
+(variable fyear was int, now long to accommodate using data's values)
+
+    Result                      Number of obs
+    -----------------------------------------
+    Not matched                         2,693
+        from master                     1,850  
+        from using                        843  
+
+    Matched                             9,666  
+    -----------------------------------------
+
+. 
+. tempfile main2
+
+. save `main2'
+file /var/folders/n2/pgdf58ms1yd3ch8xjn9fmpmm0000gq/T//St66258.000002 saved
+    as .dta format
+
+. 
+. use "$cleandir/tranche_level_ds_compa.dta", clear
+
+. 
+. * gen logged bps
+. gen log_margin_bps = log(margin_bps)
+
+. gen log_at = log(at)
+
+. gen log_deal_amount_converted = log(deal_amount_converted)
+
+. label variable leveraged "Leveraged"
+
+. label variable maturity "Maturity (Years)"
+
+. label variable deal_amount_converted "Loan Amount ($Million)"
+
+. label variable log_deal_amount_converted "Ln(Loan Amount)"
+
+. label variable margin_bps "Interest Spread (Basis Points)"
+
+. label variable number_of_lead_arrangers "Number of Lead Arrangers"
+
+. label variable secured_dummy "Secured"
+
+. label variable tranche_type_dummy "Term Loan"
+
+. label variable tranche_o_a_dummy "Origination"
+
+. label variable sponsor_dummy "Sponsored"
+
+. label variable total_asset "Assets ($Billion)"
+
+. local deal_controls "leveraged maturity log_deal_amount_converted secured_dum
+> my tranche_type_dummy tranche_o_a_dummy sponsor_dummy"
+
+. keep gvkey year fyear margin_bps `deal_controls'
+
+. 
+. merge m:1 gvkey fyear using `main2'
+
+    Result                      Number of obs
+    -----------------------------------------
+    Not matched                        10,461
+        from master                         0  (_merge==1)
+        from using                     10,461  (_merge==2)
+
+    Matched                             3,476  (_merge==3)
+    -----------------------------------------
+
+. 
+. * generate continuous measures
+. gen excess_interest_scaled = interest_expense_total_excess / xint
+(1,850 missing values generated)
+
+. do "$codedir/AN_StataFunctions.do"
+
+. *** Functions to Clean and Label Data ***
+. 
+. *** clean ratings
+. capture program drop clean_rating
+
+. program define clean_rating
+  1.         rename currentratingsymbol sp_rating
+  2.         replace sp_rating = subinstr(sp_rating, " prelim", "", .) 
+  3. 
+.         gen sp_rating_num = .
+  4.         replace sp_rating_num = 21 if sp_rating == "AAA"
+  5.         * replace sp_rating_num = 21 if sp_rating == "AA+" (only 1 obs)
+.         replace sp_rating_num = 20 if sp_rating == "AA" | sp_rating == "ilAA"
+>  | sp_rating == "AA+"
+  6.         replace sp_rating_num = 19 if sp_rating == "AA-"
+  7.         replace sp_rating_num = 18 if sp_rating == "A+"
+  8.         replace sp_rating_num = 17 if sp_rating == "A"
+  9.         replace sp_rating_num = 16 if sp_rating == "A-" | sp_rating == "A-
+> 1+" | sp_rating == "A-2" | sp_rating == "A-3"
+ 10.         replace sp_rating_num = 15 if sp_rating == "BBB+"
+ 11.         replace sp_rating_num = 14 if sp_rating == "BBB"
+ 12.         replace sp_rating_num = 13 if sp_rating == "BBB-"
+ 13.         replace sp_rating_num = 12 if sp_rating == "BB+"
+ 14.         replace sp_rating_num = 11 if sp_rating == "BB"
+ 15.         replace sp_rating_num = 10 if sp_rating == "BB-"
+ 16.         replace sp_rating_num = 9  if sp_rating == "B+"
+ 17.         replace sp_rating_num = 8  if sp_rating == "B"
+ 18.         replace sp_rating_num = 7  if sp_rating == "B-"
+ 19.         replace sp_rating_num = 6  if sp_rating == "CCC+"
+ 20.         replace sp_rating_num = 5  if sp_rating == "CCC"
+ 21.         replace sp_rating_num = 4  if sp_rating == "CCC-"
+ 22.         replace sp_rating_num = 3  if sp_rating == "CC"
+ 23.         replace sp_rating_num = 2  if sp_rating == "C"
+ 24.         replace sp_rating_num = 1  if sp_rating == "D"
+ 25.         replace sp_rating_num = 0 if sp_rating_num == .
+ 26.         
+.         gen not_rated = 1 if sp_rating_num == 0
+ 27.         replace not_rated = 0 if not_rated == .
+ 28. 
+.         label var sp_rating_num "S\&P Rating"
+ 29.         label var not_rated "Not Rated"
+ 30. end
+
+. 
+. *** clean variables
+. capture program drop clean_variables 
+
+. program define clean_variables
+  1.         * gen logged bps
+.         gen log_margin_bps = log(margin_bps)
+  2.         gen log_at = log(at)
+  3.         gen log_deal_amount_converted = log(deal_amount_converted)
+  4. 
+.         local controls "log_at market_to_book ppent_by_at debt_by_at cash_by_
+> at dividend_payer ret_vol cash_etr"
+  5.         local deal_controls "leveraged maturity log_deal_amount_converted 
+> secured_dummy tranche_type_dummy tranche_o_a_dummy sponsor_dummy"
+  6. 
+.         * generate interaction between controls and post
+.         foreach var in `controls' {
+  7.                 gen `var'_post = `var' * post
+  8.                 gen `var'_treated = `var' * treated
+  9.                 gen `var'_treated_loss = `var' * treated_loss
+ 10.         }
+ 11.         foreach var in `deal_controls' {
+ 12.                 gen `var'_post = `var' * post
+ 13.         }
+ 14. 
+.         local controls_post "log_at_post market_to_book_post ppent_by_at_post
+>  debt_by_at_post cash_by_at_post  dividend_payer_post ret_vol_post cash_etr_p
+> ost"
+ 15.         local deal_controls_post "leveraged_post maturity_post log_deal_am
+> ount_converted_post secured_dummy_post tranche_type_dummy_post tranche_o_a_du
+> mmy_post sponsor_dummy_post"
+ 16. 
+.         local controls_treated "log_at_treated market_to_book_treated ppent_b
+> y_at_treated debt_by_at_treated cash_by_at_treated dividend_payer_treated ret
+> _vol_treated cash_etr_treated"
+ 17.         local controls_treated_loss "log_at_treated_loss market_to_book_tr
+> eated_loss ppent_by_at_treated_loss debt_by_at_treated_loss cash_by_at_treate
+> d_loss dividend_payer_treated_loss ret_vol_treated_loss cash_etr_treated_loss
+> "
+ 18. 
+.         * winsorize at 1% and 99%
+.         foreach var in margin_bps log_margin_bps `controls' `deal_controls' `
+> controls_post' `controls_treated' `controls_treated_loss' {
+ 19.                 winsor2 `var', cuts(1 99) replace
+ 20.         }
+ 21.         * for each _sweep variable, replace missing to zero
+.         foreach var of varlist *_sweep {
+ 22.                 replace `var' = 0 if `var' == .
+ 23.         }
+ 24. 
+.         * label controls and treated, post, and treated_post
+.         label variable log_at "Ln(Total Assets)"
+ 25.         label variable cash_flows_by_at "Cash Flows / Assets"
+ 26.         label variable market_to_book "Market to Book Ratio"
+ 27.         label variable ppent_by_at "PP\&E / Assets"
+ 28.         label variable debt_by_at "Debt / Assets"
+ 29.         label variable cash_by_at "Cash / Assets"
+ 30.         label variable sales_growth "Sales Growth"
+ 31.         label variable dividend_payer "Dividend Payer"
+ 32.         label variable z_score "Z-Score"
+ 33.         label variable nol "Net Operating Loss"
+ 34.         label variable ret_buy_and_hold "Buy and Hold Return"
+ 35.         label variable ret_vol "Return Volatility"
+ 36.         label variable cash_etr "Cash ETR"
+ 37.         label variable roa "Return on Assets"
+ 38.         label variable cashflow_byat "Cash Flow / Assets"
+ 39. 
+.         label variable leveraged "Leveraged"
+ 40.         label variable maturity "Maturity (Years)"
+ 41.         label variable deal_amount_converted "Loan Amount ($Million)"
+ 42.         label variable log_deal_amount_converted "Ln(Loan Amount)"
+ 43.         label variable margin_bps "Interest Spread (Basis Points)"
+ 44.         label variable number_of_lead_arrangers "Number of Lead Arrangers"
+ 45.         label variable secured_dummy "Secured"
+ 46.         label variable tranche_type_dummy "Term Loan"
+ 47.         label variable tranche_o_a_dummy "Origination"
+ 48.         label variable sponsor_dummy "Sponsored"
+ 49.         label variable total_asset "Assets ($Billion)"
+ 50. 
+.         label variable treated "Excess Interest (30\% Rule)"
+ 51.         label variable post "Post"
+ 52.         label variable treated_post "Excess Interest (30\% Rule) x Post"
+ 53.         label variable treated_loss "Excess Interest (Loss)"
+ 54.         label variable treated_loss_post "Excess Interest (Loss) x Post"
+ 55. end
+
+. 
+. capture program drop generate_treat_vars
+
+. program define generate_treat_vars
+  1.         
+.         gen treated_all = 1 if treated == 1 | treated_loss == 1
+  2.         replace treated_all = 0 if treated_all == .
+  3.         
+.         * generate continuous measures
+.         gen excess_interest_scaled_post = excess_interest_scaled * post
+  4. 
+.         *** quartile splits
+.         gen ie_excess_q4 = 1 if excess_interest_scaled > 0.89999
+  5.         gen ie_excess_q3 = 1 if inrange(excess_interest_scaled, 0.6, 0.899
+> 99)
+  6.         gen ie_excess_q2 = 1 if inrange(excess_interest_scaled, 0.300001, 
+> 0.59999)
+  7.         gen ie_excess_q1 = 1 if inrange(excess_interest_scaled, 0.00001, 0
+> .3)
+  8. 
+.         forv i = 1/4 {
+  9.                 replace ie_excess_q`i' = 0 if excess_interest_scaled == 0
+ 10.                 replace ie_excess_q`i' = 0 if ie_excess_q`i' == .
+ 11.         }
+ 12. 
+.         forv i = 1/4 {
+ 13.                 gen ie_excess_q`i'_post = ie_excess_q`i' * post
+ 14.         }
+ 15. 
+.         label var excess_interest_scaled "Excess Interest Expense (Scaled)"
+ 16.         label var excess_interest_scaled_post "Excess Interest Expense (Sc
+> aled) x Post"
+ 17.         label var ie_excess_q1 "Excess Interest Expense Q1"
+ 18.         label var ie_excess_q2 "Excess Interest Expense Q2"
+ 19.         label var ie_excess_q3 "Excess Interest Expense Q3"
+ 20.         label var ie_excess_q4 "Excess Interest Expense Q4"
+ 21.         label var ie_excess_q1_post "Excess Interest Expense Q1 x Post"
+ 22.         label var ie_excess_q2_post "Excess Interest Expense Q2 x Post"
+ 23.         label var ie_excess_q3_post "Excess Interest Expense Q3 x Post"
+ 24.         label var ie_excess_q4_post "Excess Interest Expense Q4 x Post"
+ 25. 
+.         local treat_cts "excess_interest_scaled excess_interest_scaled_post"
+ 26.         local treat_quartiles "ie_excess_q1 ie_excess_q1_post ie_excess_q2
+>  ie_excess_q2_post ie_excess_q3 ie_excess_q3_post ie_excess_q4 ie_excess_q4_p
+> ost"
+ 27.         local treat_vars "treated treated_post treated_loss treated_loss_p
+> ost"  
+ 28. end
+
+. 
 end of do-file
-r(110);
+
+. generate_treat_vars
+(10,346 missing values generated)
+(10,346 real changes made)
+(1,850 missing values generated)
+(9,967 missing values generated)
+(13,609 missing values generated)
+(13,469 missing values generated)
+(13,262 missing values generated)
+(8,496 real changes made)
+(4,766 real changes made)
+(8,496 real changes made)
+(4,973 real changes made)
+(8,496 real changes made)
+(5,113 real changes made)
+(8,496 real changes made)
+(1,471 real changes made)
+(1,850 missing values generated)
+(1,850 missing values generated)
+(1,850 missing values generated)
+(1,850 missing values generated)
+
+. 
+. save "$cleandir/sample_composition_analysis.dta", replace
+file /Users/zrsong/MIT Dropbox/Zirui Song/Research Projects/MPS_Interest
+    Deductibility and Debt Contracting/3.
+    Data/Processed/sample_composition_analysis.dta saved
+
+. 
+. 
+. /***********
+>         Analysis (Cross-Section at Loan Issuance)
+>         ***********/
+.         
+. use "$cleandir/tranche_level_ds_compa_wlabel.dta", clear
+
+. 
+. drop if sp_rating_num == 0
+(1,492 observations deleted)
+
+. 
+. reghdfe sp_rating_num excess_interest_scaled excess_interest_scaled_post `con
+> trols' `controls_post' `deal_controls', absorb(year ff_48) vce(cluster gvkey)
+(MWFE estimator converged in 6 iterations)
+
+HDFE Linear regression                            Number of obs   =      1,984
+Absorbing 2 HDFE groups                           F(  25,    643) =      96.52
+Statistics robust to heteroskedasticity           Prob > F        =     0.0000
+                                                  R-squared       =     0.7811
+                                                  Adj R-squared   =     0.7727
+                                                  Within R-sq.    =     0.7501
+Number of clusters (gvkey)   =        644         Root MSE        =     1.4252
+
+                                (Std. err. adjusted for 644 clusters in gvkey)
+------------------------------------------------------------------------------
+             |               Robust
+sp_rating_~m | Coefficient  std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+excess_int~d |  -1.413672   .3037143    -4.65   0.000    -2.010064   -.8172806
+excess_int~t |   .3917197   .4702692     0.83   0.405    -.5317292    1.315169
+      log_at |   1.027941    .082316    12.49   0.000     .8663007    1.189582
+market_to_~k |   .5210569   .1235532     4.22   0.000     .2784404    .7636734
+ ppent_by_at |  -1.196655   .4438181    -2.70   0.007    -2.068163   -.3251474
+  debt_by_at |  -2.371754   .3949668    -6.00   0.000    -3.147334   -1.596173
+  cash_by_at |  -.5494585   .9365941    -0.59   0.558    -2.388611    1.289694
+dividend_p~r |   .7502942   .1824628     4.11   0.000     .3919993    1.108589
+     ret_vol |   -8.31734   2.007609    -4.14   0.000     -12.2596   -4.375078
+    cash_etr |  -.3173439   .1381919    -2.30   0.022    -.5887058    -.045982
+ log_at_post |   .0904898   .0864184     1.05   0.295    -.0792065    .2601862
+market_to_~t |  -.0770913   .1490686    -0.52   0.605    -.3698114    .2156289
+ppent_by_~st |    1.15332   .4607674     2.50   0.013     .2485297    2.058111
+debt_by_at~t |   1.046033   .5858361     1.79   0.075      -.10435    2.196416
+cash_by_at~t |   1.170074   1.233798     0.95   0.343    -1.252686    3.592834
+dividend_p~t |  -.2376793   .2406871    -0.99   0.324     -.710307    .2349484
+ret_vol_post |  -.6133721   3.152295    -0.19   0.846    -6.803408    5.576664
+cash_etr_p~t |  -.4111527    .308496    -1.33   0.183    -1.016934    .1946286
+   leveraged |  -1.340916   .1662978    -8.06   0.000    -1.667468   -1.014363
+    maturity |   .0710508   .0366045     1.94   0.053     -.000828    .1429297
+log_deal_a~d |  -.3286117   .0600246    -5.47   0.000    -.4464797   -.2107437
+secured_du~y |   -.583492   .1390473    -4.20   0.000    -.8565337   -.3104504
+tranche_ty~y |   .0771275   .0601718     1.28   0.200    -.0410295    .1952845
+tranche_o_~y |   .0215349   .0947774     0.23   0.820    -.1645758    .2076455
+sponsor_du~y |  -.2828286   .1603598    -1.76   0.078    -.5977208    .0320636
+       _cons |   6.108334   .6855257     8.91   0.000     4.762194    7.454473
+------------------------------------------------------------------------------
+
+Absorbed degrees of freedom:
+-----------------------------------------------------+
+ Absorbed FE | Categories  - Redundant  = Num. Coefs |
+-------------+---------------------------------------|
+        year |         8           0           8     |
+       ff_48 |        43           1          42     |
+-----------------------------------------------------+
+
+. estimates store m1
+
+. 
+. *** other LHS variables
+. use "$cleandir/sample_composition_analysis.dta", clear
+
+. 
+. reghdfe totbankdbtpct excess_interest_scaled excess_interest_scaled_post `con
+> trols' `controls_post' `deal_controls', absorb(fyear ff_48) vce(cluster gvkey
+> )
+(MWFE estimator converged in 6 iterations)
+
+HDFE Linear regression                            Number of obs   =      3,297
+Absorbing 2 HDFE groups                           F(  25,   1129) =      27.73
+Statistics robust to heteroskedasticity           Prob > F        =     0.0000
+                                                  R-squared       =     0.3941
+                                                  Adj R-squared   =     0.3792
+                                                  Within R-sq.    =     0.3310
+Number of clusters (gvkey)   =      1,130         Root MSE        =    29.5057
+
+                              (Std. err. adjusted for 1,130 clusters in gvkey)
+------------------------------------------------------------------------------
+             |               Robust
+totbankdbt~t | Coefficient  std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+excess_int~d |   .2091767   3.748994     0.06   0.956    -7.146603    7.564956
+excess_int~t |   2.435592   6.360716     0.38   0.702    -10.04456    14.91575
+      log_at |  -13.22933   .8426649   -15.70   0.000     -14.8827   -11.57597
+market_to_~k |   .4572268   1.125751     0.41   0.685    -1.751572    2.666026
+ ppent_by_at |  -11.83901   6.637646    -1.78   0.075    -24.86251    1.184503
+  debt_by_at |  -19.14285   5.688572    -3.37   0.001    -30.30421   -7.981486
+  cash_by_at |  -66.12346   12.31941    -5.37   0.000    -90.29498   -41.95194
+dividend_p~r |  -3.303587   2.527058    -1.31   0.191    -8.261845     1.65467
+     ret_vol |   7.971043   23.68197     0.34   0.736    -38.49457    54.43666
+    cash_etr |   -4.09618   2.566365    -1.60   0.111    -9.131561    .9392019
+ log_at_post |    .698465   1.088699     0.64   0.521    -1.437636    2.834566
+market_to_~t |  -3.639873   1.679433    -2.17   0.030    -6.935033   -.3447132
+ppent_by_~st |  -4.696261   9.016646    -0.52   0.603    -22.38753    12.99501
+debt_by_at~t |   12.99308   8.069018     1.61   0.108     -2.83888    28.82503
+cash_by_at~t |   25.52346   19.68622     1.30   0.195    -13.10222    64.14915
+dividend_p~t |   1.600122   4.023358     0.40   0.691    -6.293978    9.494222
+ret_vol_post |  -47.09719   41.47528    -1.14   0.256    -128.4745     34.2801
+cash_etr_p~t |   7.317051   5.401618     1.35   0.176    -3.281287    17.91539
+   leveraged |   2.998956   2.384058     1.26   0.209    -1.678726    7.676638
+    maturity |    .790393   .5711289     1.38   0.167    -.3302005    1.910987
+log_deal_a~d |   3.659335   .8786962     4.16   0.000     1.935274    5.383396
+secured_du~y |   2.370069   2.305677     1.03   0.304    -2.153824    6.893963
+tranche_ty~y |   .3541839   .9135602     0.39   0.698    -1.438283     2.14665
+tranche_o_~y |   -1.88819   1.558401    -1.21   0.226    -4.945877    1.169498
+sponsor_du~y |   4.449769   2.954721     1.51   0.132    -1.347593    10.24713
+       _cons |   137.2615   8.107883    16.93   0.000     121.3533    153.1697
+------------------------------------------------------------------------------
+
+Absorbed degrees of freedom:
+-----------------------------------------------------+
+ Absorbed FE | Categories  - Redundant  = Num. Coefs |
+-------------+---------------------------------------|
+       fyear |         8           0           8     |
+       ff_48 |        48           1          47     |
+-----------------------------------------------------+
+
+. estimates store m2      
+
+. 
+. reghdfe next_year_roa excess_interest_scaled excess_interest_scaled_post `con
+> trols' `controls_post' `deal_controls', absorb(fyear ff_48) vce(cluster gvkey
+> )
+(MWFE estimator converged in 6 iterations)
+
+HDFE Linear regression                            Number of obs   =      3,183
+Absorbing 2 HDFE groups                           F(  25,   1134) =      14.12
+Statistics robust to heteroskedasticity           Prob > F        =     0.0000
+                                                  R-squared       =     0.3224
+                                                  Adj R-squared   =     0.3052
+                                                  Within R-sq.    =     0.2626
+Number of clusters (gvkey)   =      1,135         Root MSE        =     0.0848
+
+                              (Std. err. adjusted for 1,135 clusters in gvkey)
+------------------------------------------------------------------------------
+             |               Robust
+next_year~oa | Coefficient  std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+excess_int~d |  -.1039693   .0136121    -7.64   0.000    -.1306771   -.0772615
+excess_int~t |  -.0152106   .0210158    -0.72   0.469    -.0564448    .0260236
+      log_at |   .0052346   .0021819     2.40   0.017     .0009537    .0095156
+market_to_~k |   .0259465    .003316     7.82   0.000     .0194403    .0324527
+ ppent_by_at |  -.0132323   .0177356    -0.75   0.456    -.0480305    .0215659
+  debt_by_at |   .0070496   .0162507     0.43   0.665    -.0248351    .0389343
+  cash_by_at |  -.0627232   .0346375    -1.81   0.070    -.1306839    .0052376
+dividend_p~r |   .0141451    .006231     2.27   0.023     .0019195    .0263706
+     ret_vol |   .0193039   .0870724     0.22   0.825    -.1515373    .1901451
+    cash_etr |  -.0182767   .0066558    -2.75   0.006    -.0313357   -.0052177
+ log_at_post |   .0064196   .0046886     1.37   0.171    -.0027797     .015619
+market_to_~t |  -.0086664    .005326    -1.63   0.104    -.0191163    .0017834
+ppent_by_~st |   .0293525   .0224187     1.31   0.191    -.0146343    .0733393
+debt_by_at~t |   -.025287   .0332925    -0.76   0.448    -.0906087    .0400348
+cash_by_at~t |  -.0771326   .0763861    -1.01   0.313    -.2270065    .0727413
+dividend_p~t |  -.0063774   .0105057    -0.61   0.544    -.0269902    .0142354
+ret_vol_post |   .2379446   .1854903     1.28   0.200    -.1259981    .6018872
+cash_etr_p~t |  -.0072666   .0187353    -0.39   0.698    -.0440263    .0294932
+   leveraged |  -.0029256   .0048334    -0.61   0.545     -.012409    .0065579
+    maturity |   .0043132   .0014516     2.97   0.003     .0014651    .0071613
+log_deal_a~d |  -.0036004   .0022711    -1.59   0.113    -.0080563    .0008555
+secured_du~y |  -.0137762   .0053734    -2.56   0.010    -.0243192   -.0032333
+tranche_ty~y |   -.003532    .002847    -1.24   0.215    -.0091179     .002054
+tranche_o_~y |  -.0123486   .0042889    -2.88   0.004    -.0207637   -.0039334
+sponsor_du~y |   .0091634   .0068434     1.34   0.181    -.0042638    .0225906
+       _cons |  -.0336625   .0245729    -1.37   0.171    -.0818759    .0145509
+------------------------------------------------------------------------------
+
+Absorbed degrees of freedom:
+-----------------------------------------------------+
+ Absorbed FE | Categories  - Redundant  = Num. Coefs |
+-------------+---------------------------------------|
+       fyear |         8           0           8     |
+       ff_48 |        48           1          47     |
+-----------------------------------------------------+
+
+. estimates store m3
+
+. 
+. reghdfe next_year_cash_flows_by_at excess_interest_scaled excess_interest_sca
+> led_post `controls' `controls_post' `deal_controls', absorb(fyear ff_48) vce(
+> cluster gvkey)
+(MWFE estimator converged in 6 iterations)
+
+HDFE Linear regression                            Number of obs   =      3,180
+Absorbing 2 HDFE groups                           F(  25,   1134) =      13.52
+Statistics robust to heteroskedasticity           Prob > F        =     0.0000
+                                                  R-squared       =     0.3034
+                                                  Adj R-squared   =     0.2856
+                                                  Within R-sq.    =     0.2409
+Number of clusters (gvkey)   =      1,135         Root MSE        =     0.0623
+
+                              (Std. err. adjusted for 1,135 clusters in gvkey)
+------------------------------------------------------------------------------
+             |               Robust
+next_year_~t | Coefficient  std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+excess_int~d |  -.0574186   .0081154    -7.08   0.000    -.0733415   -.0414957
+excess_int~t |  -.0065298   .0141451    -0.46   0.644    -.0342833    .0212237
+      log_at |   .0043039   .0018825     2.29   0.022     .0006104    .0079975
+market_to_~k |    .021316   .0035504     6.00   0.000     .0143499    .0282821
+ ppent_by_at |   .0431828   .0132114     3.27   0.001     .0172613    .0691043
+  debt_by_at |    .012766   .0132944     0.96   0.337    -.0133184    .0388505
+  cash_by_at |  -.0223066   .0234501    -0.95   0.342     -.068317    .0237038
+dividend_p~r |   .0012165   .0051822     0.23   0.814    -.0089512    .0113842
+     ret_vol |  -.0855841   .0480916    -1.78   0.075    -.1799426    .0087744
+    cash_etr |  -.0061953   .0041029    -1.51   0.131    -.0142454    .0018548
+ log_at_post |   .0026129   .0033618     0.78   0.437    -.0039831    .0092088
+market_to_~t |  -.0089522   .0046603    -1.92   0.055    -.0180959    .0001915
+ppent_by_~st |   .0184075   .0165492     1.11   0.266    -.0140629     .050878
+debt_by_at~t |  -.0310562   .0222049    -1.40   0.162    -.0746236    .0125111
+cash_by_at~t |   -.011345    .051874    -0.22   0.827    -.1131248    .0904349
+dividend_p~t |    .000398   .0084753     0.05   0.963     -.016231     .017027
+ret_vol_post |   .1090094   .1340912     0.81   0.416    -.1540854    .3721041
+cash_etr_p~t |  -.0197978   .0121124    -1.63   0.102    -.0435631    .0039674
+   leveraged |  -.0075365   .0048032    -1.57   0.117    -.0169606    .0018876
+    maturity |   .0028805   .0009099     3.17   0.002     .0010952    .0046658
+log_deal_a~d |  -.0042656   .0018096    -2.36   0.019    -.0078161   -.0007151
+secured_du~y |  -.0117941   .0044556    -2.65   0.008    -.0205362    -.003052
+tranche_ty~y |  -.0049994   .0020375    -2.45   0.014    -.0089971   -.0010018
+tranche_o_~y |  -.0058632   .0032512    -1.80   0.072    -.0122423    .0005159
+sponsor_du~y |   .0039132   .0063322     0.62   0.537    -.0085109    .0163373
+       _cons |   .0423532    .019583     2.16   0.031     .0039302    .0807761
+------------------------------------------------------------------------------
+
+Absorbed degrees of freedom:
+-----------------------------------------------------+
+ Absorbed FE | Categories  - Redundant  = Num. Coefs |
+-------------+---------------------------------------|
+       fyear |         8           0           8     |
+       ff_48 |        48           1          47     |
+-----------------------------------------------------+
+
+. estimates store m4
+
+. 
+. reghdfe next_year_ebitda excess_interest_scaled excess_interest_scaled_post `
+> controls' `controls_post' `deal_controls', absorb(fyear ff_48) vce(cluster gv
+> key)
+(MWFE estimator converged in 6 iterations)
+
+HDFE Linear regression                            Number of obs   =      3,183
+Absorbing 2 HDFE groups                           F(  25,   1134) =      15.50
+Statistics robust to heteroskedasticity           Prob > F        =     0.0000
+                                                  R-squared       =     0.3520
+                                                  Adj R-squared   =     0.3355
+                                                  Within R-sq.    =     0.2981
+Number of clusters (gvkey)   =      1,135         Root MSE        =     0.0654
+
+                              (Std. err. adjusted for 1,135 clusters in gvkey)
+------------------------------------------------------------------------------
+             |               Robust
+next_year~da | Coefficient  std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+excess_int~d |   -.085493   .0096908    -8.82   0.000    -.1045069   -.0664792
+excess_int~t |  -.0239967   .0168501    -1.42   0.155    -.0570575    .0090642
+      log_at |   .0025025   .0019429     1.29   0.198    -.0013096    .0063146
+market_to_~k |   .0268462   .0039298     6.83   0.000     .0191358    .0345567
+ ppent_by_at |   .0236759   .0141125     1.68   0.094    -.0040135    .0513654
+  debt_by_at |   .0472861   .0131453     3.60   0.000     .0214943    .0730779
+  cash_by_at |   -.034904    .027319    -1.28   0.202    -.0885055    .0186975
+dividend_p~r |   .0037934   .0048232     0.79   0.432      -.00567    .0132568
+     ret_vol |  -.0305676   .0649033    -0.47   0.638    -.1579115    .0967764
+    cash_etr |  -.0041068   .0040872    -1.00   0.315    -.0121261    .0039126
+ log_at_post |   .0000489   .0035227     0.01   0.989    -.0068629    .0069608
+market_to_~t |  -.0155793    .005072    -3.07   0.002    -.0255309   -.0056277
+ppent_by_~st |   .0268794   .0182162     1.48   0.140    -.0088618    .0626206
+debt_by_at~t |  -.0171053   .0208091    -0.82   0.411    -.0579339    .0237234
+cash_by_at~t |  -.0052811    .058146    -0.09   0.928    -.1193669    .1088047
+dividend_p~t |   .0029176    .008211     0.36   0.722     -.013193    .0190281
+ret_vol_post |   .1646861   .1271187     1.30   0.195    -.0847281    .4141003
+cash_etr_p~t |  -.0361345   .0120275    -3.00   0.003    -.0597331   -.0125359
+   leveraged |  -.0031853   .0046872    -0.68   0.497    -.0123818    .0060112
+    maturity |   .0031868   .0010636     3.00   0.003        .0011    .0052737
+log_deal_a~d |  -.0031114   .0019463    -1.60   0.110    -.0069301    .0007072
+secured_du~y |  -.0053402   .0042522    -1.26   0.209    -.0136834    .0030029
+tranche_ty~y |  -.0041136   .0023133    -1.78   0.076    -.0086525    .0004253
+tranche_o_~y |  -.0010306   .0033105    -0.31   0.756    -.0075259    .0054648
+sponsor_du~y |   .0030056     .00643     0.47   0.640    -.0096104    .0156216
+       _cons |    .063924   .0208483     3.07   0.002     .0230185    .1048295
+------------------------------------------------------------------------------
+
+Absorbed degrees of freedom:
+-----------------------------------------------------+
+ Absorbed FE | Categories  - Redundant  = Num. Coefs |
+-------------+---------------------------------------|
+       fyear |         8           0           8     |
+       ff_48 |        48           1          47     |
+-----------------------------------------------------+
+
+. estimates store m5
+
+. 
+. esttab m1 m2 m3 m4 m5 using "$tabdir/next_year_risk_tests.tex", replace ///
+> nodepvars nomti nonum collabels(none) label b(3) se(3) parentheses ///
+> star(* 0.10 ** 0.05 *** 0.01) ar2 plain lines fragment noconstant keep(excess
+> _interest_scaled excess_interest_scaled_post `controls' `deal_controls')
+(output written to /Users/zrsong/MIT Dropbox/Zirui Song/Apps/Overleaf/Tax Incid
+> ence and Loan Contract Terms/Tables/next_year_risk_tests.tex)
+
+. est clear
+
+. 
+. *** close log
+. *log close
+. 
+end of do-file
