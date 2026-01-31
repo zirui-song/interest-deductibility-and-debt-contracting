@@ -20,10 +20,26 @@ if not os.path.exists(tranche_level_ds_compa_path):
     raise FileNotFoundError(f"tranche_level_ds_compa_filtered.csv not found at {tranche_level_ds_compa_path}. Please run CR_2_CleanDealscanMerge.py first.")
 tranche_level_ds_compa = pd.read_csv(tranche_level_ds_compa_path)
 
+# Calculate pre-period average (2014-2017) of excess_interest_scaled from Compustat panel
+comp_crspa_path = os.path.join(processed_dir, 'comp_crspa_merged.csv')
+if os.path.exists(comp_crspa_path):
+    comp_crspa = pd.read_csv(comp_crspa_path)
+    # Calculate excess_interest_scaled from Compustat variables
+    comp_crspa['excess_interest_scaled_compa'] = comp_crspa['interest_expense_total_excess'] / comp_crspa['xint']
+    comp_crspa.loc[comp_crspa['excess_interest_scaled_compa'].isna() | (comp_crspa['excess_interest_scaled_compa'] < 0), 'excess_interest_scaled_compa'] = 0
+    # Keep pre-period years (2014-2017)
+    pre_period = comp_crspa[(comp_crspa['fyear'] >= 2014) & (comp_crspa['fyear'] <= 2017)]
+    # Calculate firm-level pre-period average
+    pre_period_avg = pre_period.groupby('gvkey')['excess_interest_scaled_compa'].mean().reset_index()
+    pre_period_avg.columns = ['gvkey', 'excess_interest_pre']
+    # Merge to loan sample (keep as NaN for non-matches to reflect actual regression sample)
+    tranche_level_ds_compa = tranche_level_ds_compa.merge(pre_period_avg, on='gvkey', how='left')
+
 ## Summary Statistics of Firms in the Final Sample
 
 variable_labels = {
     'excess_interest_scaled': 'Excess Interest Expense (Scaled)',
+    'excess_interest_pre': 'Excess Interest Expense (Pre-Period Avg)',
     'deal_amount_converted': 'Loan Amount ($Million)',
     'leveraged': 'Leveraged',
     'margin_bps': 'Interest Spread (Basis Points)',
@@ -47,9 +63,9 @@ variable_labels = {
     'cash_etr': 'Cash ETR',
 }
 
-# Drop observations if any variables in variable_labels are missing (except pviol)
+# Drop observations if any variables in variable_labels are missing (except pviol and excess_interest_pre)
 initial_count = len(tranche_level_ds_compa)
-dropna_vars = [v for v in variable_labels.keys() if v != 'pviol']
+dropna_vars = [v for v in variable_labels.keys() if v not in ['pviol', 'excess_interest_pre']]
 tranche_level_ds_compa = tranche_level_ds_compa.dropna(subset=dropna_vars)
 dropped_count = initial_count - len(tranche_level_ds_compa)
 if dropped_count > 0:
