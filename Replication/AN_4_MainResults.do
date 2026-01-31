@@ -238,19 +238,26 @@ star(* 0.10 ** 0.05 *** 0.01) ar2 plain lines fragment noconstant keep(excess_in
 est clear
 
 ******************	Alternative: Fixed Pre-Period Treatment  ******************
-* Treatment is fixed at pre-period average from loan sample
+* Treatment is fixed at pre-period average (2014-2017) from Compustat panel
 
-use "$cleandir/tranche_level_ds_compa_wlabel.dta", clear
+* Step 1: Calculate pre-period average from Compustat panel
+import delimited "$cleandir/comp_crspa_merged.csv", clear
 
-* Calculate pre-period average of excess_interest_scaled for each firm
-preserve
-keep if post == 0
-collapse (mean) excess_interest_pre = excess_interest_scaled, by(gvkey)
+* Calculate excess_interest_scaled from Compustat variables
+gen excess_interest_scaled_compa = interest_expense_total_excess / xint
+replace excess_interest_scaled_compa = 0 if excess_interest_scaled_compa == . | excess_interest_scaled_compa < 0
+
+* Keep pre-period years (2014-2017)
+keep if fyear >= 2014 & fyear <= 2017
+
+* Calculate firm-level pre-period average
+collapse (mean) excess_interest_pre = excess_interest_scaled_compa, by(gvkey)
+
 tempfile pre_period_treatment
 save `pre_period_treatment'
-restore
 
-* Merge pre-period average back to full sample
+* Step 2: Load loan sample and merge pre-period treatment
+use "$cleandir/tranche_level_ds_compa_wlabel.dta", clear
 merge m:1 gvkey using `pre_period_treatment', keep(match) nogen
 
 * Create interaction with post
@@ -278,11 +285,3 @@ estimates store f3
 esttab f1 f2 f3 using "$tabdir/margin_ie_excess_fixedpre.tex", replace ///
 nodepvars nomti nonum collabels(none) label b(3) se(3) parentheses ///
 star(* 0.10 ** 0.05 *** 0.01) ar2 plain lines fragment noconstant drop(_cons `controls_post')
-
-* Display key results
-display "Fixed Pre-Period Treatment Results:"
-display "Sample size:"
-count
-estimates restore f3
-test excess_pre_X_post = 0
-est clear
