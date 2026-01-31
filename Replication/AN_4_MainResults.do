@@ -236,3 +236,53 @@ esttab m5 m6 m7 m8 m1 m2 m3 m4 using "$tabdir/other_terms_ie_excess.tex", replac
 nodepvars nomti nonum collabels(none) label b(3) se(3) parentheses ///
 star(* 0.10 ** 0.05 *** 0.01) ar2 plain lines fragment noconstant keep(excess_interest_scaled excess_interest_scaled_post)
 est clear
+
+******************	Alternative: Fixed Pre-Period Treatment  ******************
+* Treatment is fixed at pre-period average from loan sample
+
+use "$cleandir/tranche_level_ds_compa_wlabel.dta", clear
+
+* Calculate pre-period average of excess_interest_scaled for each firm
+preserve
+keep if post == 0
+collapse (mean) excess_interest_pre = excess_interest_scaled, by(gvkey)
+tempfile pre_period_treatment
+save `pre_period_treatment'
+restore
+
+* Merge pre-period average back to full sample
+merge m:1 gvkey using `pre_period_treatment', keep(match) nogen
+
+* Create interaction with post
+gen excess_pre_X_post = excess_interest_pre * post
+
+* Label variables
+label var excess_interest_pre "Excess Interest (Pre-Period Avg, Scaled)"
+label var excess_pre_X_post "Excess Interest (Pre-Period Avg, Scaled) x Post"
+
+local controls "log_at market_to_book ppent_by_at debt_by_at cash_by_at dividend_payer ret_vol cash_etr"
+local deal_controls "leveraged maturity log_deal_amount_converted secured_dummy tranche_type_dummy tranche_o_a_dummy sponsor_dummy"
+local controls_post "log_at_post market_to_book_post ppent_by_at_post debt_by_at_post cash_by_at_post dividend_payer_post ret_vol_post cash_etr_post"
+
+* Run regressions with fixed pre-period treatment
+reghdfe margin_bps excess_interest_pre excess_pre_X_post `deal_controls', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
+estimates store f1
+
+reghdfe margin_bps excess_interest_pre excess_pre_X_post `controls' `deal_controls', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
+estimates store f2
+
+reghdfe margin_bps excess_interest_pre excess_pre_X_post `controls' `deal_controls' `controls_post', absorb(year ff_48 sp_rating_num) vce(cluster gvkey)
+estimates store f3
+
+* Save results
+esttab f1 f2 f3 using "$tabdir/margin_ie_excess_fixedpre.tex", replace ///
+nodepvars nomti nonum collabels(none) label b(3) se(3) parentheses ///
+star(* 0.10 ** 0.05 *** 0.01) ar2 plain lines fragment noconstant drop(_cons `controls_post')
+
+* Display key results
+display "Fixed Pre-Period Treatment Results:"
+display "Sample size:"
+count
+estimates restore f3
+test excess_pre_X_post = 0
+est clear
